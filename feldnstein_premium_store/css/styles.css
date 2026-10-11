@@ -1,0 +1,6 @@
+:root {
+  --forest: #184e32; --forest-dark: #0d3822; --ochre: #c59b27; --ochre-deep: #b8860b;
+  --ivory: #fcfbf7; --warm-card: #f7f5ee; --hairline: #e9e5d9;
+  --herb: #246942; --rust: #bc4747; --charcoal: #222522;
+  --shadow-ambient: 0 8px 24px -4px rgba(24, 78, 50, 0.06);
+}
