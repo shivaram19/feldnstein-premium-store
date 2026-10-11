@@ -40,7 +40,7 @@ document.addEventListener('click', e => {
 });
 
 // --- Scrollspy ---
-// Note: empty section placeholders (until Tasks 6-9 fill them) may cause multiple simultaneous intersections; this resolves once sections have height.
+// dedupe: desktop + mobile navs share hrefs.
 const navLinks = document.querySelectorAll('.nav-link');
 const spyTargets = [...new Set([...navLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean))];
 const spy = new IntersectionObserver(entries => {
