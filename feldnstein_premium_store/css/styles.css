@@ -10,11 +10,11 @@
   font-weight: 600; font-size: 0.875rem; padding: 0.875rem 1.75rem;
   transition: background-color .25s ease, color .25s ease, transform .15s ease, box-shadow .25s ease, border-color .25s ease; }
 .btn:active { transform: scale(.98); }
-.btn:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(197,155,39,.45); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(197,155,39,.45), 0 0 0 6px rgba(13,56,34,.9); }
 .btn-primary { background: var(--forest); color: #fff; }
 .btn-primary:hover { background: var(--forest-dark); box-shadow: var(--shadow-ambient); }
 .btn-gold { background: var(--ochre); color: var(--forest-dark); }
-.btn-gold:hover { background: var(--ochre-deep); color: var(--forest-dark); box-shadow: var(--shadow-ambient); }
+.btn-gold:hover { background: var(--ochre-deep); color: #081f13; box-shadow: var(--shadow-ambient); }
 .btn-ghost { background: transparent; color: var(--forest); border: 1.5px solid var(--forest); }
 .btn-ghost:hover { background: var(--forest); color: #fff; }
 
