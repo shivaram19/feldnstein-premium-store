@@ -149,6 +149,7 @@ window.closeQuickView = () => {
 };
 modal.addEventListener('click', e => { if (e.target === modal) closeQuickView(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeQuickView(); });
+document.getElementById('modalCloseBtn').addEventListener('click', closeQuickView);
 modal.querySelector('#modalAddBtn').addEventListener('click', () => {
   quickAddProduct(modal.dataset.name, modal.dataset.price);
   closeQuickView();
