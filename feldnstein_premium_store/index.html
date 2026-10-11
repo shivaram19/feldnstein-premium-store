@@ -33,7 +33,34 @@
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body class="bg-brand-ivory text-brand-charcoal font-sans antialiased">
-  <header id="siteHeader"><!-- Task 3 --></header>
+  <header id="siteHeader" class="sticky top-0 z-50 border-b transition-all duration-300 bg-brand-ivory/90 backdrop-blur-md border-brand-ochre/15">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12">
+      <div class="flex items-center justify-between h-16 lg:h-20 transition-all duration-300" id="headerInner">
+        <a href="#hero" class="font-serif text-2xl lg:text-3xl font-medium text-brand-forest tracking-tight">FELDn<span class="italic text-brand-ochre">STEIN</span></a>
+        <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold" aria-label="Primary">
+          <a href="#collection" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Shop</a>
+          <a href="#matrix" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Our Standard</a>
+          <a href="#process" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Journal</a>
+          <a href="#subscription" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Club</a>
+        </nav>
+        <div class="flex items-center gap-3">
+          <button id="cartBtn" class="relative w-10 h-10 rounded-full flex items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors" aria-label="Cart">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            <span id="cartCount" class="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-brand-ochre text-white text-[10px] font-bold hidden items-center justify-center">0</span>
+          </button>
+          <button id="menuBtn" class="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-brand-forest" aria-label="Menu" aria-expanded="false">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+        </div>
+      </div>
+      <div id="mobileMenu" class="lg:hidden hidden pb-4 flex flex-col gap-3 text-sm font-semibold">
+        <a href="#collection" class="nav-link text-brand-charcoal">Shop</a>
+        <a href="#matrix" class="nav-link text-brand-charcoal">Our Standard</a>
+        <a href="#process" class="nav-link text-brand-charcoal">Journal</a>
+        <a href="#subscription" class="nav-link text-brand-charcoal">Club</a>
+      </div>
+    </div>
+  </header>
   <main>
     <section id="hero"><!-- Task 4 --></section>
     <div id="ticker"><!-- Task 5 --></div>
