@@ -312,7 +312,7 @@
               <div class="md:col-span-4 p-5 sm:p-6 bg-brand-warmCard/70 flex items-center border-b md:border-b-0 md:border-r border-brand-border">
                 <span class="text-xs font-bold uppercase tracking-wider text-brand-subtle">Standard &amp; Parameter</span>
               </div>
-              <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/10 flex items-center justify-between border-b md:border-b-0 md:border-r border-brand-border">
+              <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 flex items-center justify-between border-b md:border-b-0 md:border-r border-brand-border">
                 <div class="flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-brand-rust"></span>
                   <span class="text-xs font-bold uppercase tracking-wider text-brand-rust">Commercial Baseline</span>
@@ -475,7 +475,7 @@
           </article>
           <article class="rounded-3xl bg-white border border-brand-border p-6 lg:p-8 flex flex-col justify-between card-lift relative" data-reveal>
             <div>
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-ochre/15 text-brand-ochreDeep tracking-wider uppercase mb-6">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-ochre/15 text-brand-forestDark tracking-wider uppercase mb-6">
                 <span class="material-symbols-outlined text-[14px]">autorenew</span>
                 <span>SAVE 10% EVERY MONTH</span>
               </div>
@@ -501,7 +501,7 @@
                 <span class="text-[11px] uppercase tracking-wider text-brand-subtle font-bold block">Subscribe &amp; Save</span>
                 <p class="font-serif text-lg font-bold text-brand-ochreDeep">10% Off + 2x Points</p>
               </div>
-              <button class="btn btn-gold" onclick="var t=document.getElementById('toast');t.textContent='Kitchen Reserve Activated — Our concierge will confirm your monthly blend selection.';t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)">Start Subscription</button>
+              <button class="btn btn-gold" onclick="showToast('Kitchen Reserve Activated — Our concierge will confirm your monthly blend selection.')">Start Subscription</button>
             </div>
           </article>
         </div>
@@ -517,12 +517,12 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
-            <div class="flex items-center gap-1 mb-4">
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
             </div>
             <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“I've been using Feldnstein's groundnut oil for 4 months now. The difference in taste is unbelievable — my family instantly noticed it in everyday cooking.”</p>
             <p class="text-sm text-brand-subtle leading-relaxed flex-1">Traditional monolithic stone press oil with pure authentic aroma and zero chemical impurities.</p>
@@ -532,7 +532,7 @@
                   AM
                 </div>
                 <div>
-                  <h4 class="text-sm font-bold text-brand-forest">Dr. Arjun Mehta</h4>
+                  <h3 class="text-sm font-bold text-brand-forest">Dr. Arjun Mehta</h4>
                   <span class="text-xs text-brand-subtle font-medium">Verified Household • Guntur</span>
                 </div>
               </div>
@@ -542,12 +542,12 @@
             </div>
           </article>
           <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
-            <div class="flex items-center gap-1 mb-4">
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
             </div>
             <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“The coconut oil is the real deal — thick, fragrant, solidifies in cold weather exactly like it should! We've subscribed to the monthly plan and it's been one of the best decisions of this year.”</p>
             <p class="text-sm text-brand-subtle leading-relaxed flex-1">Delivered fresh in apothecary glass bottles directly to our doorstep on monthly automated refill.</p>
@@ -557,7 +557,7 @@
                   S
                 </div>
                 <div>
-                  <h4 class="text-sm font-bold text-brand-forest">Sunita</h4>
+                  <h3 class="text-sm font-bold text-brand-forest">Sunita</h4>
                   <span class="text-xs text-brand-subtle font-medium">Monthly Subscriber • Amaravati</span>
                 </div>
               </div>
@@ -567,12 +567,12 @@
             </div>
           </article>
           <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
-            <div class="flex items-center gap-1 mb-4">
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
-              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;">star</span>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
             </div>
             <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“As a nutritionist, I'm very particular about the oils I recommend to my patients. Feldnstein's sesame oil is the only brand I trust — stone-pressed certified with zero chemical residues.”</p>
             <p class="text-sm text-brand-subtle leading-relaxed flex-1">Stone pressed using traditional Gaanuga crushing. Zero chemical residues, no argemone, and no synthetic additives.</p>
@@ -582,7 +582,7 @@
                   MV
                 </div>
                 <div>
-                  <h4 class="text-sm font-bold text-brand-forest">Dr. Mahesh Varma</h4>
+                  <h3 class="text-sm font-bold text-brand-forest">Dr. Mahesh Varma</h4>
                   <span class="text-xs text-brand-subtle font-medium">Nutritionist &amp; Wellness Consultant</span>
                 </div>
               </div>
@@ -665,7 +665,7 @@
           </div>
         </div>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 py-16 border-b border-white/10" data-reveal>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 py-16 border-b border-white/10" data-reveal>
         <div class="lg:col-span-2 flex flex-col items-start pr-4 col-span-2 md:col-span-3 lg:col-span-2">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-11 h-11 rounded-full overflow-hidden border border-white/20 bg-white/10 p-0.5 shadow-sm flex items-center justify-center">
@@ -686,7 +686,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-3">
-          <h4 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Shop</h4>
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Shop</h4>
           <ul class="flex flex-col gap-2.5 text-xs text-white/70">
             <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Bull-Pressed Groundnut Oil</a></li>
             <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Sun-Dried Coconut Copra Oil</a></li>
@@ -696,7 +696,7 @@
           </ul>
         </div>
         <div class="flex flex-col gap-3">
-          <h4 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Company</h4>
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Company</h4>
           <ul class="flex flex-col gap-2.5 text-xs text-white/70">
             <li><a class="hover:text-brand-ochre transition-colors" href="#process">The 8 RPM Gaanuga Method</a></li>
             <li><a class="hover:text-brand-ochre transition-colors" href="#matrix">Quality &amp; Purity Standards</a></li>
@@ -706,7 +706,7 @@
           </ul>
         </div>
         <div class="flex flex-col gap-3">
-          <h4 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Support</h4>
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Support</h4>
           <ul class="flex flex-col gap-2.5 text-xs text-white/70">
             <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre mt-0.5">store</span><span><strong>Store:</strong> Rajendranagar 3rd Line, Main Road, Opp. ICON Mall, Guntur</span></li>
             <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre mt-0.5">factory</span><span><strong>Mill:</strong> Mothadaka, Guntur, Andhra Pradesh, India</span></li>
@@ -715,7 +715,7 @@
           </ul>
         </div>
         <div class="flex flex-col gap-3">
-          <h4 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Legal</h4>
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Legal</h4>
           <ul class="flex flex-col gap-2.5 text-xs text-white/70">
             <li><a class="hover:text-brand-ochre transition-colors" href="#">Purity Guarantee</a></li>
             <li><a class="hover:text-brand-ochre transition-colors" href="#">Shipping &amp; Glass Safety</a></li>

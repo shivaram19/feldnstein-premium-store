@@ -162,14 +162,17 @@ let cartTotal = 0, cartItems = 0;
 const cartCount = document.getElementById('cartCount');
 const toast = document.getElementById('toast');
 let toastTimer;
+window.showToast = msg => {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+};
 window.quickAddProduct = (name, price) => {
   cartItems += 1; cartTotal += Number(price);
   cartCount.textContent = String(cartItems);
   cartCount.classList.remove('hidden'); cartCount.classList.add('flex');
-  toast.textContent = `Added to Reserve Cart — ${name} · ₹${cartTotal}`;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+  showToast(`Added to Reserve Cart — ${name} · ₹${cartTotal}`);
 };
 document.querySelectorAll('.quick-add').forEach(b =>
   b.addEventListener('click', () => quickAddProduct(b.dataset.name, b.dataset.price)));
