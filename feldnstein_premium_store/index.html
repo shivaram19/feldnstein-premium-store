@@ -361,7 +361,10 @@
           <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'therapeutic')" aria-pressed="false">Therapeutic &amp; Hair</button>
           <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'value')" aria-pressed="false">Kitchen Value 5L</button>
         </div>
-        <div id="productCarousel" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width:none" role="region" aria-label="Products">
+        <div class="relative">
+          <div class="carousel-fade carousel-fade-l" aria-hidden="true"></div>
+          <div class="carousel-fade carousel-fade-r" aria-hidden="true"></div>
+          <div id="productCarousel" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width:none; scroll-padding:0 16px" role="region" aria-label="Products">
           <article class="product-item card-lift card-img-zoom arch-frame bg-white border border-brand-border flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
             <div class="relative">
               <img src="assets/img/img-02.jpg" alt="Bull Pressed Groundnut Oil" class="w-full h-64 object-cover">
@@ -425,6 +428,7 @@
               <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Sunflower Oil" data-price="800" data-img="assets/img/img-05.jpg" data-desc="Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing." data-badge="Open Pollinated Seeds">Quick View</button>
             </div>
           </article>
+          </div>
         </div>
         <p id="filterEmpty" class="hidden text-center text-sm text-brand-charcoal/60 py-8">No products in this category yet.</p>
         <div class="mt-6 flex items-center justify-center gap-4">

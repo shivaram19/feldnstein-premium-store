@@ -67,3 +67,9 @@
 .js .k-word { display: inline-block; opacity: 0; transform: translateY(.55em) rotate(1.2deg); filter: blur(8px);
   transition: opacity .8s ease, transform .8s cubic-bezier(.22,1,.36,1), filter .8s ease; transition-delay: var(--d, 0s); will-change: transform, opacity, filter; }
 .kinetic-in .k-word { opacity: 1; transform: none; filter: none; }
+
+/* ===== Carousel edge fades (progressive disclosure) ===== */
+.carousel-fade { position: absolute; top: 0; bottom: 1rem; width: 4rem; z-index: 5; pointer-events: none; opacity: 0; transition: opacity .35s ease; }
+.carousel-fade-l { left: 0; background: linear-gradient(to right, #fff, transparent); }
+.carousel-fade-r { right: 0; background: linear-gradient(to left, #fff, transparent); }
+.carousel-fade.show { opacity: 1; }

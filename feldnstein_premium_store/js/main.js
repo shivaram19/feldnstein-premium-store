@@ -134,7 +134,12 @@ carouselTrack.addEventListener('scroll', () => {
   if (max <= 0) return;
   const idx = Math.min(carouselDots.length - 1, Math.floor((carouselTrack.scrollLeft / max) * carouselDots.length));
   syncDots(idx);
+  const fadeL = document.querySelector('.carousel-fade-l');
+  const fadeR = document.querySelector('.carousel-fade-r');
+  if (fadeL) fadeL.classList.toggle('show', carouselTrack.scrollLeft > 8);
+  if (fadeR) fadeR.classList.toggle('show', carouselTrack.scrollLeft < max - 8);
 }, { passive: true });
+carouselTrack.dispatchEvent(new Event('scroll'));
 
 // --- Category filter ---
 window.filterProducts = (btn, category) => {
