@@ -77,11 +77,12 @@ if (!prefersReduced) {
   document.querySelectorAll('[data-reveal]').forEach(el => el.classList.add('is-revealed'));
 }
 
-// --- Hero video: respect reduced motion (poster frame stays visible) ---
-const heroVideo = document.getElementById('heroVideo');
-if (prefersReduced && heroVideo) {
-  heroVideo.removeAttribute('autoplay');
-  heroVideo.pause();
+// --- Ambient videos: respect reduced motion (poster/static frame stays) ---
+if (prefersReduced) {
+  document.querySelectorAll('video.ambient-video').forEach(v => {
+    v.removeAttribute('autoplay');
+    v.pause();
+  });
 }
 
 // --- Carousel ---
