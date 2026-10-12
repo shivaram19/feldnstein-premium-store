@@ -63,31 +63,33 @@
     </div>
   </header>
   <main>
-  <section id="hero" class="relative w-full min-h-[88vh] flex items-center overflow-hidden bg-brand-ivory">
-    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-24 w-full">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-        <div class="lg:col-span-7 relative" data-reveal>
-          <div class="section-label"><span class="material-symbols-outlined text-sm">eco</span> Farm-Direct · Lab-Tested · Small Batch</div>
-          <h1 class="font-serif font-medium text-brand-forest tracking-tight text-[2.5rem] leading-[1.1] sm:text-6xl lg:text-[4.25rem] lg:leading-[1.05]">
-            Where tradition meets <em class="italic font-normal text-brand-ochre">purity.</em>
-          </h1>
-          <p class="mt-6 text-base sm:text-lg text-brand-charcoal/85 leading-relaxed max-w-md">Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.</p>
-          <div class="mt-8 flex flex-wrap items-center gap-4">
-            <a href="#collection" class="btn btn-primary">Shop the Reserve <span class="material-symbols-outlined text-base">arrow_forward</span></a>
-            <a href="#matrix" class="btn btn-ghost">Our Standard</a>
-          </div>
+  <section id="hero" class="relative w-full min-h-[100svh] flex items-center overflow-hidden bg-brand-forestDark">
+    <video id="heroVideo" class="ambient-video absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline preload="metadata" poster="assets/video/hero-cinematic-poster.jpg" aria-label="Bulls circling the traditional gaanuga oil press at the Mothadaka farm">
+      <source src="assets/video/hero-cinematic.mp4" type="video/mp4">
+      <img src="assets/video/hero-cinematic-poster.jpg" alt="Bulls circling the traditional gaanuga oil press at the Mothadaka farm" class="absolute inset-0 w-full h-full object-cover">
+    </video>
+    <div class="absolute inset-0 bg-gradient-to-r from-brand-forestDark/95 via-brand-forestDark/70 to-brand-forestDark/25 pointer-events-none"></div>
+    <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-forestDark/70 to-transparent pointer-events-none"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-28 lg:py-36 w-full">
+      <div class="max-w-3xl">
+        <div class="section-label" data-reveal><span class="material-symbols-outlined text-sm">eco</span> Farm-Direct · Lab-Tested · Small Batch</div>
+        <h1 id="heroTitle" data-kinetic class="font-serif font-medium text-white tracking-tight text-[3rem] leading-[1.02] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.98] mt-4">
+          Where tradition meets <em class="italic font-normal text-brand-ochre">purity.</em>
+        </h1>
+        <p class="mt-8 text-base sm:text-lg text-white/80 leading-relaxed max-w-md" data-reveal>Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.</p>
+        <div class="mt-10 flex flex-wrap items-center gap-4" data-reveal>
+          <a href="#collection" class="btn btn-gold">Shop the Reserve <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+          <a href="#matrix" class="btn btn-ghost-light">Our Standard</a>
         </div>
-        <div class="lg:col-span-5 relative" data-reveal>
-          <div class="arch-frame card-img-zoom">
-            <video id="heroVideo" class="ambient-video w-full h-[420px] lg:h-[560px] object-cover" autoplay muted loop playsinline preload="metadata" poster="assets/img/img-01.jpg" aria-label="Bulls harnessed to the traditional gaanuga oil press at the farm">
-              <source src="assets/video/hero-loop.mp4" type="video/mp4">
-              <img src="assets/img/img-01.jpg" alt="Traditional bull-pressed Vedic Gaanuga mill" class="w-full h-[420px] lg:h-[560px] object-cover">
-            </video>
-          </div>
-          <div class="absolute bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-8 lg:translate-x-0 flex items-center gap-2 bg-white rounded-full pl-2 pr-4 py-1.5 shadow-[0_8px_24px_-4px_rgba(24,78,50,0.06)]">
+        <div class="mt-12 flex flex-wrap items-center gap-3" data-reveal>
+          <span class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
             <span class="material-symbols-outlined text-brand-ochre text-xl">verified</span>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-brand-forest">Lab Verified · Batch 042</span>
-          </div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-white">Lab Verified · Batch 042</span>
+          </span>
+          <span class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
+            <span class="material-symbols-outlined text-brand-ochre text-xl">shield</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-white">FSSAI Certified Mill</span>
+          </span>
         </div>
       </div>
     </div>

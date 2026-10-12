@@ -85,6 +85,33 @@ if (prefersReduced) {
   });
 }
 
+// --- Kinetic typography: split hero headline into staggered words ---
+if (!prefersReduced) {
+  document.querySelectorAll('[data-kinetic]').forEach(el => {
+    const wrap = node => {
+      [...node.childNodes].forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const frag = document.createDocumentFragment();
+          child.textContent.split(/(\s+)/).forEach(part => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            const w = document.createElement('span');
+            w.className = 'k-word';
+            w.textContent = part;
+            frag.appendChild(w);
+          });
+          node.replaceChild(frag, child);
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          wrap(child);
+        }
+      });
+    };
+    wrap(el);
+    el.querySelectorAll('.k-word').forEach((w, i) => w.style.setProperty('--d', `${0.15 + i * 0.09}s`));
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('kinetic-in')));
+  });
+}
+
 // --- Carousel ---
 window.scrollCarousel = dir => {
   const track = document.getElementById('productCarousel');

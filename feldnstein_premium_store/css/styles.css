@@ -58,3 +58,12 @@
 /* ===== Scrollspy active nav link ===== */
 .nav-link.text-brand-forest { position: relative; }
 .nav-link.text-brand-forest::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; border-radius: 2px; background: var(--ochre); }
+
+/* ===== Ghost button for dark surfaces ===== */
+.btn-ghost-light { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.55); }
+.btn-ghost-light:hover { background: #fff; color: var(--forest); border-color: #fff; }
+
+/* ===== Kinetic typography (hero headline) ===== */
+.js .k-word { display: inline-block; opacity: 0; transform: translateY(.55em) rotate(1.2deg); filter: blur(8px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.22,1,.36,1), filter .8s ease; transition-delay: var(--d, 0s); will-change: transform, opacity, filter; }
+.kinetic-in .k-word { opacity: 1; transform: none; filter: none; }
