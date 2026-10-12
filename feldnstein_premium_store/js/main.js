@@ -41,21 +41,32 @@ document.addEventListener('click', e => {
 
 // --- Scrollspy ---
 // dedupe: desktop + mobile navs share hrefs.
+// Scroll-position based: unlike an IntersectionObserver, this can represent
+// "no section yet" — at the hero (above the first nav target) nothing is highlighted.
 const navLinks = document.querySelectorAll('.nav-link');
-const spyTargets = [...new Set([...navLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean))];
-const spy = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      navLinks.forEach(a => {
-        const active = a.getAttribute('href') === '#' + e.target.id;
-        a.classList.toggle('text-brand-forest', active);
-        if (active) a.setAttribute('aria-current', 'location');
-        else a.removeAttribute('aria-current');
-      });
-    }
+const spyTargets = [...new Set([...navLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean))]
+  .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+let spyTicking = false;
+function updateSpy() {
+  spyTicking = false;
+  const probe = window.scrollY + window.innerHeight * 0.38;
+  let currentId = null;
+  for (const t of spyTargets) {
+    if (t.getBoundingClientRect().top + window.scrollY <= probe) currentId = t.id;
+  }
+  navLinks.forEach(a => {
+    const active = '#' + currentId === a.getAttribute('href');
+    a.classList.toggle('text-brand-forest', active);
+    if (active) a.setAttribute('aria-current', 'location');
+    else a.removeAttribute('aria-current');
   });
-}, { rootMargin: '-40% 0px -55% 0px' });
-spyTargets.forEach(t => spy.observe(t));
+}
+function onSpyScroll() {
+  if (!spyTicking) { spyTicking = true; requestAnimationFrame(updateSpy); }
+}
+window.addEventListener('scroll', onSpyScroll, { passive: true });
+window.addEventListener('resize', onSpyScroll);
+updateSpy();
 
 // --- Scroll reveal (peak-end micro-interaction) ---
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
