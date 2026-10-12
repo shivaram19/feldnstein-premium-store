@@ -107,103 +107,11 @@
         <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> Direct From Mothadaka Farm</span>
       </div>
     </div>
-    <section id="collection" class="py-20 lg:py-24">
-      <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="section-head" data-reveal>
-          <div class="hairline-rule"></div>
-          <div class="section-label">01 — The Absolute Reserve</div>
-          <h2 class="section-title">The <em>absolute</em> reserve collection</h2>
-          <p class="section-sub">Five pure cold-pressed oils, hand-harvested and stone-milled within 24 hours of extraction.</p>
-        </div>
-        <div class="flex flex-wrap justify-center gap-3 mb-10">
-          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors bg-brand-forest text-white" onclick="filterProducts(this, 'all')" aria-pressed="true">All Oils</button>
-          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'staples')" aria-pressed="false">Cooking Staples</button>
-          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'therapeutic')" aria-pressed="false">Therapeutic &amp; Hair</button>
-          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'value')" aria-pressed="false">Kitchen Value 5L</button>
-        </div>
-        <div id="productCarousel" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width:none" role="region" aria-label="Products">
-          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
-            <div class="relative">
-              <img src="assets/img/img-02.jpg" alt="Bull Pressed Groundnut Oil" class="w-full h-64 object-cover">
-              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Single-Origin Harvest</span>
-            </div>
-            <div class="p-6 flex flex-col flex-1 text-center">
-              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Groundnut Oil</h3>
-              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga.</p>
-              <div class="mt-4 flex items-baseline justify-center gap-2">
-                <span class="font-serif text-xl font-bold text-brand-forest">₹625</span>
-                <span class="text-xs text-brand-charcoal/50">Range: ₹625 – ₹3,000</span>
-              </div>
-              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Groundnut Oil" data-price="625">Add to Reserve Cart</button>
-              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Groundnut Oil" data-price="625" data-img="assets/img/img-02.jpg" data-desc="Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga." data-badge="Single-Origin Harvest">Quick View</button>
-            </div>
-          </article>
-          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples therapeutic" data-reveal>
-            <div class="relative">
-              <img src="assets/img/img-03.jpg" alt="Bull Pressed Coconut (Copra) Oil" class="w-full h-64 object-cover">
-              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Sun-Dried Copra</span>
-            </div>
-            <div class="p-6 flex flex-col flex-1 text-center">
-              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Coconut (Copra) Oil</h3>
-              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather.</p>
-              <div class="mt-4 flex items-baseline justify-center gap-2">
-                <span class="font-serif text-xl font-bold text-brand-forest">₹600</span>
-              </div>
-              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600">Add to Reserve Cart</button>
-              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600" data-img="assets/img/img-03.jpg" data-desc="Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather." data-badge="Sun-Dried Copra">Quick View</button>
-            </div>
-          </article>
-          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="therapeutic" data-reveal>
-            <div class="relative">
-              <img src="assets/img/img-04.jpg" alt="Bull Pressed Black Sesame Oil" class="w-full h-64 object-cover">
-              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Ayurvedic Grade</span>
-            </div>
-            <div class="p-6 flex flex-col flex-1 text-center">
-              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Black Sesame Oil</h3>
-              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Crushed slowly from native black sesame seeds with natural palm jaggery binding.</p>
-              <div class="mt-4 flex items-baseline justify-center gap-2">
-                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
-                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
-              </div>
-              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Black Sesame Oil" data-price="800">Add to Reserve Cart</button>
-              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Black Sesame Oil" data-price="800" data-img="assets/img/img-04.jpg" data-desc="Crushed slowly from native black sesame seeds with natural palm jaggery binding." data-badge="Ayurvedic Grade">Quick View</button>
-            </div>
-          </article>
-          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
-            <div class="relative">
-              <img src="assets/img/img-05.jpg" alt="Bull Pressed Sunflower Oil" class="w-full h-64 object-cover">
-              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Open Pollinated Seeds</span>
-            </div>
-            <div class="p-6 flex flex-col flex-1 text-center">
-              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Sunflower Oil</h3>
-              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing.</p>
-              <div class="mt-4 flex items-baseline justify-center gap-2">
-                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
-                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
-              </div>
-              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Sunflower Oil" data-price="800">Add to Reserve Cart</button>
-              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Sunflower Oil" data-price="800" data-img="assets/img/img-05.jpg" data-desc="Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing." data-badge="Open Pollinated Seeds">Quick View</button>
-            </div>
-          </article>
-        </div>
-        <p id="filterEmpty" class="hidden text-center text-sm text-brand-charcoal/60 py-8">No products in this category yet.</p>
-        <div class="mt-6 flex items-center justify-center gap-4">
-          <button onclick="scrollCarousel(-1)" aria-label="Previous products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_back</span></button>
-          <div id="carouselDots" class="flex items-center gap-1.5" aria-hidden="true">
-            <span class="w-6 h-1.5 rounded-full bg-brand-forest transition-all"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
-          </div>
-          <button onclick="scrollCarousel(1)" aria-label="Next products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_forward</span></button>
-        </div>
-      </div>
-    </section>
     <section id="process" class="py-20 lg:py-24 bg-brand-warmCard border-y border-brand-border">
       <div class="max-w-7xl mx-auto px-6 lg:px-12">
         <div class="section-head" data-reveal>
           <div class="hairline-rule"></div>
-          <div class="section-label"><span class="material-symbols-outlined text-sm">history_edu</span> 02 — From Native Seeds to Culinary Gold</div>
+          <div class="section-label"><span class="material-symbols-outlined text-sm">history_edu</span> 01 — From Native Seeds to Culinary Gold</div>
           <h2 class="section-title">From Native Seed to <em>Apothecary Bottle</em></h2>
           <p class="section-sub">An ancient Gaanuga sequence that refuses modern shortcuts. Here is exactly how your oil is born.</p>
         </div>
@@ -309,7 +217,7 @@
         <div class="max-w-5xl mx-auto" data-reveal>
           <div class="section-head">
             <div class="hairline-rule"></div>
-            <div class="section-label"><span class="material-symbols-outlined text-sm">balance</span> Strict Transparency</div>
+            <div class="section-label"><span class="material-symbols-outlined text-sm">balance</span> 02 — Strict Transparency</div>
             <h2 class="section-title">What Goes Into Your Cooking <em>Matters</em></h2>
             <p class="section-sub">Industrial commercial oils prioritize infinite shelf-life over bioavailability. Compare the essential truth side-by-side.</p>
           </div>
@@ -436,6 +344,98 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+    <section id="collection" class="py-20 lg:py-24">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="section-head" data-reveal>
+          <div class="hairline-rule"></div>
+          <div class="section-label">03 — The Absolute Reserve</div>
+          <h2 class="section-title">The <em>absolute</em> reserve collection</h2>
+          <p class="section-sub">Five pure cold-pressed oils, hand-harvested and stone-milled within 24 hours of extraction.</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 mb-10">
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors bg-brand-forest text-white" onclick="filterProducts(this, 'all')" aria-pressed="true">All Oils</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'staples')" aria-pressed="false">Cooking Staples</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'therapeutic')" aria-pressed="false">Therapeutic &amp; Hair</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'value')" aria-pressed="false">Kitchen Value 5L</button>
+        </div>
+        <div id="productCarousel" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width:none" role="region" aria-label="Products">
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
+            <div class="relative">
+              <img src="assets/img/img-02.jpg" alt="Bull Pressed Groundnut Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Single-Origin Harvest</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Groundnut Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹625</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹625 – ₹3,000</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Groundnut Oil" data-price="625">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Groundnut Oil" data-price="625" data-img="assets/img/img-02.jpg" data-desc="Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga." data-badge="Single-Origin Harvest">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples therapeutic" data-reveal>
+            <div class="relative">
+              <img src="assets/img/img-03.jpg" alt="Bull Pressed Coconut (Copra) Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Sun-Dried Copra</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Coconut (Copra) Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹600</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600" data-img="assets/img/img-03.jpg" data-desc="Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather." data-badge="Sun-Dried Copra">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="therapeutic" data-reveal>
+            <div class="relative">
+              <img src="assets/img/img-04.jpg" alt="Bull Pressed Black Sesame Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Ayurvedic Grade</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Black Sesame Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Crushed slowly from native black sesame seeds with natural palm jaggery binding.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Black Sesame Oil" data-price="800">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Black Sesame Oil" data-price="800" data-img="assets/img/img-04.jpg" data-desc="Crushed slowly from native black sesame seeds with natural palm jaggery binding." data-badge="Ayurvedic Grade">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
+            <div class="relative">
+              <img src="assets/img/img-05.jpg" alt="Bull Pressed Sunflower Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Open Pollinated Seeds</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Sunflower Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Sunflower Oil" data-price="800">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Sunflower Oil" data-price="800" data-img="assets/img/img-05.jpg" data-desc="Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing." data-badge="Open Pollinated Seeds">Quick View</button>
+            </div>
+          </article>
+        </div>
+        <p id="filterEmpty" class="hidden text-center text-sm text-brand-charcoal/60 py-8">No products in this category yet.</p>
+        <div class="mt-6 flex items-center justify-center gap-4">
+          <button onclick="scrollCarousel(-1)" aria-label="Previous products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_back</span></button>
+          <div id="carouselDots" class="flex items-center gap-1.5" aria-hidden="true">
+            <span class="w-6 h-1.5 rounded-full bg-brand-forest transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+          </div>
+          <button onclick="scrollCarousel(1)" aria-label="Next products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_forward</span></button>
         </div>
       </div>
     </section>
