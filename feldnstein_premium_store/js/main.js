@@ -85,6 +85,24 @@ if (prefersReduced) {
   });
 }
 
+// --- Lazy-activate below-fold ambient videos (keeps initial load light) ---
+if (!prefersReduced && 'IntersectionObserver' in window) {
+  const videoLoader = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const v = e.target;
+      const srcEl = v.querySelector('source[data-src]');
+      if (srcEl) {
+        srcEl.src = srcEl.dataset.src;
+        v.load();
+        v.play().catch(() => {});
+      }
+      videoLoader.unobserve(v);
+    });
+  }, { rootMargin: '300px' });
+  document.querySelectorAll('video.ambient-video[data-lazy]').forEach(v => videoLoader.observe(v));
+}
+
 // --- Kinetic typography: split hero headline into staggered words ---
 if (!prefersReduced) {
   document.querySelectorAll('[data-kinetic]').forEach(el => {
