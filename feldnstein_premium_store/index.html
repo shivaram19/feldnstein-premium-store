@@ -160,11 +160,71 @@
               <path d="M 186 284 A 235 235 0 0 1 375 146" marker-end="url(#flow-arrow)"/>
             </g>
             <circle cx="400" cy="380" r="108" stroke="#c59b27" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.85" fill="none"/>
-            <path d="M 336 396 a 64 46 0 0 0 128 0" fill="#184e32" fill-opacity="0.1" stroke="#184e32" stroke-width="7" stroke-linecap="round"/>
-            <rect x="394" y="312" width="12" height="74" rx="6" fill="#184e32"/>
-            <path d="M 400 318 L 470 340" stroke="#184e32" stroke-width="10" stroke-linecap="round" fill="none"/>
-            <text x="400" y="462" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="18" font-weight="600" fill="#184e32">Bull Pressed</text>
-            <text x="400" y="482" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" letter-spacing="2.5" fill="#717972">3 RPM · STONE CHURN</text>
+            <!-- Fixed central press -->
+            <g id="ghani-press">
+              <path d="M336 396 A64 46 0 0 0 464 396" fill="#184e32" fill-opacity=".10" stroke="#184e32" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="400" cy="380" r="10" fill="#C59B27" stroke="#184e32" stroke-width="3"/>
+              <path d="M400 380 L400 324" stroke="#184e32" stroke-width="12" stroke-linecap="round"/>
+            </g>
+            <!-- Entire bull + beam orbit around the press, counter-clockwise (driven by js/main.js) -->
+            <g id="bull-orbit">
+              <g transform="translate(400 380) scale(0.85) translate(-400 -380)">
+                <!-- Wooden beam: shaft to bull harness -->
+                <path d="M400 380 L400 235" stroke="#6D4527" stroke-width="14" stroke-linecap="round" fill="none"/>
+                <path d="M400 380 L400 235" stroke="#B7834D" stroke-width="5" stroke-linecap="round" fill="none"/>
+                <!-- Bull faces along the circular walking direction -->
+                <g id="bull" transform="translate(400 235)">
+                  <!-- Far hind leg -->
+                  <g id="leg-hind-far">
+                    <path d="M43 15 L47 35 L42 53 L49 56 L57 53 L56 34 L53 13 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                    <path d="M42 52 L51 52 L54 59 L41 59 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Near hind leg -->
+                  <g id="leg-hind-near">
+                    <path d="M58 17 L60 37 L66 53 L60 57 L53 52 L51 35 L49 15 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                    <path d="M54 52 L63 52 L66 59 L54 59 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Far front leg -->
+                  <g id="leg-front-far">
+                    <path d="M10 13 L13 34 L8 52 L15 56 L22 52 L22 33 L20 11 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                    <path d="M8 51 L17 51 L20 58 L7 58 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Near front leg -->
+                  <g id="leg-front-near">
+                    <path d="M25 14 L28 34 L31 52 L24 56 L17 52 L17 34 L15 12 Z" fill="#E0C79D" stroke="#694222" stroke-width="2"/>
+                    <path d="M19 51 L28 51 L31 58 L18 58 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Unified body silhouette -->
+                  <path d="M-3 1 C1 -13 15 -20 30 -18 C42 -17 52 -11 64 -8 C78 -4 88 7 86 20 C83 34 70 40 53 37 L18 33 C5 30 -3 17 -3 1 Z" fill="#C9A779" stroke="#694222" stroke-width="2"/>
+                  <!-- Zebu shoulder hump -->
+                  <path d="M-2 9 C-13 -3 -7 -23 7 -28 C20 -32 30 -19 29 -6 L19 17 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                  <!-- Neck -->
+                  <path d="M-4 -9 C-14 -18 -13 -34 -3 -42 C8 -49 22 -39 24 -27 L17 -6 L8 7 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                  <!-- Head -->
+                  <path d="M-6 -36 C-19 -40 -24 -51 -16 -59 L-1 -63 L13 -55 L15 -43 L6 -33 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                  <!-- Muzzle -->
+                  <path d="M-19 -51 Q-30 -54 -29 -44 Q-26 -34 -13 -37 L-5 -43 L-8 -51 Z" fill="#8B5A2B" stroke="#694222" stroke-width="1.5"/>
+                  <!-- Horns -->
+                  <path d="M-14 -57 Q-29 -69 -23 -76 Q-12 -69 -7 -57 Z" fill="#F5EBDC" stroke="#694222" stroke-width="1.5"/>
+                  <path d="M4 -59 Q18 -73 14 -78 Q3 -70 -2 -59 Z" fill="#F5EBDC" stroke="#694222" stroke-width="1.5"/>
+                  <!-- Ear and eye -->
+                  <path d="M-9 -44 Q-27 -49 -24 -39 L-10 -34 Z" fill="#A87946" stroke="#694222" stroke-width="1.5"/>
+                  <circle cx="-13" cy="-48" r="2.2" fill="#184E32"/>
+                  <circle cx="-13" cy="-48" r=".8" fill="#FFFFFF"/>
+                  <!-- Tail -->
+                  <path d="M78 7 Q99 13 91 30" fill="none" stroke="#694222" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M91 29 Q84 36 92 40 Q99 34 91 29 Z" fill="#49372A"/>
+                  <!-- Harness around shoulder, attached at the beam origin -->
+                  <path d="M-1 -5 Q-3 8 5 19" fill="none" stroke="#694222" stroke-width="7" stroke-linecap="round"/>
+                  <path d="M-3 0 L5 3" fill="none" stroke="#E0BD83" stroke-width="2"/>
+                  <!-- Harness attachment -->
+                  <circle cx="0" cy="0" r="8" fill="#8B5A2B" stroke="#694222" stroke-width="2"/>
+                  <circle cx="0" cy="0" r="3" fill="#E5C58C"/>
+                </g>
+              </g>
+            </g>
+            <text x="400" y="462" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="18" font-weight="600" fill="#184e32" stroke="#ffffff" stroke-width="6" paint-order="stroke">Bull Pressed</text>
+            <text x="400" y="482" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" letter-spacing="2.5" fill="#717972" stroke="#ffffff" stroke-width="5" paint-order="stroke">3 RPM · STONE CHURN</text>
             <g>
               <circle cx="400" cy="145" r="19" fill="#184e32"/>
               <text x="400" y="150" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">01</text>
@@ -306,7 +366,7 @@
         <p class="mt-8 text-sm sm:text-base text-white/60 max-w-xl mx-auto leading-relaxed">Every batch rests a full 48 hours before it reaches your kitchen. Nothing is rushed, because nothing needs to be.</p>
       </div>
     </section>
-    <section id="matrix" class="pt-32 lg:pt-40 pb-20 lg:pb-24 bg-brand-warmCard">
+    <section id="matrix" class="py-20 lg:py-24 bg-brand-warmCard">
       <div class="max-w-7xl mx-auto px-6 lg:px-12">
         <div class="max-w-5xl mx-auto" data-reveal>
           <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 mb-14">
@@ -316,7 +376,6 @@
               <h2 class="section-title !text-left">What Goes Into Your Cooking <em>Matters</em></h2>
               <p class="section-sub !mt-3">Industrial commercial oils prioritize infinite shelf-life over bioavailability. Compare the essential truth side-by-side.</p>
             </div>
-            <img src="assets/img/illustration-press.jpg" alt="Traditional bull-driven gaanuga press with sesame, groundnuts and coconut" width="510" height="404" class="w-52 sm:w-64 lg:w-72 mix-blend-multiply flex-shrink-0 self-center lg:self-end" loading="lazy">
           </div>
           <div class="bg-white rounded-3xl border border-brand-border shadow-sm overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-12 border-b border-brand-border">

@@ -1,4 +1,3 @@
-node_modules/
-.DS_Store
-BULLS.rar
-BULLS/
+# Default ignored files
+/shelf/
+/workspace.xml

@@ -245,3 +245,98 @@ window.quickAddProduct = (name, price) => {
 };
 document.querySelectorAll('.quick-add').forEach(b =>
   b.addEventListener('click', () => quickAddProduct(b.dataset.name, b.dataset.price)));
+
+// --- Bull-driven ghani: orbit + walking legs (requestAnimationFrame) ---
+(() => {
+  const orbit = document.getElementById("bull-orbit");
+
+  if (!orbit) {
+    console.warn("Bull orbit element not found.");
+    return;
+  }
+
+  const legs = [
+    { id: "leg-front-far",  x: 15, y: 13, phase: 0 },
+    { id: "leg-hind-near",  x: 55, y: 15, phase: 0 },
+    { id: "leg-front-near", x: 21, y: 13, phase: Math.PI },
+    { id: "leg-hind-far",   x: 48, y: 15, phase: Math.PI }
+  ];
+
+  const animatedLegs = legs.map(leg => ({
+    ...leg,
+    element: document.getElementById(leg.id)
+  }));
+
+  if (animatedLegs.some(leg => !leg.element)) {
+    console.warn("One or more bull leg elements are missing.");
+    return;
+  }
+
+  const orbitDuration = 20000; // one lap = 3 RPM
+  const walkDuration = 1100;   // trot cycle
+  const swingAngle = 22;       // forward/backward leg swing
+  const liftHeight = 3.5;      // subtle hoof lift in SVG units
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  let startTime = null;
+  let frameId = null;
+
+  function animate(timestamp) {
+    if (startTime === null) startTime = timestamp;
+
+    const elapsed = timestamp - startTime;
+
+    // Bull and wooden beam orbit the press together (counter-clockwise).
+    const angle = (elapsed % orbitDuration) / orbitDuration * 360;
+
+    orbit.setAttribute("transform", `rotate(${-angle} 400 380)`);
+
+    // Animate alternating diagonal pairs so the bull appears to trot.
+    const cycle = elapsed / walkDuration * Math.PI * 2;
+
+    animatedLegs.forEach(leg => {
+      const stride = cycle + leg.phase;
+
+      // Swing the leg forward and backward around its hip.
+      const swing = Math.sin(stride) * swingAngle;
+
+      // Lift the hoof during the forward swing.
+      const lift = Math.max(0, Math.sin(stride)) * liftHeight;
+
+      leg.element.setAttribute(
+        "transform",
+        `translate(0 ${-lift}) rotate(${swing} ${leg.x} ${leg.y})`
+      );
+    });
+
+    frameId = requestAnimationFrame(animate);
+  }
+
+  function stop() {
+    if (frameId !== null) {
+      cancelAnimationFrame(frameId);
+      frameId = null;
+    }
+  }
+
+  function start() {
+    stop();
+    startTime = null;
+
+    if (reducedMotion.matches) {
+      orbit.setAttribute("transform", "rotate(0 400 380)");
+
+      animatedLegs.forEach(leg => {
+        leg.element.removeAttribute("transform");
+      });
+
+      return;
+    }
+
+    frameId = requestAnimationFrame(animate);
+  }
+
+  reducedMotion.addEventListener("change", start);
+  start();
+})();
