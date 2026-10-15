@@ -340,3 +340,22 @@ document.querySelectorAll('.quick-add').forEach(b =>
   reducedMotion.addEventListener("change", start);
   start();
 })();
+
+// --- Process diagram: clickable SVG steps scroll to the matching process card ---
+// Steps 01 + 02 both land on the first card (sourcing covers seed prep);
+// 03 -> second, 04 -> third, 05 -> fourth.
+const processStepTargets = { 1: 1, 2: 1, 3: 2, 4: 3, 5: 4 };
+window.goToProcessStep = step => {
+  const card = document.getElementById(`process-step-${processStepTargets[step]}`);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+document.querySelectorAll('[data-process-step]').forEach(el => {
+  const activate = () => window.goToProcessStep(Number(el.dataset.processStep));
+  el.addEventListener('click', activate);
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      activate();
+    }
+  });
+});

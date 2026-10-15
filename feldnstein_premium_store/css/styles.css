@@ -73,3 +73,15 @@
 .carousel-fade-l { left: 0; background: linear-gradient(to right, #fff, transparent); }
 .carousel-fade-r { right: 0; background: linear-gradient(to left, #fff, transparent); }
 .carousel-fade.show { opacity: 1; }
+
+/* Process diagram: interactive SVG steps (click + keyboard) */
+.process-step {
+  cursor: pointer;
+}
+.process-step:focus {
+  outline: none;
+}
+.process-step:focus-visible {
+  outline: 2px solid #c59b27;
+  outline-offset: 8px;
+}
