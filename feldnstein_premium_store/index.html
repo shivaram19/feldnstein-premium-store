@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" sizes="180x180" href="assets/img/favicon-180.png">
+  <link rel="apple-touch-icon" href="assets/img/favicon-180.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FELD·N·STEIN">
+  <meta property="og:url" content="https://shivaram19.github.io/feldnstein-premium-store/feldnstein_premium_store/">
+  <meta property="og:title" content="FELD·N·STEIN — Purity, Verified at the Source">
+  <meta property="og:description" content="Bull-pressed artisanal oils from the Mothadaka farm. No heat. No chemicals. Lab-tested batches.">
+  <meta property="og:image" content="https://shivaram19.github.io/feldnstein-premium-store/feldnstein_premium_store/assets/img/logo-green.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FELD·N·STEIN — Purity, Verified at the Source">
+  <meta name="twitter:description" content="Bull-pressed artisanal oils from the Mothadaka farm. No heat. No chemicals. Lab-tested batches.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FELD·N·STEIN",
+    "description": "Bull-pressed artisanal oils and farm-direct staples from the Mothadaka heritage farmstead. No heat, no chemicals, lab-tested batches.",
+    "url": "https://shivaram19.github.io/feldnstein-premium-store/",
+    "makesOffer": [
+      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Bull Pressed Groundnut Oil" }, "priceCurrency": "INR", "price": "625" },
+      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Bull Pressed Coconut (Copra) Oil" }, "priceCurrency": "INR", "price": "600" },
+      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Bull Pressed Black Sesame Oil" }, "priceCurrency": "INR", "price": "800" },
+      { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Bull Pressed Sunflower Oil" }, "priceCurrency": "INR", "price": "800" }
+    ]
+  }
+  </script>
+  <title>FELD·N·STEIN — Purity, Verified at the Source</title>
+  <meta name="description" content="Bull-pressed artisanal oils and farm-direct staples. No heat. No chemicals. Lab-tested batches.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              forest: '#184e32', forestDark: '#0d3822', ochre: '#c59b27', ochreDeep: '#b8860b',
+              ivory: '#fcfbf7', warmCard: '#f7f5ee', border: '#e9e5d9',
+              herb: '#246942', rust: '#bc4747', charcoal: '#222522', subtle: '#414942'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="bg-brand-ivory text-brand-charcoal font-sans antialiased">
+  <header id="siteHeader" class="sticky top-0 z-50 border-b transition-all duration-300 bg-brand-ivory/90 backdrop-blur-md border-brand-ochre/15">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12">
+      <div class="flex items-center justify-between h-16 lg:h-20 transition-all duration-300" id="headerInner">
+        <a href="#hero" class="flex items-center gap-2.5 group" aria-label="FELD·N·STEIN home">
+          <span class="w-9 h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden border border-brand-forest/15 shadow-sm flex-none transition-transform duration-300 group-hover:scale-105">
+            <img src="assets/img/logo-green.jpg" alt="" width="40" height="40" class="w-full h-full object-cover">
+          </span>
+          <span class="font-serif text-xl lg:text-2xl font-medium text-brand-forest tracking-[0.12em]">FELD·N·STEIN</span>
+        </a>
+        <nav class="hidden lg:flex items-center gap-8 text-sm font-semibold" aria-label="Primary">
+          <a href="#collection" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Shop</a>
+          <a href="#matrix" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Our Standard</a>
+          <a href="#process" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Journal</a>
+          <a href="#subscription" class="nav-link text-brand-charcoal hover:text-brand-forest transition-colors">Club</a>
+        </nav>
+        <div class="flex items-center gap-3">
+          <button id="cartBtn" class="relative w-10 h-10 rounded-full flex items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors" aria-label="Cart">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            <span id="cartCount" class="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-brand-ochre text-brand-forestDark text-[10px] font-bold hidden items-center justify-center">0</span>
+          </button>
+          <button id="menuBtn" class="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-brand-forest" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+        </div>
+      </div>
+      <div id="mobileMenu" class="lg:hidden hidden pb-4 flex flex-col gap-3 text-sm font-semibold">
+        <a href="#collection" class="nav-link text-brand-charcoal">Shop</a>
+        <a href="#matrix" class="nav-link text-brand-charcoal">Our Standard</a>
+        <a href="#process" class="nav-link text-brand-charcoal">Journal</a>
+        <a href="#subscription" class="nav-link text-brand-charcoal">Club</a>
+      </div>
+    </div>
+  </header>
+  <main>
+  <section id="hero" class="relative w-full min-h-[100svh] flex items-center overflow-hidden bg-brand-forestDark">
+    <video id="heroVideo" class="ambient-video absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline preload="metadata" poster="assets/video/hero-cinematic-poster.jpg" aria-label="Bulls circling the traditional gaanuga oil press at the Mothadaka farm">
+      <source src="assets/video/hero-cinematic.mp4" type="video/mp4">
+      <img src="assets/video/hero-cinematic-poster.jpg" alt="Bulls circling the traditional gaanuga oil press at the Mothadaka farm" class="absolute inset-0 w-full h-full object-cover">
+    </video>
+    <div class="absolute inset-0 bg-gradient-to-r from-brand-forestDark/95 via-brand-forestDark/70 to-brand-forestDark/25 pointer-events-none"></div>
+    <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-forestDark/70 to-transparent pointer-events-none"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-28 lg:py-36 w-full">
+      <div class="max-w-3xl">
+        <div class="section-label" data-reveal><span class="material-symbols-outlined text-sm">eco</span> Farm-Direct · Lab-Tested · Small Batch</div>
+        <h1 id="heroTitle" data-kinetic class="font-serif font-medium text-white tracking-tight text-[3rem] leading-[1.02] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.98] mt-4">
+          Where tradition meets <em class="italic font-normal text-brand-ochre">purity.</em>
+        </h1>
+        <p class="mt-8 text-base sm:text-lg text-white/80 leading-relaxed max-w-md" data-reveal>Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.</p>
+        <div class="mt-10 flex flex-wrap items-center gap-4" data-reveal>
+          <a href="#collection" class="btn btn-gold">Shop the Reserve <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+          <a href="#matrix" class="btn btn-ghost-light">Our Standard</a>
+        </div>
+        <div class="mt-12 flex flex-wrap items-center gap-3" data-reveal>
+          <span class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
+            <span class="material-symbols-outlined text-brand-ochre text-xl">verified</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-white">Lab Verified · Batch 042</span>
+          </span>
+          <span class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
+            <span class="material-symbols-outlined text-brand-ochre text-xl">shield</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-white">FSSAI Certified Mill</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+    <div id="ticker" class="w-full bg-brand-warmCard border-y border-brand-border py-4 overflow-hidden select-none">
+      <div class="max-w-7xl mx-auto px-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs uppercase tracking-widest text-brand-forest font-semibold text-center">
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> 100% Bull Rotated Gaanuga Mill</span>
+        <span class="text-brand-border hidden md:inline">•</span>
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> Zero Chemical Refining</span>
+        <span class="text-brand-border hidden md:inline">•</span>
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> Unrefined &amp; Bleach-Free</span>
+        <span class="text-brand-border hidden md:inline">•</span>
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> Glass Bottle Packaging</span>
+        <span class="text-brand-border hidden md:inline">•</span>
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span> Direct From Mothadaka Farm</span>
+      </div>
+    </div>
+    <section id="process" class="py-20 lg:py-24 bg-white border-y border-brand-border">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="section-head" data-reveal>
+          <div class="hairline-rule"></div>
+          <div class="section-label"><span class="material-symbols-outlined text-sm">history_edu</span> 01 — From Native Seeds to Culinary Gold</div>
+          <h2 class="section-title">From Native Seed to <em>Apothecary Bottle</em></h2>
+          <p class="section-sub">An ancient Gaanuga sequence that refuses modern shortcuts. Here is exactly how your oil is born.</p>
+        </div>
+        <div class="max-w-2xl mx-auto mb-16" data-reveal>
+          <svg viewBox="0 0 800 760" class="w-full h-auto" role="img" aria-label="Five-step process: farm sourced, hand cleaned, bull pressed, cloth filtered, bottled">
+            <defs>
+              <marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#184e32"/>
+              </marker>
+            </defs>
+            <g stroke="#184e32" stroke-width="2" stroke-dasharray="7 8" opacity="0.5" fill="none">
+              <path d="M 425 146 A 235 235 0 0 1 614 284" marker-end="url(#flow-arrow)"/>
+              <path d="M 630 332 A 235 235 0 0 1 558 554" marker-end="url(#flow-arrow)"/>
+              <path d="M 517 584 A 235 235 0 0 1 283 584" marker-end="url(#flow-arrow)"/>
+              <path d="M 242 554 A 235 235 0 0 1 170 332" marker-end="url(#flow-arrow)"/>
+              <path d="M 186 284 A 235 235 0 0 1 375 146" marker-end="url(#flow-arrow)"/>
+            </g>
+            <circle cx="400" cy="380" r="108" stroke="#c59b27" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.85" fill="none"/>
+            <!-- Fixed central press -->
+            <g id="ghani-press">
+              <path d="M336 396 A64 46 0 0 0 464 396" fill="#184e32" fill-opacity=".10" stroke="#184e32" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="400" cy="380" r="10" fill="#C59B27" stroke="#184e32" stroke-width="3"/>
+              <path d="M400 380 L400 324" stroke="#184e32" stroke-width="12" stroke-linecap="round"/>
+            </g>
+            <!-- Entire bull + beam orbit around the press, counter-clockwise (driven by js/main.js) -->
+            <g id="bull-orbit">
+              <g transform="translate(400 380) scale(0.85) translate(-400 -380)">
+                <!-- Wooden beam: shaft to bull harness -->
+                <path d="M400 380 L400 235" stroke="#6D4527" stroke-width="14" stroke-linecap="round" fill="none"/>
+                <path d="M400 380 L400 235" stroke="#B7834D" stroke-width="5" stroke-linecap="round" fill="none"/>
+                <!-- Bull faces along the circular walking direction -->
+                <g id="bull" transform="translate(400 235)">
+                  <!-- Far hind leg -->
+                  <g id="leg-hind-far">
+                    <path d="M43 15 L47 35 L42 53 L49 56 L57 53 L56 34 L53 13 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                    <path d="M42 52 L51 52 L54 59 L41 59 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Near hind leg -->
+                  <g id="leg-hind-near">
+                    <path d="M58 17 L60 37 L66 53 L60 57 L53 52 L51 35 L49 15 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                    <path d="M54 52 L63 52 L66 59 L54 59 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Far front leg -->
+                  <g id="leg-front-far">
+                    <path d="M10 13 L13 34 L8 52 L15 56 L22 52 L22 33 L20 11 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                    <path d="M8 51 L17 51 L20 58 L7 58 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Near front leg -->
+                  <g id="leg-front-near">
+                    <path d="M25 14 L28 34 L31 52 L24 56 L17 52 L17 34 L15 12 Z" fill="#E0C79D" stroke="#694222" stroke-width="2"/>
+                    <path d="M19 51 L28 51 L31 58 L18 58 Z" fill="#49372A"/>
+                  </g>
+                  <!-- Unified body silhouette -->
+                  <path d="M-3 1 C1 -13 15 -20 30 -18 C42 -17 52 -11 64 -8 C78 -4 88 7 86 20 C83 34 70 40 53 37 L18 33 C5 30 -3 17 -3 1 Z" fill="#C9A779" stroke="#694222" stroke-width="2"/>
+                  <!-- Zebu shoulder hump -->
+                  <path d="M-2 9 C-13 -3 -7 -23 7 -28 C20 -32 30 -19 29 -6 L19 17 Z" fill="#A87946" stroke="#694222" stroke-width="2"/>
+                  <!-- Neck -->
+                  <path d="M-4 -9 C-14 -18 -13 -34 -3 -42 C8 -49 22 -39 24 -27 L17 -6 L8 7 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                  <!-- Head -->
+                  <path d="M-6 -36 C-19 -40 -24 -51 -16 -59 L-1 -63 L13 -55 L15 -43 L6 -33 Z" fill="#D8BD91" stroke="#694222" stroke-width="2"/>
+                  <!-- Muzzle -->
+                  <path d="M-19 -51 Q-30 -54 -29 -44 Q-26 -34 -13 -37 L-5 -43 L-8 -51 Z" fill="#8B5A2B" stroke="#694222" stroke-width="1.5"/>
+                  <!-- Horns -->
+                  <path d="M-14 -57 Q-29 -69 -23 -76 Q-12 -69 -7 -57 Z" fill="#F5EBDC" stroke="#694222" stroke-width="1.5"/>
+                  <path d="M4 -59 Q18 -73 14 -78 Q3 -70 -2 -59 Z" fill="#F5EBDC" stroke="#694222" stroke-width="1.5"/>
+                  <!-- Ear and eye -->
+                  <path d="M-9 -44 Q-27 -49 -24 -39 L-10 -34 Z" fill="#A87946" stroke="#694222" stroke-width="1.5"/>
+                  <circle cx="-13" cy="-48" r="2.2" fill="#184E32"/>
+                  <circle cx="-13" cy="-48" r=".8" fill="#FFFFFF"/>
+                  <!-- Tail -->
+                  <path d="M78 7 Q99 13 91 30" fill="none" stroke="#694222" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M91 29 Q84 36 92 40 Q99 34 91 29 Z" fill="#49372A"/>
+                  <!-- Harness around shoulder, attached at the beam origin -->
+                  <path d="M-1 -5 Q-3 8 5 19" fill="none" stroke="#694222" stroke-width="7" stroke-linecap="round"/>
+                  <path d="M-3 0 L5 3" fill="none" stroke="#E0BD83" stroke-width="2"/>
+                  <!-- Harness attachment -->
+                  <circle cx="0" cy="0" r="8" fill="#8B5A2B" stroke="#694222" stroke-width="2"/>
+                  <circle cx="0" cy="0" r="3" fill="#E5C58C"/>
+                </g>
+              </g>
+            </g>
+            <text x="400" y="462" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="18" font-weight="600" fill="#184e32" stroke="#ffffff" stroke-width="6" paint-order="stroke">Bull Pressed</text>
+            <text x="400" y="482" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" letter-spacing="2.5" fill="#717972" stroke="#ffffff" stroke-width="5" paint-order="stroke">3 RPM · STONE CHURN</text>
+            <g class="process-step" data-process-step="1" role="button" tabindex="0" aria-label="Step 01 — Farm sourced: scroll to process card">
+              <circle cx="400" cy="145" r="19" fill="#184e32"/>
+              <text x="400" y="150" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">01</text>
+              <text x="400" y="100" text-anchor="middle" font-family="Newsreader, Georgia, serif" font-size="17" font-weight="600" fill="#184e32">FARM SOURCED</text>
+              <text x="400" y="118" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" letter-spacing="1" fill="#717972">GUNTUR TERRACES</text>
+            </g>
+            <g class="process-step" data-process-step="2" role="button" tabindex="0" aria-label="Step 02 — Hand cleaned: scroll to process card">
+              <circle cx="624" cy="307" r="19" fill="#184e32"/>
+              <text x="624" y="312" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">02</text>
+              <text x="652" y="300" text-anchor="start" font-family="Newsreader, Georgia, serif" font-size="17" font-weight="600" fill="#184e32">HAND CLEANED</text>
+              <text x="652" y="318" text-anchor="start" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" letter-spacing="1" fill="#717972">HAND-CLEANED SEEDS</text>
+            </g>
+            <g class="process-step" data-process-step="3" role="button" tabindex="0" aria-label="Step 03 — Bull pressed: scroll to process card">
+              <circle cx="538" cy="570" r="19" fill="#c59b27"/>
+              <text x="538" y="575" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">03</text>
+              <text x="558" y="596" text-anchor="start" font-family="Newsreader, Georgia, serif" font-size="17" font-weight="600" fill="#184e32">BULL PRESSED</text>
+              <text x="558" y="614" text-anchor="start" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" letter-spacing="1" fill="#717972">GIR BULL CHURN</text>
+            </g>
+            <g class="process-step" data-process-step="4" role="button" tabindex="0" aria-label="Step 04 — Cloth filtered: scroll to process card">
+              <circle cx="262" cy="570" r="19" fill="#184e32"/>
+              <text x="262" y="575" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">04</text>
+              <text x="242" y="596" text-anchor="end" font-family="Newsreader, Georgia, serif" font-size="17" font-weight="600" fill="#184e32">CLOTH FILTERED</text>
+              <text x="242" y="614" text-anchor="end" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" letter-spacing="1" fill="#717972">48-HR SETTLING</text>
+            </g>
+            <g class="process-step" data-process-step="5" role="button" tabindex="0" aria-label="Step 05 — Bottled: scroll to process card">
+              <circle cx="176" cy="307" r="19" fill="#184e32"/>
+              <text x="176" y="312" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#ffffff">05</text>
+              <text x="148" y="300" text-anchor="end" font-family="Newsreader, Georgia, serif" font-size="17" font-weight="600" fill="#184e32">BOTTLED</text>
+              <text x="148" y="318" text-anchor="end" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" letter-spacing="1" fill="#717972">APOTHECARY GRADE</text>
+            </g>
+          </svg>
+          <p class="text-center text-xs text-brand-subtle mt-4 tracking-wide">Farm sourced → hand cleaned → bull pressed → cloth filtered → bottled.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <article id="process-step-1" class="scroll-mt-24 rounded-2xl bg-white border border-brand-border p-6 flex flex-col justify-between card-lift card-img-zoom overflow-hidden relative" data-reveal>
+            <div>
+              <div class="relative w-full h-56 rounded-xl bg-brand-warmCard overflow-hidden mb-5 border border-brand-border/60 flex items-center justify-center">
+                <img loading="lazy" src="assets/img/img-06.jpg" alt="Heirloom Seeds Sun-Drying on Guntur Terraces" class="w-full h-full object-cover transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                <span class="absolute top-3 left-3 bg-brand-forest/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 shadow-sm">Phase 01</span>
+                <span class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md text-brand-forest flex items-center justify-center shadow-md">
+                  <span class="material-symbols-outlined text-lg text-brand-ochre">solar_power</span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-serif text-3xl font-bold text-brand-ochre leading-none">01</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-subtle bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">Guntur Terraces</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-brand-forest mb-2.5 leading-snug">Sourcing &amp; Sun-Drying</h3>
+              <p class="text-xs sm:text-sm text-brand-subtle leading-relaxed mb-4">Single-origin heirloom seeds hand-sorted and dried under natural sunlight. Zero chemical fumigation or pesticides.</p>
+            </div>
+            <div class="pt-4 border-t border-brand-border/60 flex items-center justify-between text-[11px] font-semibold text-brand-forest">
+              <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-brand-ochre">check_circle</span>Heirloom Pods</span>
+              <span class="text-brand-subtle font-normal">Zero Chemicals</span>
+            </div>
+          </article>
+          <article id="process-step-2" class="scroll-mt-24 rounded-2xl bg-white border border-brand-border p-6 flex flex-col justify-between card-lift card-img-zoom overflow-hidden relative" data-reveal>
+            <span class="absolute top-0 right-0 bg-brand-forest text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-bl-xl z-10 shadow-sm">Core Pillar</span>
+            <div>
+              <div class="relative w-full h-56 rounded-xl bg-brand-warmCard overflow-hidden mb-5 border border-brand-border/60 flex items-center justify-center">
+                <video class="ambient-video w-full h-full object-cover" data-lazy muted loop playsinline preload="none" poster="assets/img/img-07.png" aria-label="Bulls circling the traditional stone gaanuga mill press"><source data-src="assets/video/process-press.mp4" type="video/mp4"><img loading="lazy" src="assets/img/img-07.png" alt="Traditional Monolithic Stone Gaanuga Mill Press" class="w-full h-full object-cover"></video>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                <span class="absolute top-3 left-3 bg-brand-forest text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 shadow-sm">Phase 02</span>
+                <span class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md text-brand-forest flex items-center justify-center shadow-md">
+                  <span class="material-symbols-outlined text-lg text-brand-forest">cyclone</span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-serif text-3xl font-bold text-brand-ochre leading-none">02</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-forestDark bg-brand-ochre/20 px-2.5 py-1 rounded-full border border-brand-ochre/30">Gir Bull Churn</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-brand-forest mb-2.5 leading-snug">3 RPM Bull Pressing</h3>
+              <p class="text-xs sm:text-sm text-brand-subtle leading-relaxed mb-4">Monolithic granite pestle turned slowly at 3 RPM. Cold crushing strictly caps heat below 38°C to keep enzymes intact.</p>
+            </div>
+            <div class="pt-4 border-t border-brand-border/60 flex items-center justify-between text-[11px] font-semibold text-brand-forest">
+              <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-brand-ochre">thermostat</span>&lt;38°C Friction Heat</span>
+              <span class="text-brand-subtle font-normal">Active Enzymes</span>
+            </div>
+          </article>
+          <article id="process-step-3" class="scroll-mt-24 rounded-2xl bg-white border border-brand-border p-6 flex flex-col justify-between card-lift card-img-zoom overflow-hidden relative" data-reveal>
+            <div>
+              <div class="relative w-full h-56 rounded-xl bg-brand-warmCard overflow-hidden mb-5 border border-brand-border/60 flex items-center justify-center">
+                <img loading="lazy" src="assets/img/img-08.jpg" alt="48-Hour Gravity Sedimentation Settling" class="w-full h-full object-cover transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                <span class="absolute top-3 left-3 bg-brand-forest/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 shadow-sm">Phase 03</span>
+                <span class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md text-brand-forest flex items-center justify-center shadow-md">
+                  <span class="material-symbols-outlined text-lg text-brand-ochre">hourglass_empty</span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-serif text-3xl font-bold text-brand-ochre leading-none">03</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-subtle bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">48-Hr Settling</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-brand-forest mb-2.5 leading-snug">Gravity Sedimentation</h3>
+              <p class="text-xs sm:text-sm text-brand-subtle leading-relaxed mb-4">Fresh raw oil rests in food-grade steel vats. Natural gravity clarifies without micro-filters, deodorizers, or bleaching clays.</p>
+            </div>
+            <div class="pt-4 border-t border-brand-border/60 flex items-center justify-between text-[11px] font-semibold text-brand-forest">
+              <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-brand-ochre">filter_vintage</span>Zero Micro-Filters</span>
+              <span class="text-brand-subtle font-normal">100% Raw Clarity</span>
+            </div>
+          </article>
+          <article id="process-step-4" class="scroll-mt-24 rounded-2xl bg-white border border-brand-border p-6 flex flex-col justify-between card-lift card-img-zoom overflow-hidden relative" data-reveal>
+            <div>
+              <div class="relative w-full h-56 rounded-xl bg-brand-warmCard overflow-hidden mb-5 border border-brand-border/60 flex items-center justify-center">
+                <video class="ambient-video w-full h-full object-cover" data-lazy muted loop playsinline preload="none" poster="assets/img/img-09.jpg" aria-label="Fresh-pressed golden oil pouring into a steel settling bowl"><source data-src="assets/video/process-pour.mp4" type="video/mp4"><img loading="lazy" src="assets/img/img-09.jpg" alt="Amber Glass Apothecary Bottling" class="w-full h-full object-cover"></video>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                <span class="absolute top-3 left-3 bg-brand-forest/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 shadow-sm">Phase 04</span>
+                <span class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/95 backdrop-blur-md text-brand-forest flex items-center justify-center shadow-md">
+                  <span class="material-symbols-outlined text-lg text-brand-ochre">shield</span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-serif text-3xl font-bold text-brand-ochre leading-none">04</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-subtle bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">Apothecary Grade</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-brand-forest mb-2.5 leading-snug">Amber Glass Bottling</h3>
+              <p class="text-xs sm:text-sm text-brand-subtle leading-relaxed mb-4">Hand-decanted into UV-protective pharmaceutical amber glass to prevent oxidation and eradicate microplastic leaching.</p>
+            </div>
+            <div class="pt-4 border-t border-brand-border/60 flex items-center justify-between text-[11px] font-semibold text-brand-forest">
+              <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-brand-ochre">sanitizer</span>100% UV Barrier</span>
+              <span class="text-brand-subtle font-normal">Plastic-Free</span>
+            </div>
+          </article>
+        </div>
+        <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="#matrix" class="btn btn-primary">Explore Our 4-Step Process <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+          <a href="https://wa.me/919160098989?text=Hi%2C%20I%20would%20like%20to%20learn%20more%20about%20the%20Mothadaka%20mill%20process." target="_blank" rel="noopener noreferrer" class="btn btn-ghost"><span class="material-symbols-outlined text-base text-brand-ochre">verified</span> Learn More About Our Process</a>
+        </div>
+      </div>
+    </section>
+    <section aria-label="Our creed" class="bg-brand-forestDark text-white py-28 lg:py-40 relative overflow-hidden">
+      <div class="absolute inset-x-0 top-0 h-px bg-white/10"></div>
+      <div class="absolute inset-x-0 bottom-0 h-px bg-white/10"></div>
+      <div class="max-w-6xl mx-auto px-6 text-center" data-reveal>
+        <div class="hairline-rule" style="background:rgba(255,255,255,.15)"></div>
+        <div class="mt-8 flex items-center justify-center gap-3 sm:gap-6 lg:gap-10">
+          <!-- Oversized NO -->
+          <div class="font-serif font-normal text-brand-ochre text-[6rem] sm:text-[10rem] lg:text-[12rem] leading-[0.8] tracking-[-0.08em] shrink-0">
+            NO
+          </div>
+          <!-- Three statements -->
+          <div class="flex flex-col items-start font-serif font-medium text-white text-2xl sm:text-5xl lg:text-6xl leading-[1.12] tracking-tight">
+            <span>HEAT.</span>
+            <span>CHEMICALS.</span>
+            <span>PLASTIC.</span>
+          </div>
+        </div>
+        <p class="mt-8 font-serif italic font-normal text-brand-ochre text-4xl sm:text-5xl lg:text-6xl leading-tight">
+          Just patience.
+        </p>
+        <p class="mt-6 text-sm sm:text-base text-white/60 max-w-xl mx-auto leading-relaxed">Every batch rests a full 48 hours before it reaches your kitchen. Nothing is rushed, because nothing needs to be.</p>
+      </div>
+    </section>
+    <section id="matrix" class="py-20 lg:py-24 bg-brand-warmCard">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="max-w-5xl mx-auto" data-reveal>
+          <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 mb-14">
+            <div class="max-w-xl text-left">
+              <div class="hairline-rule" style="margin-left:0;margin-right:0"></div>
+              <div class="section-label"><span class="material-symbols-outlined text-sm">balance</span> 02 — Strict Transparency</div>
+              <h2 class="section-title !text-left">What Goes Into Your Cooking <em>Matters</em></h2>
+              <p class="section-sub !mt-3">Industrial commercial oils prioritize infinite shelf-life over bioavailability. Compare the essential truth side-by-side.</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-3xl border border-brand-border shadow-sm overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-12 border-b border-brand-border">
+              <div class="md:col-span-4 p-5 sm:p-6 bg-brand-warmCard/70 flex items-center border-b md:border-b-0 md:border-r border-brand-border">
+                <span class="text-xs font-bold uppercase tracking-wider text-brand-subtle">Standard &amp; Parameter</span>
+              </div>
+              <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 flex items-center justify-between border-b md:border-b-0 md:border-r border-brand-border">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-brand-rust"></span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-brand-rust">Commercial Baseline</span>
+                </div>
+                <span class="text-[11px] text-brand-subtle font-medium">Refined Seed Oils</span>
+              </div>
+              <div class="md:col-span-4 p-5 sm:p-6 bg-brand-forest text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-brand-ochre"></span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-white">Vedic Gaanuga Mill</span>
+                </div>
+                <span class="text-[11px] text-white/90 font-medium">FELD·N·STEIN Artisanal</span>
+              </div>
+            </div>
+            <div class="divide-y divide-brand-border/60">
+              <div class="grid grid-cols-1 md:grid-cols-12 transition-colors hover:bg-brand-warmCard/30">
+                <div class="md:col-span-4 p-5 sm:p-6 flex items-start gap-3.5 bg-brand-warmCard/30 md:bg-transparent border-b md:border-b-0 md:border-r border-brand-border/60">
+                  <div class="w-9 h-9 rounded-full bg-brand-ochre/20 text-brand-forest flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-lg">thermostat</span>
+                  </div>
+                  <div>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-brand-forest leading-snug">Heat &amp; Friction</h3>
+                    <p class="text-xs text-brand-subtle mt-0.5">Extraction Temperature</p>
+                  </div>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 md:border-r border-brand-border/60 flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-rust flex-shrink-0">close</span>
+                    <span class="text-sm font-bold text-brand-charcoal/80">200°C High Heat</span>
+                  </div>
+                  <p class="text-xs text-brand-subtle leading-relaxed">Thermal deodorization induces lipid oxidation &amp; degrades heat-sensitive antioxidants.</p>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-forest flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-ochre flex-shrink-0">check_circle</span>
+                    <span class="text-sm font-bold text-white">&lt;38°C Natural Cold Press</span>
+                  </div>
+                  <p class="text-xs text-white/75 leading-relaxed">Slow 3 RPM monolithic granite naturally dissipates friction, keeping active enzymes intact.</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-12 transition-colors hover:bg-brand-warmCard/30">
+                <div class="md:col-span-4 p-5 sm:p-6 flex items-start gap-3.5 bg-brand-warmCard/30 md:bg-transparent border-b md:border-b-0 md:border-r border-brand-border/60">
+                  <div class="w-9 h-9 rounded-full bg-brand-ochre/20 text-brand-forest flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-lg">science</span>
+                  </div>
+                  <div>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-brand-forest leading-snug">Extraction Agents</h3>
+                    <p class="text-xs text-brand-subtle mt-0.5">Solvents &amp; Refining</p>
+                  </div>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 md:border-r border-brand-border/60 flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-rust flex-shrink-0">close</span>
+                    <span class="text-sm font-bold text-brand-charcoal/80">Hexane &amp; Caustic Soda</span>
+                  </div>
+                  <p class="text-xs text-brand-subtle leading-relaxed">Petroleum solvents &amp; acid wash applied to artificially force commercial yield.</p>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-forest flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-ochre flex-shrink-0">check_circle</span>
+                    <span class="text-sm font-bold text-white">100% Bull Pressing</span>
+                  </div>
+                  <p class="text-xs text-white/75 leading-relaxed">Zero chemical interventions. Sun-dried heirloom seeds crushed solely by stone weight.</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-12 transition-colors hover:bg-brand-warmCard/30">
+                <div class="md:col-span-4 p-5 sm:p-6 flex items-start gap-3.5 bg-brand-warmCard/30 md:bg-transparent border-b md:border-b-0 md:border-r border-brand-border/60">
+                  <div class="w-9 h-9 rounded-full bg-brand-ochre/20 text-brand-forest flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-lg">hourglass_empty</span>
+                  </div>
+                  <div>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-brand-forest leading-snug">Clarification &amp; Nutrients</h3>
+                    <p class="text-xs text-brand-subtle mt-0.5">Filtration Standard</p>
+                  </div>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 md:border-r border-brand-border/60 flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-rust flex-shrink-0">close</span>
+                    <span class="text-sm font-bold text-brand-charcoal/80">Synthetic Dewaxing</span>
+                  </div>
+                  <p class="text-xs text-brand-subtle leading-relaxed">Stripped of naturally occurring aromatics, micronutrients, beta-carotene, and tocopherols.</p>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-forest flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-ochre flex-shrink-0">check_circle</span>
+                    <span class="text-sm font-bold text-white">48-Hr Gravity Settling</span>
+                  </div>
+                  <p class="text-xs text-white/75 leading-relaxed">Steel vat resting preserves authentic nutty fragrance, living sesamol, and bio-available sterols.</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-12 transition-colors hover:bg-brand-warmCard/30">
+                <div class="md:col-span-4 p-5 sm:p-6 flex items-start gap-3.5 bg-brand-warmCard/30 md:bg-transparent border-b md:border-b-0 md:border-r border-brand-border/60">
+                  <div class="w-9 h-9 rounded-full bg-brand-ochre/20 text-brand-forest flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span class="material-symbols-outlined text-lg">shield</span>
+                  </div>
+                  <div>
+                    <h3 class="font-serif text-base sm:text-lg font-bold text-brand-forest leading-snug">Bottle Packaging</h3>
+                    <p class="text-xs text-brand-subtle mt-0.5">Leaching Protection</p>
+                  </div>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-rust/15 md:border-r border-brand-border/60 flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-rust flex-shrink-0">close</span>
+                    <span class="text-sm font-bold text-brand-charcoal/80">Thin PET Plastic</span>
+                  </div>
+                  <p class="text-xs text-brand-subtle leading-relaxed">Oils absorb endocrine disruptors and microplastics under transit heat and sunlight.</p>
+                </div>
+                <div class="md:col-span-4 p-5 sm:p-6 bg-brand-forest flex flex-col justify-center">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <span class="material-symbols-outlined text-base text-brand-ochre flex-shrink-0">check_circle</span>
+                    <span class="text-sm font-bold text-white">Pharmaceutical Amber Glass</span>
+                  </div>
+                  <p class="text-xs text-white/75 leading-relaxed">Chemically inert UV barrier blocks photo-oxidation with zero phthalate or microplastic leaching.</p>
+                </div>
+              </div>
+            </div>
+          <div class="bg-brand-forestDark px-6 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-white/85 text-center sm:text-left"><strong class="text-white font-semibold">Every parameter above ships with each bottle</strong> — batch lab report included.</p>
+            <a href="#collection" class="btn btn-gold flex-shrink-0">Shop the Reserve <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+          </div>
+                  </div>
+        </div>
+      </div>
+    </section>
+    <section id="collection" class="py-20 lg:py-24 bg-white border-y border-brand-border">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="section-head" data-reveal>
+          <div class="hairline-rule"></div>
+          <div class="section-label">03 — The Absolute Reserve</div>
+          <h2 class="section-title">The <em>absolute</em> reserve collection</h2>
+          <p class="section-sub">Five pure cold-pressed oils, hand-harvested and stone-milled within 24 hours of extraction.</p>
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 mb-10">
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors bg-brand-forest text-white" onclick="filterProducts(this, 'all')" aria-pressed="true">All Oils</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'staples')" aria-pressed="false">Cooking Staples</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'therapeutic')" aria-pressed="false">Therapeutic &amp; Hair</button>
+          <button class="category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors text-brand-subtle" onclick="filterProducts(this, 'value')" aria-pressed="false">Kitchen Value 5L</button>
+        </div>
+        <div class="relative">
+          <div class="carousel-fade carousel-fade-l" aria-hidden="true"></div>
+          <div class="carousel-fade carousel-fade-r" aria-hidden="true"></div>
+          <div id="productCarousel" class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width:none; scroll-padding:0 16px" role="region" aria-label="Products">
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white border border-brand-border flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
+            <div class="relative">
+              <img loading="lazy" src="assets/img/img-02.jpg" alt="Bull Pressed Groundnut Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Single-Origin Harvest</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Groundnut Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹625</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹625 – ₹3,000</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Groundnut Oil" data-price="625">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Groundnut Oil" data-price="625" data-img="assets/img/img-02.jpg" data-desc="Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga." data-badge="Single-Origin Harvest">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white border border-brand-border flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples therapeutic" data-reveal>
+            <div class="relative">
+              <img loading="lazy" src="assets/img/img-03.jpg" alt="Bull Pressed Coconut (Copra) Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Sun-Dried Copra</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Coconut (Copra) Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹600</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Coconut (Copra) Oil" data-price="600" data-img="assets/img/img-03.jpg" data-desc="Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather." data-badge="Sun-Dried Copra">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white border border-brand-border flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="therapeutic" data-reveal>
+            <div class="relative">
+              <img loading="lazy" src="assets/img/img-04.jpg" alt="Bull Pressed Black Sesame Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Ayurvedic Grade</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Black Sesame Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Crushed slowly from native black sesame seeds with natural palm jaggery binding.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Black Sesame Oil" data-price="800">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Black Sesame Oil" data-price="800" data-img="assets/img/img-04.jpg" data-desc="Crushed slowly from native black sesame seeds with natural palm jaggery binding." data-badge="Ayurvedic Grade">Quick View</button>
+            </div>
+          </article>
+          <article class="product-item card-lift card-img-zoom arch-frame bg-white border border-brand-border flex flex-col min-w-[300px] sm:min-w-[340px] snap-start" data-category="staples" data-reveal>
+            <div class="relative">
+              <img loading="lazy" src="assets/img/img-05.jpg" alt="Bull Pressed Sunflower Oil" class="w-full h-64 object-cover">
+              <span class="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">Open Pollinated Seeds</span>
+            </div>
+            <div class="p-6 flex flex-col flex-1 text-center">
+              <h3 class="font-serif text-lg font-semibold text-brand-forest">Bull Pressed Sunflower Oil</h3>
+              <p class="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing.</p>
+              <div class="mt-4 flex items-baseline justify-center gap-2">
+                <span class="font-serif text-xl font-bold text-brand-forest">₹800</span>
+                <span class="text-xs text-brand-charcoal/50">Range: ₹800 – ₹3,875</span>
+              </div>
+              <button class="btn btn-primary mt-4 w-full quick-add" data-name="Bull Pressed Sunflower Oil" data-price="800">Add to Reserve Cart</button>
+              <button class="btn btn-ghost mt-2 w-full quick-view-btn" data-name="Bull Pressed Sunflower Oil" data-price="800" data-img="assets/img/img-05.jpg" data-desc="Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing." data-badge="Open Pollinated Seeds">Quick View</button>
+            </div>
+          </article>
+          </div>
+        </div>
+        <p id="filterEmpty" class="hidden text-center text-sm text-brand-charcoal/60 py-8">No products in this category yet.</p>
+        <div class="mt-6 flex items-center justify-center gap-4">
+          <button onclick="scrollCarousel(-1)" aria-label="Previous products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_back</span></button>
+          <div id="carouselDots" class="flex items-center gap-1.5" aria-hidden="true">
+            <span class="w-6 h-1.5 rounded-full bg-brand-forest transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-brand-border transition-all"></span>
+          </div>
+          <button onclick="scrollCarousel(1)" aria-label="Next products" class="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors"><span class="material-symbols-outlined">arrow_forward</span></button>
+        </div>
+      </div>
+    </section>
+    <section id="subscription" class="py-20 lg:py-24 bg-brand-warmCard border-y border-brand-border">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="section-head" data-reveal>
+          <div class="hairline-rule"></div>
+          <div class="section-label"><span class="material-symbols-outlined text-sm">sync</span> 04 — Seamless Agrarian Supply</div>
+          <h2 class="section-title">How FELD·N·STEIN <em>Fits in Your Day</em></h2>
+          <p class="section-sub">Two simple, deliberate ways to keep clean, unadulterated cold-pressed oil running in your daily kitchen.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <article class="rounded-3xl bg-white border border-brand-border p-6 lg:p-8 flex flex-col justify-between card-lift" data-reveal>
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-warmCard text-brand-forest text-xs font-bold uppercase tracking-wider mb-6">
+                <span class="material-symbols-outlined text-sm">local_shipping</span>
+                <span>On-Demand Harvest Dispatch</span>
+              </div>
+              <h3 class="font-serif text-2xl font-semibold text-brand-forest mb-3">Fresh Bottle On-Demand</h3>
+              <p class="text-sm text-brand-subtle leading-relaxed">Order individual bottles fresh from this week's mill batch whenever your pantry runs low. Dispatched within 48 hours of pressing.</p>
+              <ul class="mt-8 flex flex-col gap-3.5 text-xs sm:text-sm text-brand-forest">
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Bottled within 48h of stone rotation</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Glass-safe eco-cushioned packaging</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Zero subscription or recurring commitment</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-10 pt-6 border-t border-brand-border flex items-center justify-between gap-4">
+              <div>
+                <span class="text-[11px] uppercase tracking-wider text-brand-subtle font-bold">Pricing</span>
+                <p class="font-serif text-lg font-bold text-brand-forest">From ₹600 / Bottle</p>
+              </div>
+              <a href="#collection" class="btn btn-primary">Order Single Bottle</a>
+            </div>
+          </article>
+          <article class="rounded-3xl bg-white border-2 border-brand-ochre p-6 lg:p-8 flex flex-col justify-between card-lift relative" data-reveal>
+            <span class="absolute -top-3.5 left-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-ochre text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">Most Popular</span>
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-ochre/15 text-brand-forestDark tracking-wider uppercase mb-6">
+                <span class="material-symbols-outlined text-[14px]">autorenew</span>
+                <span>SAVE 10% EVERY MONTH</span>
+              </div>
+              <h3 class="font-serif text-2xl font-semibold text-brand-forest mb-3">Kitchen Reserve Subscription</h3>
+              <p class="text-sm text-brand-subtle leading-relaxed mb-6">Automated monthly or bi-weekly refill deliveries straight from the press. Never run out of clean cooking fats while earning double loyalty points.</p>
+              <ul class="flex flex-col gap-3.5 text-xs sm:text-sm text-brand-forest">
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Automatic 10% discount locked on every recurring cycle</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Earn 2x reward points (1 point per ₹5 spent)</span>
+                </li>
+                <li class="flex items-center gap-2.5">
+                  <span class="material-symbols-outlined text-brand-ochre text-base">check</span>
+                  <span>Pause, modify bottle varieties, or cancel anytime with 1-click on WhatsApp</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-10 pt-6 border-t border-brand-border flex items-center justify-between gap-4">
+              <div>
+                <span class="text-[11px] uppercase tracking-wider text-brand-subtle font-bold block">Subscribe &amp; Save</span>
+                <p class="font-serif text-lg font-bold text-brand-ochreDeep">10% Off + 2x Points</p>
+              </div>
+              <button class="btn btn-gold" onclick="showToast('Kitchen Reserve Activated — Our concierge will confirm your monthly blend selection.')">Start Subscription</button>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section id="testimonials" class="py-20 lg:py-24 bg-white border-y border-brand-border">
+      <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="section-head" data-reveal>
+          <div class="hairline-rule"></div>
+          <div class="section-label"><span class="material-symbols-outlined text-sm">reviews</span> 05 — What Makes People Come Back</div>
+          <h2 class="section-title">What Makes People Come Back <em>at FELD·N·STEIN</em></h2>
+          <p class="section-sub">Unsolicited feedback from physicians, culinary artists, and conscious families across Andhra Pradesh.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+            </div>
+            <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“I've been using FELD·N·STEIN's groundnut oil for 4 months now. The difference in taste is unbelievable — my family instantly noticed it in everyday cooking.”</p>
+            <p class="text-sm text-brand-subtle leading-relaxed flex-1">Traditional monolithic stone press oil with pure authentic aroma and zero chemical impurities.</p>
+            <div class="mt-6 pt-5 border-t border-brand-border/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-brand-forest text-white font-serif font-bold flex items-center justify-center text-sm shadow-sm">
+                  AM
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-brand-forest">Dr. Arjun Mehta</h3>
+                  <span class="text-xs text-brand-subtle font-medium">Verified Household • Guntur</span>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-forest bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">
+                <span class="material-symbols-outlined text-xs text-brand-ochre">verified</span>Verified
+              </span>
+            </div>
+          </article>
+          <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+            </div>
+            <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“The coconut oil is the real deal — thick, fragrant, solidifies in cold weather exactly like it should! We've subscribed to the monthly plan and it's been one of the best decisions of this year.”</p>
+            <p class="text-sm text-brand-subtle leading-relaxed flex-1">Delivered fresh in apothecary glass bottles directly to our doorstep on monthly automated refill.</p>
+            <div class="mt-6 pt-5 border-t border-brand-border/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-brand-ochre text-brand-forestDark font-serif font-bold flex items-center justify-center text-sm shadow-sm">
+                  S
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-brand-forest">Sunita</h3>
+                  <span class="text-xs text-brand-subtle font-medium">Monthly Subscriber • Amaravati</span>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-forest bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">
+                <span class="material-symbols-outlined text-xs text-brand-ochre">verified</span>Reserve Club
+              </span>
+            </div>
+          </article>
+          <article class="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift" data-reveal>
+            <div class="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+              <span class="material-symbols-outlined text-base text-brand-forest" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">star</span>
+            </div>
+            <p class="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“As a nutritionist, I'm very particular about the oils I recommend to my patients. FELD·N·STEIN's sesame oil is the only brand I trust — stone-pressed certified with zero chemical residues.”</p>
+            <p class="text-sm text-brand-subtle leading-relaxed flex-1">Stone pressed using traditional Gaanuga crushing. Zero chemical residues, no argemone, and no synthetic additives.</p>
+            <div class="mt-6 pt-5 border-t border-brand-border/60 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-brand-forestDark text-white font-serif font-bold flex items-center justify-center text-sm shadow-sm">
+                  MV
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-brand-forest">Dr. Mahesh Varma</h3>
+                  <span class="text-xs text-brand-subtle font-medium">Nutritionist &amp; Wellness Consultant</span>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-forest bg-brand-warmCard px-2.5 py-1 rounded-full border border-brand-border/60">
+                <span class="material-symbols-outlined text-xs text-brand-ochre">verified</span>Doctor Verified
+              </span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer id="siteFooter" class="bg-brand-forestDark text-white">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 pt-24 lg:pt-32 pb-12">
+      <div class="bg-brand-forest rounded-[2.5rem] p-8 sm:p-14 lg:p-16 relative overflow-hidden shadow-xl border border-white/10" data-reveal>
+        <video class="ambient-video absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none" data-lazy muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"><source data-src="assets/video/footer-heritage.mp4" type="video/mp4"></video>
+        <div class="absolute inset-0 bg-brand-forestDark/60 pointer-events-none"></div>
+        <div class="absolute -right-24 -bottom-24 w-96 h-96 rounded-full bg-brand-forestDark/50 blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col gap-12">
+          <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-white/10">
+            <div class="max-w-2xl flex flex-col items-start">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-brand-ochre text-xs font-bold uppercase tracking-widest mb-6 border border-white/10">
+                <span class="w-1.5 h-1.5 rounded-full bg-brand-ochre"></span>
+                <span>Open Heritage Farmstead</span>
+              </div>
+              <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight text-white mb-4">
+                Not a sterile factory. <br>
+                A <span class="italic text-brand-ochre">Living Heritage Mill.</span>
+              </h2>
+              <p class="text-base sm:text-lg text-white/90 leading-relaxed font-sans">
+                <strong class="text-white font-semibold">100% Bull Pressed</strong> — No Heat, No Chemicals, Pure Nutrition. No machines. No shortcuts. Just an ancient bull-rotated stone press and generations of trust.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 flex-shrink-0">
+              <a class="btn btn-gold group" href="#collection">
+                <span>Explore Our Oils</span>
+                <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </a>
+              <a class="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white hover:text-brand-ochre font-semibold text-sm transition-all border border-white/20 hover:border-brand-ochre bg-white/10 backdrop-blur-sm shadow-sm" href="#process">
+                <span class="material-symbols-outlined text-lg text-brand-ochre">play_circle</span>
+                <span>Discover Our Process</span>
+              </a>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+            <div class="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between hover:bg-white/15 transition-all">
+              <div>
+                <div class="w-10 h-10 rounded-full bg-brand-ochre/20 flex items-center justify-center text-brand-ochre mb-4">
+                  <span class="material-symbols-outlined text-2xl">location_on</span>
+                </div>
+                <h3 class="font-serif text-lg font-bold text-white mb-1.5">Mothadaka Unit</h3>
+                <p class="text-sm text-white/80 leading-relaxed">Guntur District. Open daily for customer visits &amp; farm tours.</p>
+              </div>
+            </div>
+            <div class="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between hover:bg-white/15 transition-all">
+              <div>
+                <div class="w-10 h-10 rounded-full bg-brand-ochre/20 flex items-center justify-center text-brand-ochre mb-4">
+                  <span class="material-symbols-outlined text-2xl">science</span>
+                </div>
+                <h3 class="font-serif text-lg font-bold text-white mb-1.5">FSSAI &amp; NABL</h3>
+                <p class="text-sm text-white/80 leading-relaxed">Multi-point lab checks for zero pesticide and zero hexane.</p>
+              </div>
+            </div>
+            <div class="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between hover:bg-white/15 transition-all">
+              <div>
+                <div class="w-10 h-10 rounded-full bg-brand-ochre/20 flex items-center justify-center text-brand-ochre mb-4">
+                  <span class="material-symbols-outlined text-2xl">loyalty</span>
+                </div>
+                <h3 class="font-serif text-lg font-bold text-white mb-1.5">Reward Points</h3>
+                <p class="text-sm text-white/80 leading-relaxed">Earn 1 pt per ₹10 spent. 50 pts = ₹25 off your next order.</p>
+              </div>
+            </div>
+            <div class="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col justify-between hover:bg-white/15 transition-all">
+              <div>
+                <div class="w-10 h-10 rounded-full bg-brand-ochre/20 flex items-center justify-center text-brand-ochre mb-4">
+                  <span class="material-symbols-outlined text-2xl">opacity</span>
+                </div>
+                <h3 class="font-serif text-lg font-bold text-white mb-1.5">Pure Sediments</h3>
+                <p class="text-sm text-white/80 leading-relaxed">Gravity settled. Natural micro-sediments prove raw purity.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 py-16 border-b border-white/10" data-reveal>
+        <div class="lg:col-span-2 flex flex-col items-start pr-4 col-span-2 md:col-span-3 lg:col-span-2">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-full overflow-hidden border border-white/20 shadow-sm flex-none">
+              <img alt="FELD·N·STEIN bull emblem" class="w-full h-full object-cover" src="assets/img/logo-green.jpg" width="44" height="44">
+            </div>
+            <span class="font-serif text-2xl font-medium text-white tracking-[0.12em]">FELD·N·STEIN</span>
+          </div>
+          <p class="text-xs sm:text-sm text-white/70 max-w-sm leading-relaxed mb-6">
+            Handcrafted single-origin cold-pressed oils. Unheated, untreated, and extracted with traditional granite stone Gaanuga churners for pure bioavailability.
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-bold uppercase flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs text-brand-ochre">verified</span> 100% Bull Rotated
+            </span>
+            <span class="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-bold uppercase flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs text-brand-ochre">verified</span> FSSAI Certified
+            </span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Shop</h3>
+          <ul class="flex flex-col gap-2.5 text-xs text-white/70">
+            <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Bull-Pressed Groundnut Oil</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Sun-Dried Coconut Copra Oil</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Vedic Black Sesame (Til) Oil</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Heirloom Sunflower Seed Oil</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#collection">Kitchen Value 5-Litre Cans</a></li>
+          </ul>
+        </div>
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Company</h3>
+          <ul class="flex flex-col gap-2.5 text-xs text-white/70">
+            <li><a class="hover:text-brand-ochre transition-colors" href="#process">The 3 RPM Gaanuga Method</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#matrix">Quality &amp; Purity Standards</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#subscription">Kitchen Reserve Subscription</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="https://wa.me/919160098989" target="_blank" rel="noopener noreferrer">Mothadaka Farm Tours</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#">Physician Affiliation Club</a></li>
+          </ul>
+        </div>
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Support</h3>
+          <ul class="flex flex-col gap-2.5 text-xs text-white/70">
+            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre mt-0.5">store</span><span><strong>Store:</strong> Rajendranagar 3rd Line, Main Road, Opp. ICON Mall, Guntur</span></li>
+            <li class="flex items-start gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre mt-0.5">factory</span><span><strong>Mill:</strong> Mothadaka, Guntur, Andhra Pradesh, India</span></li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre">mail</span><a class="hover:text-brand-ochre transition-colors" href="mailto:contact@feldnstein.com">contact@feldnstein.com</a></li>
+            <li class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-brand-ochre">chat</span><span>WhatsApp: +91 91600 98989</span></li>
+          </ul>
+        </div>
+        <div class="flex flex-col gap-3">
+          <h3 class="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Legal</h3>
+          <ul class="flex flex-col gap-2.5 text-xs text-white/70">
+            <li><a class="hover:text-brand-ochre transition-colors" href="#">Purity Guarantee</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#">Shipping &amp; Glass Safety</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#">Privacy Charter</a></li>
+            <li><a class="hover:text-brand-ochre transition-colors" href="#">FSSAI Lic. #10123000000000</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/60" data-reveal>
+        <p>© 2025 FELD·N·STEIN Pure Botanical Oils Ltd. All agrarian heritage rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="quickViewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-brand-charcoal/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-[2.5rem] border border-brand-border max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button id="modalCloseBtn" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-brand-warmCard hover:bg-brand-border flex items-center justify-center text-brand-forest transition-colors" aria-label="Close quick view">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div class="rounded-2xl bg-brand-warmCard p-6 flex items-center justify-center border border-brand-border/60">
+          <img id="modalImg" src="" alt="" class="max-h-64 object-contain">
+        </div>
+        <div>
+          <span id="modalBadge" class="text-[11px] font-bold uppercase tracking-wider text-brand-ochre block mb-1">Cold Pressed Batch</span>
+          <h3 id="modalTitle" class="font-serif text-2xl font-bold text-brand-forest">Product Name</h3>
+          <p id="modalDesc" class="text-xs text-brand-subtle mt-2 leading-relaxed">Artisanal single-origin stone churned oil.</p>
+          <div class="mt-4 flex items-baseline gap-2">
+            <span id="modalPrice" class="font-serif text-3xl font-bold text-brand-forest">₹625</span>
+            <span id="modalMrp" class="text-xs text-brand-subtle line-through"></span>
+          </div>
+          <div class="mt-6 flex flex-col gap-3">
+            <button id="modalAddBtn" class="btn btn-primary w-full text-xs font-bold uppercase tracking-wider">
+              <span class="material-symbols-outlined text-base">shopping_bag</span> Add to Reserve Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/main.js"></script>
+</body>
+</html>

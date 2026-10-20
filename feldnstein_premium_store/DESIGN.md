@@ -1,5 +1,5 @@
 ---
-name: FELDnSTEIN Heritage Curation
+name: FELD·N·STEIN Heritage Curation
 colors:
   surface: '#faf9f5'
   surface-dim: '#dbdad6'

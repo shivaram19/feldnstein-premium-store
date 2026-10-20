@@ -1,0 +1,16 @@
+# Normalize text files to LF in the repository; check out with the
+# platform-native ending (CRLF on Windows, LF elsewhere).
+* text=auto
+
+# Binary assets — never line-ending convert or diff these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
