@@ -56,6 +56,7 @@ done
 expected=1
 for f in $(ls "$DECISIONS_DIR"/[0-9]*.md 2>/dev/null | sort); do
   num=$(basename "$f" | cut -c1-4)
+  case $num in *[!0-9]*) continue ;; esac
   stripped=$(echo "$num" | sed 's/^0*//')
   [ -n "$stripped" ] || stripped=0
   if [ "$stripped" -ne "$expected" ]; then
