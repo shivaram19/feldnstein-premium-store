@@ -78,7 +78,7 @@ These principles are the lenses every decision is checked against. They are orde
 
 ### 3.8 Measure, don't guess
 
-*Donald Knuth (1974): "premature optimization is the root of all evil"; Google SRE Book (2016), ch. "Monitoring Distributed Systems."* Performance claims, capacity claims, and "users will want this" claims are hypotheses. Profile, benchmark, or instrument before acting on them — and act on the result, not the impression. (See the METR 2024 and Microsoft/CMU 2025 studies in §7: experienced developers were *certain* AI tooling made them faster; the measurements said otherwise. Confidence is not evidence.)
+*Donald Knuth (1974): "premature optimization is the root of all evil"; Google SRE Book (2016), ch. "Monitoring Distributed Systems."* Performance claims, capacity claims, and "users will want this" claims are hypotheses. Profile, benchmark, or instrument before acting on them — and act on the result, not the impression. Microsoft found only about a third of shipped features improved their target metrics (Kohavi et al., cited in Fowler's "Yagni", §7.3) — so "users will want this" is a claim to test, not a fact to build on. (See the METR 2024 and Microsoft/CMU 2025 studies in §7: experienced developers were *certain* AI tooling made them faster; the measurements said otherwise. Confidence is not evidence.)
 
 ## 4. The decision procedure
 
@@ -96,6 +96,7 @@ Truly trivial choices (naming a local variable, a one-line style fix) do not nee
 
 - Records live in `docs/decisions/` as `NNNN-kebab-title.md`, numbered strictly sequentially from `0001`.
 - **Never delete a record.** A wrong decision is marked `Status: superseded` with a `- Superseded by:` pointer to its replacement. History is data.
+- Corrections of fact may amend an accepted record in place; material changes to the decision itself require a new superseding record.
 - Every record captures: Context, Decision Drivers, Considered Options, Decision, Consequences — so a future reader can reconstruct *why*, not just *what*.
 - An ADR is a letter to a future maintainer, not a verdict (after Nygard, 2011). Write it to be read with fresh eyes in two years.
 
@@ -113,7 +114,7 @@ Grounded in the NIST AI Risk Management Framework 1.0 (GOVERN function, 2023): r
 
 1. First principles: E. Musk interview (2013), https://www.youtube.com/watch?v=L-s_3b5fRd8 · P. Graham, "How to Think for Yourself" (2020), https://paulgraham.com/think.html
 2. KISS — folk principle, defined in §3.1.
-3. YAGNI: M. Fowler, https://martinfowler.com/bliki/Yagni.html
+3. YAGNI: M. Fowler (incl. the Kohavi et al. finding that only ~⅓ of shipped features improved their target metrics), https://martinfowler.com/bliki/Yagni.html
 4. DRY: Hunt & Thomas; authors' restatement: https://www.artima.com/articles/orthogonality-and-the-dry-principle
 5. SoC: Dijkstra, EWD447, https://www.cs.utexas.edu/users/EWD/transcriptions/EWD04xx/EWD447.html · Parnas, https://doi.org/10.1145/361598.361623
 6. SOLID: R. C. Martin, *Agile Software Development: PPP* (2002)
@@ -382,6 +383,7 @@ done
 expected=1
 for f in $(ls "$DECISIONS_DIR"/[0-9]*.md 2>/dev/null | sort); do
   num=$(basename "$f" | cut -c1-4)
+  case $num in *[!0-9]*) continue ;; esac
   stripped=$(echo "$num" | sed 's/^0*//')
   [ -n "$stripped" ] || stripped=0
   if [ "$stripped" -ne "$expected" ]; then
