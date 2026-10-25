@@ -314,12 +314,12 @@ git commit -m "docs: AGENTS.md binding agents to decision doctrine"
 **Files:**
 - Create: `scripts/adr-check.sh`
 
-- [ ] **Step 1: Write the failing test (run before the script exists)**
+- [x] **Step 1: Write the failing test (run before the script exists)**
 
 Run: `sh scripts/adr-check.sh docs/decisions`
 Expected: FAIL — `scripts/adr-check.sh: No such file or directory`. This is the red state: the check cannot pass yet.
 
-- [ ] **Step 2: Implement the script**
+- [x] **Step 2: Implement the script**
 
 Create `scripts/adr-check.sh` with exactly this content:
 
@@ -357,7 +357,7 @@ for f in "$DECISIONS_DIR"/[0-9]*.md; do
 
   # required sections
   for section in "## Context" "## Decision Drivers" "## Considered Options" "## Decision" "## Consequences"; do
-    grep -q "^$section" "$f" || report "$f: missing section '$section'"
+    grep -q "^$section\$" "$f" || report "$f: missing section '$section'"
   done
 
   # status
@@ -401,12 +401,12 @@ fi
 echo "adr-check: OK ($records record(s))"
 ```
 
-- [ ] **Step 3: Run against the seeded log — expect pass**
+- [x] **Step 3: Run against the seeded log — expect pass**
 
 Run: `sh scripts/adr-check.sh docs/decisions`
 Expected: `adr-check: OK (2 record(s))`, exit 0.
 
-- [ ] **Step 4: Test failure detection with a broken fixture**
+- [x] **Step 4: Test failure detection with a broken fixture**
 
 Create `docs/decisions/9999-broken-fixture.md` with exactly this content (bad number, missing sections, invalid status):
 
@@ -421,7 +421,7 @@ This file is intentionally invalid for testing adr-check.sh.
 Run: `sh scripts/adr-check.sh docs/decisions`
 Expected: exit 1, with errors on stderr for: expected record number 0003 got 9999, missing sections ('## Context', '## Decision Drivers', '## Considered Options', '## Decision', '## Consequences'), invalid status.
 
-- [ ] **Step 5: Remove fixture and re-verify**
+- [x] **Step 5: Remove fixture and re-verify**
 
 Run:
 ```bash
@@ -430,7 +430,7 @@ sh scripts/adr-check.sh docs/decisions
 ```
 Expected: `adr-check: OK (2 record(s))`, exit 0.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 chmod +x scripts/adr-check.sh
