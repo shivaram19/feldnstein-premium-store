@@ -276,12 +276,12 @@ git commit -m "docs: ADR-0002 recording Vite+React SPA migration direction"
 **Files:**
 - Create: `AGENTS.md` (repo root)
 
-- [ ] **Step 1: Check for an existing AGENTS.md**
+- [x] **Step 1: Check for an existing AGENTS.md**
 
 Run: `ls AGENTS.md 2>/dev/null || echo "absent"`
 Expected: `absent` (the project currently has no root AGENTS.md). If a file exists, read it and append this content under a new section instead of overwriting.
 
-- [ ] **Step 2: Write AGENTS.md**
+- [x] **Step 2: Write AGENTS.md**
 
 Create `AGENTS.md` at the repo root with exactly this content:
 
@@ -292,15 +292,15 @@ This repository follows the engineering decision doctrine in `docs/engineering/f
 
 Hard rules for every agent working in this repo:
 
-1. **Record before implementing.** Every decision above the trivial gets a record in `docs/decisions/` (copy `docs/decisions/TEMPLATE.md`) *before* the corresponding change lands. Number records sequentially (`NNNN-kebab-title.md`). Truly trivial choices get a one-line note under their parent decision's record instead.
-2. **Follow the 5-step procedure** (`docs/engineering/first-principles.md` §4): classify reversibility → restate from first principles → enumerate options → seek evidence → record.
+1. **Record before implementing.** Every decision above the trivial gets a record in `docs/decisions/` (copy `docs/decisions/TEMPLATE.md`) *before* the corresponding change lands. Number records sequentially (`NNNN-kebab-title.md`). Truly trivial choices get a one-line note under their parent decision's record instead — or in the commit message when no parent record exists.
+2. **Follow the 5-step procedure** (`docs/engineering/first-principles.md` §4): classify the door (one-way/two-way) → restate from first principles → enumerate options → seek evidence → record.
 3. **Evidence over intuition.** Don't optimize, build, or claim without measurement or a cited source (§3.8). Don't build presumptive features (§3.2, YAGNI).
 4. **AI output is input, not decision** (§6). If options or code substantially came from AI tools, the record must say so; the named human owner remains accountable.
-5. **Never delete a decision record** — mark it `Status: superseded` with a `- Superseded by:` pointer to the replacement.
+5. **Never delete a decision record** — mark it `Status: superseded` with a `- Superseded by:` pointer to the replacement. Corrections of fact may amend an accepted record in place; material changes to the decision itself require a new superseding record.
 6. **Validate before committing.** After adding or editing records, run `sh scripts/adr-check.sh` from the repo root; it must pass.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add AGENTS.md
