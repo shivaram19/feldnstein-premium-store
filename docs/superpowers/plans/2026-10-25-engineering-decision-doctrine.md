@@ -445,7 +445,7 @@ git commit -m "tools: adr-check.sh validates decision log integrity"
 **Files:**
 - No new files.
 
-- [ ] **Step 1: Verify all deliverables exist and the check passes**
+- [x] **Step 1: Verify all deliverables exist and the check passes**
 
 Run:
 ```bash
@@ -455,7 +455,7 @@ git log --oneline -6
 ```
 Expected: all six files listed; `adr-check: OK (2 record(s))`; six commits visible (spec commit + Tasks 1–5 commits).
 
-- [ ] **Step 2: Confirm the React app is untouched**
+- [x] **Step 2: Confirm the React app is untouched**
 
 Run: `git status --porcelain feldnstein-react feldnstein_premium_store`
 Expected: no output (application code unchanged).
