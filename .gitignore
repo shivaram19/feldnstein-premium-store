@@ -1,3 +1,7 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+platform-backend/target/
+platform-admin/node_modules/
+platform-admin/dist/
+.tools/
