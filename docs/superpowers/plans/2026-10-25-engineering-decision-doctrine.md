@@ -143,7 +143,7 @@ git commit -m "docs: engineering first principles and decision doctrine"
 - Create: `docs/decisions/TEMPLATE.md`
 - Create: `docs/decisions/0001-adopt-engineering-decision-doctrine.md`
 
-- [ ] **Step 1: Write the template**
+- [x] **Step 1: Write the template**
 
 Create `docs/decisions/TEMPLATE.md` with exactly this content:
 
@@ -152,6 +152,7 @@ Create `docs/decisions/TEMPLATE.md` with exactly this content:
 
 - Status: proposed | accepted | deprecated | superseded
 - Superseded by: <ADR number, e.g. 0003> (only when Status is superseded)
+Status meanings: proposed = under discussion · accepted = decided · deprecated = no longer relevant, no successor needed · superseded = replaced by a later ADR, requires the "- Superseded by:" pointer above.
 
 ## Context
 
@@ -165,7 +166,7 @@ Create `docs/decisions/TEMPLATE.md` with exactly this content:
 
 1. <Option A> — <one-line strengths / weaknesses>
 2. <Option B> — <one-line strengths / weaknesses>
-3. Do nothing — <cost of not deciding>
+N. Do nothing — <cost of not deciding> (always include this option, in any position)
 
 ## Decision
 
@@ -176,7 +177,7 @@ Create `docs/decisions/TEMPLATE.md` with exactly this content:
 <What becomes easier, what becomes harder, what is explicitly deferred or out of scope. Note the door type (one-way / two-way) and what evidence would reopen this decision.>
 ```
 
-- [ ] **Step 2: Write ADR-0001**
+- [x] **Step 2: Write ADR-0001**
 
 Create `docs/decisions/0001-adopt-engineering-decision-doctrine.md` with exactly this content:
 
@@ -211,7 +212,7 @@ Option 3. Adopt `docs/engineering/first-principles.md` as binding doctrine; reco
 Easier: backlog open questions now have a defined path to resolution (one record each); future maintainers inherit the "why." Harder: every non-trivial choice costs the time to write a record; discipline is required not to treat records as paperwork. Two-way door — the doctrine itself can be amended or superseded by a later ADR. Deferred: CI integration of `adr-check.sh` (planned later); resolving any actual backlog open question (each will get its own ADR when taken up).
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/decisions/TEMPLATE.md docs/decisions/0001-adopt-engineering-decision-doctrine.md
