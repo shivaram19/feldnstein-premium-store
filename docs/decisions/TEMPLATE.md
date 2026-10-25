@@ -2,6 +2,7 @@
 
 - Status: proposed | accepted | deprecated | superseded
 - Superseded by: <ADR number, e.g. 0003> (only when Status is superseded)
+Status meanings: proposed = under discussion · accepted = decided · deprecated = no longer relevant, no successor needed · superseded = replaced by a later ADR, requires the "- Superseded by:" pointer above.
 
 ## Context
 
@@ -15,7 +16,7 @@
 
 1. <Option A> — <one-line strengths / weaknesses>
 2. <Option B> — <one-line strengths / weaknesses>
-3. Do nothing — <cost of not deciding>
+N. Do nothing — <cost of not deciding> (always include this option, in any position)
 
 ## Decision
 
