@@ -4,7 +4,7 @@ import {
   AnalyticsTab, LoyaltyTab, OrdersTab, PointsLedgerTab, ProductsTab, StockMovementsTab,
 } from './tabs'
 import {
-  GAnalytics, GBatches, GDashboard, GMasters, GMovements, GProducts, GQuality, GStock,
+  GAnalytics, GBatches, GDashboard, GMasters, GMovements, GPrices, GProducts, GQuality, GStock,
 } from './gaanugu-screens'
 import { clearAuth, getAuth, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
@@ -15,6 +15,7 @@ const NAV = [
   { id: 'g-stock', label: 'Inventory · Stock', icon: '▤', Component: GStock, title: <>Stock <em>levels</em></>, sub: 'On hand, reserved, available — per SKU, batch, warehouse.' },
   { id: 'g-movements', label: 'Inventory · Ledger', icon: '⇄', Component: GMovements, title: <>Movement <em>ledger</em></>, sub: 'Immutable audit trail of every unit in and out.' },
   { id: 'g-products', label: 'Master · Oils', icon: '🫙', Component: GProducts, title: <>Oil <em>catalog</em></>, sub: 'Cold-pressed oils and their SKU variants.' },
+  { id: 'g-prices', label: 'Master · Prices', icon: '₹', Component: GPrices, title: <>Price <em>configurations</em></>, sub: 'MRP, selling and cost prices per SKU — history preserved (ADR-0007).' },
   { id: 'g-masters', label: 'Master · Directory', icon: '☷', Component: GMasters, title: <>Master <em>directory</em></>, sub: 'Warehouses, farmers & suppliers, bulls, operators, presses.' },
   { id: 'g-analytics', label: 'Gaanugu · Analytics', icon: '◔', Component: GAnalytics, title: <><em>Analytics</em></>, sub: 'Stock value, yields, procurement spend, traceability.' },
   { id: 'products', label: 'Demo · Products', icon: '🫙', Component: ProductsTab, title: <>The <em>catalog</em></>, sub: 'Demo domain (ADR-0004) — replaced by gaanugu pages.' },
