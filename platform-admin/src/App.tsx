@@ -1,176 +1,100 @@
 import { useEffect, useState } from 'react'
+import { Button, ToastProvider } from './ui'
+import {
+  AnalyticsTab, LoyaltyTab, OrdersTab, PointsLedgerTab, ProductsTab, StockMovementsTab,
+} from './tabs'
+import { clearAuth, getAuth, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
-const TABS = [
-  { id: 'products', label: 'Products', path: '/products' },
-  { id: 'stock-movements', label: 'Stock Movements', path: '/stock-movements' },
-  { id: 'purchase-orders', label: 'Orders', path: '/purchase-orders' },
-  { id: 'loyalty-accounts', label: 'Loyalty', path: '/loyalty-accounts' },
-  { id: 'loyalty-transactions', label: 'Points Ledger', path: '/loyalty-transactions' },
-  { id: 'analytics', label: 'Analytics', path: '/analytics/summary' },
+const NAV = [
+  { id: 'products', label: 'Products', icon: '🫙', Component: ProductsTab, title: <>The <em>catalog</em></>, sub: 'Inventory items, stock levels, and low-stock alerts.' },
+  { id: 'stock-movements', label: 'Stock Movements', icon: '⇄', Component: StockMovementsTab, title: <>Stock <em>ledger</em></>, sub: 'Every unit in, out, and adjusted — the traceability trail.' },
+  { id: 'purchase-orders', label: 'Orders', icon: '🧾', Component: OrdersTab, title: <><em>Orders</em></>, sub: 'Order book with live status pipeline.' },
+  { id: 'loyalty-accounts', label: 'Loyalty', icon: '❋', Component: LoyaltyTab, title: <>Loyalty <em>members</em></>, sub: 'Tiers and points balances across the membership.' },
+  { id: 'loyalty-transactions', label: 'Points Ledger', icon: '✦', Component: PointsLedgerTab, title: <>Points <em>ledger</em></>, sub: 'Awards and redemptions, post by post.' },
+  { id: 'analytics', label: 'Analytics', icon: '◔', Component: AnalyticsTab, title: <><em>Analytics</em></>, sub: 'Business summary across every domain.' },
 ] as const
 
-type TabId = (typeof TABS)[number]['id']
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v)
-}
-
-function DataTable({ data }: { data: Record<string, unknown>[] }) {
-  if (data.length === 0) return <p>No rows.</p>
-  const columns = Object.keys(data[0])
-  return (
-    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-      <thead>
-        <tr>
-          {columns.map((c) => (
-            <th key={c} style={cellStyle}>{c}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((row, i) => (
-          <tr key={i}>
-            {columns.map((c) => (
-              <td key={c} style={cellStyle}>{formatValue(row[c])}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-function AnalyticsView({ data }: { data: Record<string, unknown> }) {
-  return (
-    <table style={{ borderCollapse: 'collapse' }}>
-      <tbody>
-        {Object.entries(data).map(([k, v]) => (
-          <tr key={k}>
-            <th style={{ ...cellStyle, textAlign: 'left' }}>{k}</th>
-            <td style={cellStyle}>{formatValue(v)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-function formatValue(v: unknown): string {
-  if (v === null || v === undefined) return ''
-  if (typeof v === 'object') return JSON.stringify(v)
-  return String(v)
-}
-
-const cellStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '6px 10px',
-  textAlign: 'left',
-  fontSize: 14,
-}
-
-const inputStyle: React.CSSProperties = {
-  padding: '6px 10px',
-  border: '1px solid #999',
-  borderRadius: 6,
-  fontSize: 14,
-}
-
-const buttonStyle: React.CSSProperties = {
-  padding: '6px 14px',
-  borderRadius: 6,
-  border: '1px solid #999',
-  cursor: 'pointer',
-  background: '#222',
-  color: '#fff',
-}
+type NavId = (typeof NAV)[number]['id']
 
 export default function App() {
-  const [tab, setTab] = useState<TabId>('products')
-  const [rows, setRows] = useState<Record<string, unknown>[] | null>(null)
-  const [summary, setSummary] = useState<Record<string, unknown> | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [authed, setAuthed] = useState<boolean>(() => !!getAuth())
+  useEffect(() => setUnauthorizedHandler(() => setAuthed(false)), [])
+  return (
+    <ToastProvider>
+      {authed ? (
+        <Shell onLogout={() => { clearAuth(); setAuthed(false) }} />
+      ) : (
+        <Login onSuccess={() => setAuthed(true)} />
+      )}
+    </ToastProvider>
+  )
+}
+
+/* ---------- login ---------- */
+function Login({ onSuccess }: { onSuccess: () => void }) {
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
-  const [auth, setAuth] = useState<string | null>(null)
-
-  const active = TABS.find((t) => t.id === tab)!
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    setRows(null)
-    setSummary(null)
-    fetch(active.path, auth ? { headers: { Authorization: auth } } : undefined)
-      .then((res) => {
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
-        return res.json()
-      })
-      .then((json: unknown) => {
-        if (cancelled) return
-        if (Array.isArray(json)) {
-          setRows(json.filter(isRecord))
-        } else if (isRecord(json)) {
-          setSummary(json)
-        }
-      })
-      .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const submit = async () => {
+    setBusy(true); setError(null)
+    try {
+      saveAuth(user, pass)
+      await verifyCredentials()
+      onSuccess()
+    } catch {
+      clearAuth()
+      setError('Sign-in failed. Check the username and password.')
+      setBusy(false)
     }
-  }, [active.path, auth])
-
+  }
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-      <h1>Feldnstein Platform Admin</h1>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-        <strong>Sign in (RBAC demo — ADR-0005):</strong>
-        <input placeholder="user" value={user} onChange={(e) => setUser(e.target.value)} style={inputStyle} />
-        <input placeholder="password" type="password" value={pass} onChange={(e) => setPass(e.target.value)} style={inputStyle} />
-        <button
-          onClick={() => setAuth('Basic ' + btoa(`${user}:${pass}`))}
-          style={buttonStyle}
-          disabled={!user || !pass}
-        >
-          Login
-        </button>
-        {auth && (
-          <button onClick={() => { setAuth(null); setUser(''); setPass('') }} style={buttonStyle}>
-            Logout
-          </button>
-        )}
-        <span style={{ fontSize: 12, color: '#666' }}>
-          admin/admin123 (ADMIN) · ops/ops123 (OPERATOR) · cust/cust123 (CUSTOMER, read-only storefront role — expect 403 here)
-        </span>
+    <div className="login-wrap">
+      <div className="login-card">
+        <div className="brand">FELD·N·STEIN</div>
+        <div className="brand-sub">Platform Admin · RBAC</div>
+        <input className="input" placeholder="Username" value={user} autoFocus
+          onChange={(e) => setUser(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && pass && submit()} />
+        <input className="input" placeholder="Password" type="password" value={pass}
+          onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && user && submit()} />
+        <Button variant="primary" disabled={!user || !pass || busy} onClick={submit}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </Button>
+        {error && <p className="login-error">{error}</p>}
+        <div className="login-hint">
+          Demo accounts — <code>admin / admin123</code> <code>ops / ops123</code> <code>cust / cust123</code>
+        </div>
       </div>
-      <nav style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{
-              padding: '8px 14px',
-              borderRadius: 6,
-              border: '1px solid #999',
-              cursor: 'pointer',
-              background: t.id === tab ? '#222' : '#fff',
-              color: t.id === tab ? '#fff' : '#222',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-      {loading && <p>Loading…</p>}
-      {error && <p style={{ color: 'crimson' }}>Error fetching {active.path}: {error} (is the backend running on :8080?)</p>}
-      {!loading && !error && rows && <DataTable data={rows} />}
-      {!loading && !error && summary && <AnalyticsView data={summary} />}
+    </div>
+  )
+}
+
+/* ---------- shell ---------- */
+function Shell({ onLogout }: { onLogout: () => void }) {
+  const [tab, setTab] = useState<NavId>('products')
+  const active = NAV.find((n) => n.id === tab)!
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">FELD·N·<em>STEIN</em></div>
+        <div className="brand-sub">Platform Admin</div>
+        <nav className="nav">
+          {NAV.map((n) => (
+            <button key={n.id} className={n.id === tab ? 'active' : ''} onClick={() => setTab(n.id)}>
+              <span className="dot" />{n.label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <span>Signed in via HTTP Basic — demo realm (ADR-0005).</span>
+          <Button variant="ghost-light" small onClick={onLogout}>Sign out</Button>
+        </div>
+      </aside>
+      <main className="content">
+        <h1 className="page-title">{active.title}</h1>
+        <p className="page-sub">{active.sub}</p>
+        <active.Component />
+      </main>
     </div>
   )
 }
