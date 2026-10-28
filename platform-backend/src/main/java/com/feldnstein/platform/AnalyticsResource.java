@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -15,6 +16,7 @@ public class AnalyticsResource {
 
     @GET
     @Path("/summary")
+    @RolesAllowed("ADMIN")
     public Map<String, Object> summary() {
         Map<String, Object> result = new HashMap<>();
         result.put("productCount", Product.count());

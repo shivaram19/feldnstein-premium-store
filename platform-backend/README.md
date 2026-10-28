@@ -19,3 +19,21 @@ in-memory H2; production profile targets PostgreSQL via `docker-compose.yml`.
 CRUD endpoints (rest-data-panache): `/products`, `/stock-movements`,
 `/purchase-orders`, `/loyalty-accounts`, `/loyalty-transactions`.
 Analytics: `GET /analytics/summary`.
+
+## RBAC (ADR-0005)
+
+All endpoints require HTTP Basic auth against a demo file realm — **never for
+production**; the real AUTH-1.1 epic replaces this with DB-backed roles and
+token auth, keeping the same role names.
+
+| User | Password | Role | Can access |
+|---|---|---|---|
+| `admin` | `admin123` | ADMIN | everything, incl. `/analytics/*` |
+| `ops` | `ops123` | OPERATOR | inventory, orders, loyalty CRUD; **not** analytics (403) |
+| `cust` | `cust123` | CUSTOMER | future storefront scope; admin API returns 403 |
+
+Swagger UI has an **Authorize** button for the Basic scheme. The admin frontend
+(`platform-admin/`) has a sign-in bar on top.
+
+Verified matrix (2026-10-28): no creds → 401 · wrong password → 401 ·
+ops/analytics → 403 · cust/products → 403 · admin → 200/201.

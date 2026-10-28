@@ -68,12 +68,31 @@ const cellStyle: React.CSSProperties = {
   fontSize: 14,
 }
 
+const inputStyle: React.CSSProperties = {
+  padding: '6px 10px',
+  border: '1px solid #999',
+  borderRadius: 6,
+  fontSize: 14,
+}
+
+const buttonStyle: React.CSSProperties = {
+  padding: '6px 14px',
+  borderRadius: 6,
+  border: '1px solid #999',
+  cursor: 'pointer',
+  background: '#222',
+  color: '#fff',
+}
+
 export default function App() {
   const [tab, setTab] = useState<TabId>('products')
   const [rows, setRows] = useState<Record<string, unknown>[] | null>(null)
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState('')
+  const [pass, setPass] = useState('')
+  const [auth, setAuth] = useState<string | null>(null)
 
   const active = TABS.find((t) => t.id === tab)!
 
@@ -83,7 +102,7 @@ export default function App() {
     setError(null)
     setRows(null)
     setSummary(null)
-    fetch(active.path)
+    fetch(active.path, auth ? { headers: { Authorization: auth } } : undefined)
       .then((res) => {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
         return res.json()
@@ -105,11 +124,31 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [active.path])
+  }, [active.path, auth])
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 1100, margin: '0 auto', padding: 24 }}>
       <h1>Feldnstein Platform Admin</h1>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+        <strong>Sign in (RBAC demo — ADR-0005):</strong>
+        <input placeholder="user" value={user} onChange={(e) => setUser(e.target.value)} style={inputStyle} />
+        <input placeholder="password" type="password" value={pass} onChange={(e) => setPass(e.target.value)} style={inputStyle} />
+        <button
+          onClick={() => setAuth('Basic ' + btoa(`${user}:${pass}`))}
+          style={buttonStyle}
+          disabled={!user || !pass}
+        >
+          Login
+        </button>
+        {auth && (
+          <button onClick={() => { setAuth(null); setUser(''); setPass('') }} style={buttonStyle}>
+            Logout
+          </button>
+        )}
+        <span style={{ fontSize: 12, color: '#666' }}>
+          admin/admin123 (ADMIN) · ops/ops123 (OPERATOR) · cust/cust123 (CUSTOMER, read-only storefront role — expect 403 here)
+        </span>
+      </div>
       <nav style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         {TABS.map((t) => (
           <button
