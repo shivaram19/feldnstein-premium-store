@@ -36,6 +36,10 @@ export interface GSupplier { id: number; code: string; type: string; name: strin
 export interface GBull { id: number; code: string; name: string; breed?: string; healthStatus: string; dailyWorkLimitHrs: number; active: boolean }
 export interface GOperator { id: number; code: string; name: string; phone?: string; wageType: string; rate: number; active: boolean }
 export interface GPress { id: number; code: string; type?: string; beamCondition: string; status: string }
+export interface GPriceConfig {
+  id: number; priceType: string; amount: number; gstPct: number; effectiveFrom: string; active: boolean; notes?: string
+  variant?: GVariant & { product?: NamedRef }
+}
 
 export interface GDashboard {
   stockUnits: number; availableUnits: number; reservedUnits: number; stockValue: number
