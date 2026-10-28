@@ -1,6 +1,7 @@
 # 0007. Price configuration model: effective-dated price_config table
 
-- Status: proposed
+- Status: accepted
+- Amendment note: status amended from proposed on merge of PR #2
 
 ## Context
 
