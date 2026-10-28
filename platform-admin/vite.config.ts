@@ -12,6 +12,7 @@ export default defineConfig({
       '/loyalty-accounts': 'http://localhost:8080',
       '/loyalty-transactions': 'http://localhost:8080',
       '/analytics': 'http://localhost:8080',
+      '/g': 'http://localhost:8080',
     },
   },
 })

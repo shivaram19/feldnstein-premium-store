@@ -3,15 +3,26 @@ import { Button, ToastProvider } from './ui'
 import {
   AnalyticsTab, LoyaltyTab, OrdersTab, PointsLedgerTab, ProductsTab, StockMovementsTab,
 } from './tabs'
+import {
+  GAnalytics, GBatches, GDashboard, GMasters, GMovements, GProducts, GQuality, GStock,
+} from './gaanugu-screens'
 import { clearAuth, getAuth, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
 const NAV = [
-  { id: 'products', label: 'Products', icon: '🫙', Component: ProductsTab, title: <>The <em>catalog</em></>, sub: 'Inventory items, stock levels, and low-stock alerts.' },
-  { id: 'stock-movements', label: 'Stock Movements', icon: '⇄', Component: StockMovementsTab, title: <>Stock <em>ledger</em></>, sub: 'Every unit in, out, and adjusted — the traceability trail.' },
-  { id: 'purchase-orders', label: 'Orders', icon: '🧾', Component: OrdersTab, title: <><em>Orders</em></>, sub: 'Order book with live status pipeline.' },
-  { id: 'loyalty-accounts', label: 'Loyalty', icon: '❋', Component: LoyaltyTab, title: <>Loyalty <em>members</em></>, sub: 'Tiers and points balances across the membership.' },
-  { id: 'loyalty-transactions', label: 'Points Ledger', icon: '✦', Component: PointsLedgerTab, title: <>Points <em>ledger</em></>, sub: 'Awards and redemptions, post by post.' },
-  { id: 'analytics', label: 'Analytics', icon: '◔', Component: AnalyticsTab, title: <><em>Analytics</em></>, sub: 'Business summary across every domain.' },
+  { id: 'g-dashboard', label: 'Gaanugu · Dashboard', icon: '◈', Component: GDashboard, title: <>Operations <em>dashboard</em></>, sub: 'Stock, batches, QC queue, expiry radar — the first screen of the day.' },
+  { id: 'g-batches', label: 'Production · Batches', icon: '⚙', Component: GBatches, title: <><em>Production</em> batches</>, sub: 'Every pressing session, from seed to release gate.' },
+  { id: 'g-quality', label: 'Quality · Checks', icon: '✓', Component: GQuality, title: <>Quality <em>checks</em></>, sub: 'FSSAI panel — aflatoxin, temperature, pass/fail.' },
+  { id: 'g-stock', label: 'Inventory · Stock', icon: '▤', Component: GStock, title: <>Stock <em>levels</em></>, sub: 'On hand, reserved, available — per SKU, batch, warehouse.' },
+  { id: 'g-movements', label: 'Inventory · Ledger', icon: '⇄', Component: GMovements, title: <>Movement <em>ledger</em></>, sub: 'Immutable audit trail of every unit in and out.' },
+  { id: 'g-products', label: 'Master · Oils', icon: '🫙', Component: GProducts, title: <>Oil <em>catalog</em></>, sub: 'Cold-pressed oils and their SKU variants.' },
+  { id: 'g-masters', label: 'Master · Directory', icon: '☷', Component: GMasters, title: <>Master <em>directory</em></>, sub: 'Warehouses, farmers & suppliers, bulls, operators, presses.' },
+  { id: 'g-analytics', label: 'Gaanugu · Analytics', icon: '◔', Component: GAnalytics, title: <><em>Analytics</em></>, sub: 'Stock value, yields, procurement spend, traceability.' },
+  { id: 'products', label: 'Demo · Products', icon: '🫙', Component: ProductsTab, title: <>The <em>catalog</em></>, sub: 'Demo domain (ADR-0004) — replaced by gaanugu pages.' },
+  { id: 'stock-movements', label: 'Demo · Movements', icon: '⇄', Component: StockMovementsTab, title: <>Stock <em>ledger</em></>, sub: 'Demo domain (ADR-0004).' },
+  { id: 'purchase-orders', label: 'Demo · Orders', icon: '🧾', Component: OrdersTab, title: <><em>Orders</em></>, sub: 'Demo domain (ADR-0004).' },
+  { id: 'loyalty-accounts', label: 'Demo · Loyalty', icon: '❋', Component: LoyaltyTab, title: <>Loyalty <em>members</em></>, sub: 'Demo domain (ADR-0004).' },
+  { id: 'loyalty-transactions', label: 'Demo · Points', icon: '✦', Component: PointsLedgerTab, title: <>Points <em>ledger</em></>, sub: 'Demo domain (ADR-0004).' },
+  { id: 'analytics', label: 'Demo · Analytics', icon: '◔', Component: AnalyticsTab, title: <><em>Analytics</em></>, sub: 'Demo domain (ADR-0004).' },
 ] as const
 
 type NavId = (typeof NAV)[number]['id']
@@ -71,7 +82,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 
 /* ---------- shell ---------- */
 function Shell({ onLogout }: { onLogout: () => void }) {
-  const [tab, setTab] = useState<NavId>('products')
+  const [tab, setTab] = useState<NavId>('g-dashboard')
   const active = NAV.find((n) => n.id === tab)!
   return (
     <div className="shell">
