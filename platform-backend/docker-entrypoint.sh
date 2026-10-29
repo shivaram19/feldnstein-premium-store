@@ -9,6 +9,13 @@ if [ -n "${DB_HOST}" ] && [ -n "${DB_PORT}" ]; then
   else
     echo "[startup-probe] TCP ${DB_HOST}:${DB_PORT} UNREACHABLE"
   fi
+  echo "[startup-probe] DNS: $(getent hosts "${DB_HOST}" || echo 'no DNS entry')"
+  if command -v openssl >/dev/null 2>&1; then
+    echo "[startup-probe] TLS handshake attempt:"
+    echo | timeout 8 openssl s_client -connect "${DB_HOST}:${DB_PORT}" -servername "${DB_HOST}" 2>&1 | grep -E 'CONNECTED|Protocol|subject=|Verify return|error|errno|timed out|alert' | head -8
+  else
+    echo "[startup-probe] openssl not available in image"
+  fi
 fi
 
 exec java ${JAVA_OPTS} -jar quarkus-run.jar
