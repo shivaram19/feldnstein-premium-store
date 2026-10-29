@@ -88,11 +88,36 @@ export async function verifyCredentials(): Promise<void> {
   await req<Product[]>('/products')
 }
 
+/** Authenticated download (CSV exports) — fetch with the Basic header, save as a file. */
+export async function download(path: string, filename: string): Promise<void> {
+  const headers: Record<string, string> = {}
+  const auth = getAuth()
+  if (auth) headers.Authorization = auth
+  const res = await fetch(path, { headers })
+  if (res.status === 401) {
+    clearAuth()
+    onUnauthorized()
+    throw new Error('Session expired — sign in again.')
+  }
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
   list: <T>(path: string) => req<T[]>(path),
   get: <T>(path: string) => req<T>(path),
   create: <T>(path: string, body: unknown) =>
     req<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  update: <T>(path: string, body: unknown) =>
+    req<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+  post: <T>(path: string, body?: unknown) =>
+    req<T>(path, { method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined }),
 }
 
 export function formatINR(v: number): string {

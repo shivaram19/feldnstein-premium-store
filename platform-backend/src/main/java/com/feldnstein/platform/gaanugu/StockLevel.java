@@ -35,15 +35,19 @@ public class StockLevel extends PanacheEntity {
     @Column(nullable = false)
     public int reserved;
 
+    /** Quality-hold units: not on_hand change, excluded from available (hold & release). */
+    @Column(name = "on_hold", nullable = false)
+    public int onHold = 0;
+
     @Column(name = "unit_cost", precision = 12, scale = 2)
     public BigDecimal unitCost;
 
     @Column(name = "expiry_date")
     public LocalDate expiryDate;
 
-    /** available = on_hand − reserved; derived, never stored. */
+    /** available = on_hand − reserved − on_hold; derived, never stored. */
     @Transient
     public int getAvailable() {
-        return onHand - reserved;
+        return onHand - reserved - onHold;
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 import { Button, ToastProvider } from './ui'
 import {
   AnalyticsTab, LoyaltyTab, OrdersTab, PointsLedgerTab, ProductsTab, StockMovementsTab,
@@ -6,27 +6,167 @@ import {
 import {
   GAnalytics, GBatches, GDashboard, GMasters, GMovements, GPrices, GProducts, GQuality, GStock,
 } from './gaanugu-screens'
+import {
+  GAdjustment, GBullPress, GGrn, GProcurement, GTransfer, GWarehouses,
+} from './gaanugu-ops'
+import {
+  GAlerts, GAuditLog, GHoldRelease, GSettings,
+} from './gaanugu-alerts'
+import { GCounts } from './gaanugu-counts'
+import { GReports } from './gaanugu-reports'
 import { clearAuth, getAuth, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
-const NAV = [
-  { id: 'g-dashboard', label: 'Gaanugu · Dashboard', icon: '◈', Component: GDashboard, title: <>Operations <em>dashboard</em></>, sub: 'Stock, batches, QC queue, expiry radar — the first screen of the day.' },
-  { id: 'g-batches', label: 'Production · Batches', icon: '⚙', Component: GBatches, title: <><em>Production</em> batches</>, sub: 'Every pressing session, from seed to release gate.' },
-  { id: 'g-quality', label: 'Quality · Checks', icon: '✓', Component: GQuality, title: <>Quality <em>checks</em></>, sub: 'FSSAI panel — aflatoxin, temperature, pass/fail.' },
-  { id: 'g-stock', label: 'Inventory · Stock', icon: '▤', Component: GStock, title: <>Stock <em>levels</em></>, sub: 'On hand, reserved, available — per SKU, batch, warehouse.' },
-  { id: 'g-movements', label: 'Inventory · Ledger', icon: '⇄', Component: GMovements, title: <>Movement <em>ledger</em></>, sub: 'Immutable audit trail of every unit in and out.' },
-  { id: 'g-products', label: 'Master · Oils', icon: '🫙', Component: GProducts, title: <>Oil <em>catalog</em></>, sub: 'Cold-pressed oils and their SKU variants.' },
-  { id: 'g-prices', label: 'Master · Prices', icon: '₹', Component: GPrices, title: <>Price <em>configurations</em></>, sub: 'MRP, selling and cost prices per SKU — history preserved (ADR-0007).' },
-  { id: 'g-masters', label: 'Master · Directory', icon: '☷', Component: GMasters, title: <>Master <em>directory</em></>, sub: 'Warehouses, farmers & suppliers, bulls, operators, presses.' },
-  { id: 'g-analytics', label: 'Gaanugu · Analytics', icon: '◔', Component: GAnalytics, title: <><em>Analytics</em></>, sub: 'Stock value, yields, procurement spend, traceability.' },
-  { id: 'products', label: 'Demo · Products', icon: '🫙', Component: ProductsTab, title: <>The <em>catalog</em></>, sub: 'Demo domain (ADR-0004) — replaced by gaanugu pages.' },
-  { id: 'stock-movements', label: 'Demo · Movements', icon: '⇄', Component: StockMovementsTab, title: <>Stock <em>ledger</em></>, sub: 'Demo domain (ADR-0004).' },
-  { id: 'purchase-orders', label: 'Demo · Orders', icon: '🧾', Component: OrdersTab, title: <><em>Orders</em></>, sub: 'Demo domain (ADR-0004).' },
-  { id: 'loyalty-accounts', label: 'Demo · Loyalty', icon: '❋', Component: LoyaltyTab, title: <>Loyalty <em>members</em></>, sub: 'Demo domain (ADR-0004).' },
-  { id: 'loyalty-transactions', label: 'Demo · Points', icon: '✦', Component: PointsLedgerTab, title: <>Points <em>ledger</em></>, sub: 'Demo domain (ADR-0004).' },
-  { id: 'analytics', label: 'Demo · Analytics', icon: '◔', Component: AnalyticsTab, title: <><em>Analytics</em></>, sub: 'Demo domain (ADR-0004).' },
-] as const
+type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
+type NavGroup = { section: string; icon: string; items: NavItem[] }
 
-type NavId = (typeof NAV)[number]['id']
+const N = (id: string, label: string, Component: NavItem['Component'], title: ReactElement, sub: string): NavItem =>
+  ({ id, label, Component, title, sub })
+
+const NAV: NavGroup[] = [
+  {
+    section: 'Dashboard', icon: '📊',
+    items: [
+      N('g-dashboard', 'Inventory Dashboard', GDashboard,
+        <>Operations <em>dashboard</em></>,
+        'Stock, batches, QC queue, expiry radar — the first screen of the day.'),
+    ],
+  },
+  {
+    section: 'Stock', icon: '📦',
+    items: [
+      N('g-stock', 'Stock Levels', GStock,
+        <>Stock <em>levels</em></>,
+        'On hand, reserved, on hold, available — per SKU, batch, warehouse.'),
+    ],
+  },
+  {
+    section: 'Production', icon: '🏭',
+    items: [
+      N('g-batches', 'Batches', GBatches,
+        <><em>Production</em> batches</>,
+        'Every pressing session, from seed to release gate.'),
+      N('g-bullpress', 'Bull & Press', GBullPress,
+        <>Bull &amp; <em>press</em> management</>,
+        'Bull directory, work logs (4-hour welfare limit), press condition.'),
+    ],
+  },
+  {
+    section: 'Warehouses', icon: '🏢',
+    items: [
+      N('g-warehouses', 'Warehouses', GWarehouses,
+        <><em>Warehouse</em> network</>,
+        'Production unit, fulfilment hubs — with per-warehouse stock views.'),
+    ],
+  },
+  {
+    section: 'Movements', icon: '🔄',
+    items: [
+      N('g-movements', 'Transaction Ledger', GMovements,
+        <>Movement <em>ledger</em></>,
+        'Immutable audit trail of every unit in and out.'),
+      N('g-transfer', 'Transfer Stock', GTransfer,
+        <>Stock <em>transfer</em></>,
+        'Move units between warehouses — writes paired ledger entries.'),
+      N('g-adjustment', 'Stock Adjustment', GAdjustment,
+        <>Stock <em>adjustment</em></>,
+        'Correct system stock to physical count — damage, spoilage, expiry, theft.'),
+      N('g-grn', 'Goods Receipt (GRN)', GGrn,
+        <>Goods <em>receipt</em></>,
+        'Record packaging deliveries against purchase orders.'),
+    ],
+  },
+  {
+    section: 'Procurement', icon: '🌾',
+    items: [
+      N('g-procurement', 'Procurement', GProcurement,
+        <><em>Seed</em> &amp; packaging procurement</>,
+        'Seed purchases from farmers, packaging POs, supplier directory.'),
+    ],
+  },
+  {
+    section: 'Quality', icon: '✅',
+    items: [
+      N('g-quality', 'QC Dashboard', GQuality,
+        <>Quality <em>checks</em></>,
+        'FSSAI panel — aflatoxin, temperature, pass/fail.'),
+      N('g-holdrelease', 'Hold & Release', GHoldRelease,
+        <>Stock hold &amp; <em>release</em></>,
+        'Quarantine and release units at a stock position.'),
+    ],
+  },
+  {
+    section: 'Alerts', icon: '🔔',
+    items: [
+      N('g-alerts', 'Alerts', GAlerts,
+        <>Active <em>alerts</em> &amp; rules</>,
+        'Low stock, near expiry, QC overdue — materialised from threshold rules (ADR-0008).'),
+    ],
+  },
+  {
+    section: 'Counts', icon: '📋',
+    items: [
+      N('g-counts', 'Stock Counts', GCounts,
+        <>Stock <em>counts</em></>,
+        'Count plans, execution, and reconciliation to the ledger (ADR-0009).'),
+    ],
+  },
+  {
+    section: 'Reports', icon: '📈',
+    items: [
+      N('g-analytics', 'Analytics', GAnalytics,
+        <><em>Analytics</em></>,
+        'Stock value, yields, procurement spend, traceability.'),
+      N('g-reports', 'Reports', GReports,
+        <><em>Reports</em></>,
+        'Standard reports, whitelisted custom builder, schedules (ADR-0011).'),
+    ],
+  },
+  {
+    section: 'Catalog', icon: '🫙',
+    items: [
+      N('g-products', 'Oils', GProducts,
+        <>Oil <em>catalog</em></>,
+        'Cold-pressed oils and their SKU variants.'),
+      N('g-prices', 'Prices', GPrices,
+        <>Price <em>configurations</em></>,
+        'MRP, selling and cost prices per SKU — history preserved (ADR-0007).'),
+      N('g-masters', 'Directory', GMasters,
+        <>Master <em>directory</em></>,
+        'Warehouses, farmers & suppliers, bulls, operators, presses.'),
+    ],
+  },
+  {
+    section: 'Settings', icon: '⚙️',
+    items: [
+      N('g-settings', 'Settings', GSettings,
+        <><em>Settings</em></>,
+        'General, reorder rules, expiry policy, bull & press config, permissions.'),
+    ],
+  },
+  {
+    section: 'Audit', icon: '🔍',
+    items: [
+      N('g-audit', 'Audit Log', GAuditLog,
+        <>Audit <em>log</em></>,
+        'Who changed what — transfers, adjustments, counts, QC (ADR-0010). ADMIN-only.'),
+    ],
+  },
+  {
+    section: 'Demo · ADR-0004', icon: '🧪',
+    items: [
+      N('products', 'Products', ProductsTab, <>The <em>catalog</em></>, 'Demo domain — replaced by gaanugu pages.'),
+      N('stock-movements', 'Movements', StockMovementsTab, <>Stock <em>ledger</em></>, 'Demo domain.'),
+      N('purchase-orders', 'Orders', OrdersTab, <><em>Orders</em></>, 'Demo domain.'),
+      N('loyalty-accounts', 'Loyalty', LoyaltyTab, <>Loyalty <em>members</em></>, 'Demo domain.'),
+      N('loyalty-transactions', 'Points', PointsLedgerTab, <>Points <em>ledger</em></>, 'Demo domain.'),
+      N('analytics', 'Analytics', AnalyticsTab, <><em>Analytics</em></>, 'Demo domain.'),
+    ],
+  },
+]
+
+const FLAT: NavItem[] = NAV.flatMap((g) => g.items)
+
+type NavId = (typeof FLAT)[number]['id']
 
 export default function App() {
   const [authed, setAuthed] = useState<boolean>(() => !!getAuth())
@@ -84,17 +224,22 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 /* ---------- shell ---------- */
 function Shell({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = useState<NavId>('g-dashboard')
-  const active = NAV.find((n) => n.id === tab)!
+  const active = FLAT.find((n) => n.id === tab)!
   return (
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">FELD·N·<em>STEIN</em></div>
         <div className="brand-sub">Platform Admin</div>
         <nav className="nav">
-          {NAV.map((n) => (
-            <button key={n.id} className={n.id === tab ? 'active' : ''} onClick={() => setTab(n.id)}>
-              <span className="dot" />{n.label}
-            </button>
+          {NAV.map((g) => (
+            <div key={g.section}>
+              <div className="nav-section">{g.icon} {g.section}</div>
+              {g.items.map((n) => (
+                <button key={n.id} className={n.id === tab ? 'active' : ''} onClick={() => setTab(n.id)}>
+                  <span className="dot" />{n.label}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebar-footer">

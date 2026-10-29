@@ -23,7 +23,7 @@ export interface GQualityCheck {
   batch?: NamedRef
 }
 export interface GStockLevel {
-  id: number; onHand: number; reserved: number; unitCost?: number; expiryDate?: string
+  id: number; onHand: number; reserved: number; onHold?: number; unitCost?: number; expiryDate?: string
   variant?: GVariant & { product?: NamedRef }; batch?: NamedRef; warehouse?: NamedRef
 }
 export interface GMovement {
@@ -41,6 +41,43 @@ export interface GPriceConfig {
   variant?: GVariant & { product?: NamedRef }
 }
 
+/* ---- inventory-suite types (ADR-0008..0011) ---- */
+export interface GSeedProcurement {
+  id: number; procurementDate: string; seedType: string; qtyKg: number; ratePerKg: number
+  totalCost: number; qualityGrade?: string; paymentStatus: string; transportCost?: number
+  farmer?: NamedRef
+}
+export interface GPurchaseOrder {
+  id: number; poNumber: string; orderDate: string; expectedDelivery?: string; status: string; notes?: string
+  supplier?: NamedRef; deliveryWarehouse?: NamedRef
+}
+export interface GGoodsReceipt {
+  id: number; grnNumber: string; receiptDate: string; deliveryNoteNo?: string
+  conditionNote?: string; receivedBy?: string; po?: NamedRef
+}
+export interface GAlertRule { id: number; ruleType: string; scopeRef?: string; thresholdValue: number; active: boolean }
+export interface GAlert {
+  id: number; alertType: string; severity: string; message: string
+  refType?: string; refId?: string; status: string; createdAt: string; resolvedAt?: string
+}
+export interface GAppSetting { id: number; settingKey: string; settingValue?: string; valueType: string; description?: string }
+export interface GAuditEvent { id: number; actor: string; action: string; entityType?: string; entityId?: string; detailJson?: string; at: string }
+export interface GCountPlan {
+  id: number; planCode: string; scopeDesc?: string; warehouse?: string; warehouseId?: number
+  status: string; createdBy?: string; plannedDate?: string; completedAt?: string
+  lineCount: number; varianceCount: number; lines?: GCountLine[]
+}
+export interface GCountLine {
+  id: number; sku: string; product?: string; batchCode?: string; warehouse: string
+  systemQty: number; countedQty?: number; variance?: number; countedBy?: string; stockLevelId: number
+}
+export interface GReportSchedule { id: number; name: string; reportType: string; paramsJson?: string; frequency: string; nextRun?: string; active: boolean }
+export interface GReportRun { id: number; reportType: string; paramsJson?: string; runAt: string; scheduleId?: number; scheduleName?: string }
+export interface GBullWorkLog {
+  id: number; workDate: string; hoursWorked: number; healthObservation?: string
+  bull?: NamedRef; batch?: NamedRef
+}
+
 export interface GDashboard {
   stockUnits: number; availableUnits: number; reservedUnits: number; stockValue: number
   lowStockCount: number; expiringSoonCount: number
@@ -52,7 +89,10 @@ export interface GDashboard {
 
 export const gaanugu = {
   list: <T>(path: string) => api.list<T>(`/g${path}`),
+  get: <T>(path: string) => api.get<T>(`/g${path}`),
   create: <T>(path: string, body: unknown) => api.create<T>(`/g${path}`, body),
+  update: <T>(path: string, body: unknown) => api.update<T>(`/g${path}`, body),
+  post: <T>(path: string, body?: unknown) => api.post<T>(`/g${path}`, body),
   dashboard: () => api.get<GDashboard>('/g/analytics/dashboard'),
   traceability: () => api.get<Record<string, unknown>[]>('/g/analytics/traceability'),
 }

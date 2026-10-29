@@ -10,7 +10,7 @@ import {
   useToast, type Column,
 } from './ui'
 
-function useList<T>(path: string) {
+export function useList<T>(path: string) {
   const [data, setData] = useState<T[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -27,7 +27,7 @@ function useList<T>(path: string) {
   return { data, error, loading, reload }
 }
 
-function View({ loading, error, rows, cols, empty, rowClass, onRetry }: {
+export function View({ loading, error, rows, cols, empty, rowClass, onRetry }: {
   loading: boolean; error: string | null; rows: unknown[] | null
   cols: Column<never>[]; empty: string
   rowClass?: (row: never) => string | undefined; onRetry: () => void
@@ -442,6 +442,8 @@ export function GStock() {
             { key: 'warehouse', label: 'Warehouse', render: (s: GStockLevel) => s.warehouse?.name },
             { key: 'onHand', label: 'On hand', numeric: true },
             { key: 'reserved', label: 'Reserved', numeric: true },
+            { key: 'onHold', label: 'On hold', numeric: true, render: (s: GStockLevel) =>
+              s.onHold ? <Pill tone="gold">{s.onHold}</Pill> : 0 },
             { key: 'available', label: 'Available', numeric: true, render: (s: GStockLevel) =>
               <Pill tone={available(s) < 10 ? 'rust' : 'green'}>{available(s)}</Pill> },
             { key: 'unitCost', label: 'Unit cost', numeric: true, render: (s: GStockLevel) => (s.unitCost != null ? formatINR(s.unitCost) : '—') },
