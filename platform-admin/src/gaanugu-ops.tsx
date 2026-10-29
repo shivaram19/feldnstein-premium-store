@@ -31,7 +31,7 @@ export function GProcurement() {
 }
 
 function SeedProcurementTable() {
-  const { data, error, loading, reload } = useList<GSeedProcurement>('/seed-procurements')
+  const { data, error, loading, reload } = useList<GSeedProcurement>('/seed-procurements?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -65,14 +65,14 @@ function SeedPurchaseModal({ open, onClose, onCreated }: { open: boolean; onClos
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!open) return
-    gaanugu.list<GSupplier>('/suppliers').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
+    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
   }, [open])
   const total = (Number(form.qtyKg) || 0) * (Number(form.ratePerKg) || 0)
   const valid = form.date && form.seedType.trim() && form.farmerId && Number(form.qtyKg) > 0
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/seed-procurements', {
+      await gaanugu.create('/seed-procurements?size=500', {
         procurementDate: form.date, seedType: form.seedType.trim(),
         farmer: { id: Number(form.farmerId) }, qtyKg: Number(form.qtyKg), ratePerKg: Number(form.ratePerKg),
         totalCost: total, qualityGrade: form.grade, paymentStatus: 'PENDING',
@@ -118,7 +118,7 @@ const PO_TONE: Record<string, 'green' | 'gold' | 'rust' | 'slate' | 'forest'> = 
 }
 
 function PurchaseOrderTable() {
-  const { data, error, loading, reload } = useList<GPurchaseOrder>('/purchase-orders')
+  const { data, error, loading, reload } = useList<GPurchaseOrder>('/purchase-orders?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -152,21 +152,21 @@ function POModal({ open, onClose, onCreated }: { open: boolean; onClose: () => v
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!open) return
-    gaanugu.list<GSupplier>('/suppliers').then((r) => setSuppliers(r.filter((s) => s.type === 'PACKAGING'))).catch(() => undefined)
-    gaanugu.list<GWarehouse>('/warehouses').then(setWarehouses).catch(() => undefined)
+    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setSuppliers(r.filter((s) => s.type === 'PACKAGING'))).catch(() => undefined)
+    gaanugu.list<GWarehouse>('/warehouses?size=500').then(setWarehouses).catch(() => undefined)
   }, [open])
   const valid = form.poNumber.trim() && form.supplierId && form.warehouseId && form.orderDate && Number(form.qty) > 0
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      const po = await gaanugu.create<{ id: number }>('/purchase-orders', {
+      const po = await gaanugu.create<{ id: number }>('/purchase-orders?size=500', {
         poNumber: form.poNumber.trim(), supplier: { id: Number(form.supplierId) },
         deliveryWarehouse: { id: Number(form.warehouseId) }, orderDate: form.orderDate,
         expectedDelivery: form.expected || null, status: 'SENT', notes: form.notes.trim() || null,
       })
       if (Number(form.qty) > 0) {
         await gaanugu.create('/purchase-order-lines', {
-          po: { id: po.id }, itemType: form.itemType, spec: form.spec.trim() || null,
+          purchaseOrder: { id: po.id }, itemType: form.itemType, spec: form.spec.trim() || null,
           quantity: Number(form.qty), unitPrice: Number(form.price) || 0, taxPct: Number(form.tax) || 0,
         })
       }
@@ -216,7 +216,7 @@ function POModal({ open, onClose, onCreated }: { open: boolean; onClose: () => v
 }
 
 function SupplierTable() {
-  const { data, error, loading, reload } = useList<GSupplier>('/suppliers')
+  const { data, error, loading, reload } = useList<GSupplier>('/suppliers?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -249,7 +249,7 @@ function SupplierModal({ open, onClose, onCreated }: { open: boolean; onClose: (
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/suppliers', {
+      await gaanugu.create('/suppliers?size=500', {
         code: form.code.trim(), type: form.type, name: form.name.trim(), phone: form.phone.trim() || null,
         address: form.address.trim() || null, gst: form.gst.trim() || null, active: true,
       })
@@ -283,8 +283,8 @@ function SupplierModal({ open, onClose, onCreated }: { open: boolean; onClose: (
 
 /* ================= WAREHOUSES ================= */
 export function GWarehouses() {
-  const { data, error, loading, reload } = useList<GWarehouse>('/warehouses')
-  const stock = useList<GStockLevel>('/stock-levels')
+  const { data, error, loading, reload } = useList<GWarehouse>('/warehouses?size=500')
+  const stock = useList<GStockLevel>('/stock-levels?size=500')
   const [selected, setSelected] = useState<number | null>(null)
   const active = data?.find((w) => w.id === selected)
   const stockRows = useMemo(
@@ -368,7 +368,7 @@ function BullTable() {
 }
 
 function WorkLogTable() {
-  const { data, error, loading, reload } = useList<GBullWorkLog>('/bull-work-logs')
+  const { data, error, loading, reload } = useList<GBullWorkLog>('/bull-work-logs?size=500')
   return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No work sessions logged." onRetry={reload}
     cols={[
       { key: 'workDate', label: 'Date' },
@@ -396,9 +396,9 @@ function PressTable() {
 
 /* ================= TRANSFER ================= */
 export function GTransfer() {
-  const stock = useList<GStockLevel>('/stock-levels')
-  const movements = useList<GMovement>('/stock-movements')
-  const warehouses = useList<GWarehouse>('/warehouses')
+  const stock = useList<GStockLevel>('/stock-levels?size=500')
+  const movements = useList<GMovement>('/stock-movements?size=500')
+  const warehouses = useList<GWarehouse>('/warehouses?size=500')
   const [form, setForm] = useState({ stockLevelId: '', toWarehouseId: '', quantity: '', reason: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -471,8 +471,8 @@ export function GTransfer() {
 const ADJ_TYPES = ['DAMAGE', 'SPOILAGE', 'EXPIRY', 'THEFT', 'COUNT']
 
 export function GAdjustment() {
-  const stock = useList<GStockLevel>('/stock-levels')
-  const movements = useList<GMovement>('/stock-movements')
+  const stock = useList<GStockLevel>('/stock-levels?size=500')
+  const movements = useList<GMovement>('/stock-movements?size=500')
   const [form, setForm] = useState({ stockLevelId: '', adjustedQty: '', type: 'DAMAGE', reason: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -551,7 +551,7 @@ export function GAdjustment() {
 
 /* ================= GOODS RECEIPT (GRN) ================= */
 export function GGrn() {
-  const { data, error, loading, reload } = useList<GGoodsReceipt>('/goods-receipts')
+  const { data, error, loading, reload } = useList<GGoodsReceipt>('/goods-receipts?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -585,14 +585,14 @@ function GrnModal({ open, onClose, onCreated }: { open: boolean; onClose: () => 
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!open) return
-    gaanugu.list<GPurchaseOrder>('/purchase-orders').then(setPos).catch(() => undefined)
+    gaanugu.list<GPurchaseOrder>('/purchase-orders?size=500').then(setPos).catch(() => undefined)
   }, [open])
   const valid = form.grnNumber.trim() && form.poId && form.receiptDate
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/goods-receipts', {
-        grnNumber: form.grnNumber.trim(), po: { id: Number(form.poId) }, receiptDate: form.receiptDate,
+      await gaanugu.create('/goods-receipts?size=500', {
+        grnNumber: form.grnNumber.trim(), purchaseOrder: { id: Number(form.poId) }, receiptDate: form.receiptDate,
         deliveryNoteNo: form.deliveryNote.trim() || null, conditionNote: form.condition.trim() || null,
         receivedBy: form.receivedBy.trim() || null,
       })

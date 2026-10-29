@@ -32,7 +32,7 @@ export function GAlerts() {
 }
 
 function ActiveAlerts() {
-  const { data, error, loading, reload } = useList<GAlert>('/alerts')
+  const { data, error, loading, reload } = useList<GAlert>('/alerts?size=500')
   const [busy, setBusy] = useState(false)
   const toast = useToast()
   const open = useMemo(() => data?.filter((a) => a.status === 'OPEN') ?? [], [data])
@@ -88,7 +88,7 @@ function ActiveAlerts() {
 }
 
 function AlertRules() {
-  const { data, error, loading, reload } = useList<GAlertRule>('/alert-rules')
+  const { data, error, loading, reload } = useList<GAlertRule>('/alert-rules?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   const toggle = async (r: GAlertRule) => {
@@ -127,7 +127,7 @@ function RuleModal({ open, onClose, onCreated }: { open: boolean; onClose: () =>
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/alert-rules', {
+      await gaanugu.create('/alert-rules?size=500', {
         ruleType: form.ruleType, scopeRef: form.scopeRef.trim() || 'ALL',
         thresholdValue: Number(form.thresholdValue), active: true,
       })
@@ -283,7 +283,7 @@ export function GAuditLog() {
 
 /* ================= HOLD & RELEASE (QC) ================= */
 export function GHoldRelease() {
-  const stock = useList<GStockLevel>('/stock-levels')
+  const stock = useList<GStockLevel>('/stock-levels?size=500')
   const [modal, setModal] = useState<{ level: GStockLevel; mode: 'hold' | 'release' } | null>(null)
   const [qty, setQty] = useState('')
   const [busy, setBusy] = useState(false)

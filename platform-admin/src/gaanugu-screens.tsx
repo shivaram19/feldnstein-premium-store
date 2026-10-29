@@ -44,8 +44,8 @@ const available = (s: GStockLevel) => s.onHand - s.reserved
 export function GDashboard() {
   const [dash, setDash] = useState<GDashboard | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const stock = useList<GStockLevel>('/stock-levels')
-  const batches = useList<GBatch>('/production-batches')
+  const stock = useList<GStockLevel>('/stock-levels?size=500')
+  const batches = useList<GBatch>('/production-batches?size=500')
   const load = useCallback(() => {
     setError(null)
     gaanugu.dashboard().then(setDash).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
@@ -148,7 +148,7 @@ function PanelTitle({ children }: { children: React.ReactNode }) {
 
 /* ================= PRODUCTS ================= */
 export function GProducts() {
-  const { data, error, loading, reload } = useList<GOilProductRef>('/oil-products')
+  const { data, error, loading, reload } = useList<GOilProductRef>('/oil-products?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -183,7 +183,7 @@ function NewOilModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/oil-products', { code: form.code.trim(), name: form.name.trim(), oilSource: form.oilSource, shelfLifeDays: Number(form.shelfLifeDays), active: true })
+      await gaanugu.create('/oil-products?size=500', { code: form.code.trim(), name: form.name.trim(), oilSource: form.oilSource, shelfLifeDays: Number(form.shelfLifeDays), active: true })
       setForm({ code: '', name: '', oilSource: 'GROUNDNUT', shelfLifeDays: '365' })
       onCreated()
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
@@ -211,7 +211,7 @@ function NewOilModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
 
 /* ================= BATCHES ================= */
 export function GBatches() {
-  const { data, error, loading, reload } = useList<GBatch>('/production-batches')
+  const { data, error, loading, reload } = useList<GBatch>('/production-batches?size=500')
   const [filter, setFilter] = useState<string>('ALL')
   const [open, setOpen] = useState(false)
   const toast = useToast()
@@ -260,8 +260,8 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!open) return
-    gaanugu.list<GOilProductRef>('/oil-products').then(setProducts).catch(() => undefined)
-    gaanugu.list<GSupplier>('/suppliers').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
+    gaanugu.list<GOilProductRef>('/oil-products?size=500').then(setProducts).catch(() => undefined)
+    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
     gaanugu.list<GBull>('/bulls').then(setBulls).catch(() => undefined)
     gaanugu.list<GOperator>('/press-operators').then(setOperators).catch(() => undefined)
     gaanugu.list<GPress>('/presses').then(setPresses).catch(() => undefined)
@@ -271,7 +271,7 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/production-batches', {
+      await gaanugu.create('/production-batches?size=500', {
         batchCode: form.batchCode.trim(), product: { id: Number(form.productId) }, pressDate: form.pressDate,
         seedType: form.seedType.trim() || '—', seedQtyKg: Number(form.seedQtyKg), seedCostTotal: Number(form.seedCostTotal),
         farmer: form.farmerId ? { id: Number(form.farmerId) } : null,
@@ -338,7 +338,7 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
 
 /* ================= QUALITY ================= */
 export function GQuality() {
-  const { data, error, loading, reload } = useList<GQualityCheck>('/quality-checks')
+  const { data, error, loading, reload } = useList<GQualityCheck>('/quality-checks?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
   return (
@@ -374,12 +374,12 @@ function QualityModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
   const [form, setForm] = useState({ batchId: '', stage: 'PRE_RELEASE', moisturePct: '', aflatoxinPpb: '', oilTempCelsius: '', notes: '', pass: 'true' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (open) gaanugu.list<GBatch>('/production-batches').then(setBatches).catch(() => undefined) }, [open])
+  useEffect(() => { if (open) gaanugu.list<GBatch>('/production-batches?size=500').then(setBatches).catch(() => undefined) }, [open])
   const valid = form.batchId
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/quality-checks', {
+      await gaanugu.create('/quality-checks?size=500', {
         batch: { id: Number(form.batchId) }, stage: form.stage,
         moisturePct: form.moisturePct ? Number(form.moisturePct) : null,
         aflatoxinPpb: form.aflatoxinPpb ? Number(form.aflatoxinPpb) : null,
@@ -424,7 +424,7 @@ function QualityModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
 
 /* ================= STOCK ================= */
 export function GStock() {
-  const { data, error, loading, reload } = useList<GStockLevel>('/stock-levels')
+  const { data, error, loading, reload } = useList<GStockLevel>('/stock-levels?size=500')
   return (
     <section>
       <div className="toolbar">
@@ -458,7 +458,7 @@ export function GStock() {
 const movementTone = (t: string) => (t.endsWith('_IN') ? 'green' : t === 'ADJUSTMENT_OUT' ? 'rust' : 'gold') as never
 
 export function GMovements() {
-  const { data, error, loading, reload } = useList<GMovement>('/stock-movements')
+  const { data, error, loading, reload } = useList<GMovement>('/stock-movements?size=500')
   return (
     <section>
       <div className="toolbar">
@@ -511,7 +511,7 @@ export function GMasters() {
 }
 
 function WarehouseTable() {
-  const { data, error, loading, reload } = useList<GWarehouse>('/warehouses')
+  const { data, error, loading, reload } = useList<GWarehouse>('/warehouses?size=500')
   return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No warehouses." onRetry={reload}
     cols={[
       { key: 'code', label: 'Code', render: (w: GWarehouse) => <Pill tone="forest">{w.code}</Pill> },
@@ -522,7 +522,7 @@ function WarehouseTable() {
 }
 
 function SupplierTable() {
-  const { data, error, loading, reload } = useList<GSupplier>('/suppliers')
+  const { data, error, loading, reload } = useList<GSupplier>('/suppliers?size=500')
   return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No suppliers." onRetry={reload}
     cols={[
       { key: 'code', label: 'Code', render: (s: GSupplier) => <Pill tone="forest">{s.code}</Pill> },
@@ -573,7 +573,7 @@ const PRICE_TYPES = ['MRP', 'SELLING', 'COST'] as const
 const priceTone = (t: string) => (t === 'MRP' ? 'forest' : t === 'SELLING' ? 'green' : 'slate') as never
 
 export function GPrices() {
-  const { data, error, loading, reload } = useList<GPriceConfig>('/price-configs')
+  const { data, error, loading, reload } = useList<GPriceConfig>('/price-configs?size=500')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [open, setOpen] = useState(false)
   const toast = useToast()
@@ -636,7 +636,7 @@ function PriceModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/price-configs', {
+      await gaanugu.create('/price-configs?size=500', {
         variant: { id: Number(form.variantId) }, priceType: form.priceType,
         amount: Number(form.amount), gstPct: Number(form.gstPct) || 0,
         effectiveFrom: form.effectiveFrom, active: true, notes: form.notes.trim() || null,
