@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// VITE_BASE=/repo-name/ for the GitHub Pages build (project site subpath);
+// default '/' for local dev. See .github/workflows/deploy.yml (ADR-0012).
 export default defineConfig({
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react()],
   server: {
     port: 5173,

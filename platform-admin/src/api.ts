@@ -51,6 +51,12 @@ export interface AnalyticsSummary {
 
 const AUTH_KEY = 'feldnstein.auth'
 
+/**
+ * Backend origin. Empty in local dev (Vite proxies /g → :8080, same-origin).
+ * Set at build time via VITE_API_BASE for the deployed SPA (ADR-0012).
+ */
+const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
+
 export function getAuth(): string | null {
   return sessionStorage.getItem(AUTH_KEY)
 }
@@ -73,7 +79,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const auth = getAuth()
   if (auth) headers.Authorization = auth
   if (init?.body) headers['Content-Type'] = 'application/json'
-  const res = await fetch(path, { ...init, headers })
+  const res = await fetch(API_BASE + path, { ...init, headers })
   if (res.status === 401) {
     clearAuth()
     onUnauthorized()
@@ -93,7 +99,7 @@ export async function download(path: string, filename: string): Promise<void> {
   const headers: Record<string, string> = {}
   const auth = getAuth()
   if (auth) headers.Authorization = auth
-  const res = await fetch(path, { headers })
+  const res = await fetch(API_BASE + path, { headers })
   if (res.status === 401) {
     clearAuth()
     onUnauthorized()
