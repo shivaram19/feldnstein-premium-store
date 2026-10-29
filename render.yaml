@@ -1,0 +1,37 @@
+# Render blueprint (ADR-0012). One-time setup: Render dashboard → New → Blueprint →
+# select this repo. On every push to main, Render rebuilds and deploys the backend;
+# GitHub Actions deploys the SPA to Pages in the same push.
+
+services:
+  - type: web
+    name: feldnstein-platform-backend
+    runtime: docker
+    rootDir: platform-backend
+    plan: free
+    healthCheckPath: /q/health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: feldnstein-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: feldnstein-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: feldnstein-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: feldnstein-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: feldnstein-db
+          property: password
+
+databases:
+  - name: feldnstein-db
+    plan: free
+    databaseName: feldnstein
