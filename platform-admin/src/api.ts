@@ -85,6 +85,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     onUnauthorized()
     throw new Error('Session expired — sign in again.')
   }
+  if (res.status === 403) {
+    throw new Error('Access denied — this screen needs the ADMIN role.')
+  }
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
@@ -104,6 +107,9 @@ export async function download(path: string, filename: string): Promise<void> {
     clearAuth()
     onUnauthorized()
     throw new Error('Session expired — sign in again.')
+  }
+  if (res.status === 403) {
+    throw new Error('Access denied — this screen needs the ADMIN role.')
   }
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   const blob = await res.blob()
@@ -134,4 +140,28 @@ export function formatDate(iso: string): string {
   if (!iso) return '—'
   const d = new Date(iso)
   return isNaN(d.getTime()) ? iso : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+/** Date-only formatting — for DATE columns where a time component would be misleading. */
+export function formatDay(iso: string): string {
+  if (!iso) return '—'
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso)
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-IN', { dateStyle: 'medium' })
+}
+
+/** Username of the signed-in demo user (decoded from the Basic header). */
+export function currentUsername(): string {
+  const auth = getAuth()
+  if (!auth) return 'unknown'
+  try {
+    return atob(auth.replace('Basic ', '')).split(':')[0]
+  } catch {
+    return 'unknown'
+  }
+}
+
+/** Cross-screen navigation bus — lets any screen jump the sidebar to another page. */
+export const navEvents = new EventTarget()
+export function navigate(id: string): void {
+  navEvents.dispatchEvent(new CustomEvent('nav', { detail: id }))
 }

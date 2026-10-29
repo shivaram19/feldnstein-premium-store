@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { formatDate, formatINR } from './api'
+import { formatDate, formatDay, formatINR, currentUsername, navigate } from './api'
 import {
   batchStatusTone, BATCH_STATUSES, gaanugu,
   type GBull, type GBatch, type GDashboard, type GMovement, type GOperator, type GPress,
   type GPriceConfig, type GQualityCheck, type GStockLevel, type GSupplier, type GVariant, type GWarehouse,
 } from './gaanugu-api'
 import {
-  Button, DataTable, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, Pill,
+  Button, ConfirmModal, DataTable, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, Pill,
   useToast, type Column,
 } from './ui'
 
@@ -58,6 +58,12 @@ export function GDashboard() {
     [stock.data])
   const qcQueue = useMemo(() => batches.data?.filter((b) => b.status === 'QC_PENDING') ?? [], [batches.data])
 
+  // live feel: refresh the whole dashboard every 30s while it is open
+  useEffect(() => {
+    const t = setInterval(() => { load(); stock.reload(); batches.reload() }, 30000)
+    return () => clearInterval(t)
+  }, [load, stock, batches])
+
   if (error) return <div className="card"><ErrorState message={error} onRetry={load} /></div>
   if (!dash) return <div className="card"><LoadingRows cols={4} /></div>
 
@@ -104,7 +110,7 @@ export function GDashboard() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 22 }}>
         <div className="card">
-          <PanelTitle>Low stock — reorder now</PanelTitle>
+          <PanelTitle action={<Button variant="ghost" small onClick={() => navigate('g-stock')}>View all →</Button>}>Low stock — reorder now</PanelTitle>
           {stock.loading ? <LoadingRows cols={3} /> : low.length === 0
             ? <EmptyState title="Nothing low." hint="All SKUs hold 10+ available units." />
             : <DataTable columns={[
@@ -114,7 +120,7 @@ export function GDashboard() {
               ] as never} rows={low as never[]} />}
         </div>
         <div className="card">
-          <PanelTitle>Expiring within 30 days</PanelTitle>
+          <PanelTitle action={<Button variant="ghost" small onClick={() => navigate('g-stock')}>View all →</Button>}>Expiring within 30 days</PanelTitle>
           {stock.loading ? <LoadingRows cols={3} /> : expiring.length === 0
             ? <EmptyState title="Nothing expiring soon." />
             : <DataTable columns={[
@@ -124,7 +130,7 @@ export function GDashboard() {
               ] as never} rows={expiring as never[]} />}
         </div>
         <div className="card">
-          <PanelTitle>QC queue</PanelTitle>
+          <PanelTitle action={<Button variant="ghost" small onClick={() => navigate('g-batches')}>View all →</Button>}>QC queue</PanelTitle>
           {batches.loading ? <LoadingRows cols={3} /> : qcQueue.length === 0
             ? <EmptyState title="QC queue is clear." />
             : <DataTable columns={[
@@ -138,10 +144,11 @@ export function GDashboard() {
   )
 }
 
-function PanelTitle({ children }: { children: React.ReactNode }) {
+function PanelTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--hairline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
-      {children}
+    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--hairline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <span>{children}</span>
+      {action}
     </div>
   )
 }
@@ -210,13 +217,36 @@ function NewOilModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
 }
 
 /* ================= BATCHES ================= */
+const NEXT_STATUS: Record<string, string | null> = {
+  PRESSING: 'SEDIMENTATION', SEDIMENTATION: 'BOTTLING_READY', BOTTLING_READY: 'BOTTLING',
+  BOTTLING: 'QC_PENDING', QC_PENDING: 'QC_PASSED', QC_PASSED: 'RELEASED', RELEASED: null,
+}
+
 export function GBatches() {
   const { data, error, loading, reload } = useList<GBatch>('/production-batches?size=500')
   const [filter, setFilter] = useState<string>('ALL')
   const [open, setOpen] = useState(false)
+  const [advance, setAdvance] = useState<GBatch | null>(null)
+  const [busy, setBusy] = useState(false)
   const toast = useToast()
   const filtered = useMemo(() => !data ? null : filter === 'ALL' ? data : data.filter((b) => b.status === filter), [data, filter])
   const count = (s: string) => data?.filter((b) => b.status === s).length ?? 0
+
+  const doAdvance = async () => {
+    if (!advance) return
+    setBusy(true)
+    try {
+      const next = NEXT_STATUS[advance.status]
+      const fresh = await gaanugu.get<GBatch>(`/production-batches/${advance.id}`)
+      await gaanugu.update(`/production-batches/${advance.id}`, { ...fresh, status: next })
+      toast('success', `${advance.batchCode} → ${next?.replace(/_/g, ' ')}`)
+      setAdvance(null)
+      reload()
+    } catch (e) {
+      toast('error', e instanceof Error ? e.message : String(e))
+    } finally { setBusy(false) }
+  }
+
   return (
     <section>
       <div className="toolbar">
@@ -236,15 +266,25 @@ export function GBatches() {
           cols={[
             { key: 'batchCode', label: 'Batch' },
             { key: 'product', label: 'Oil', render: (b: GBatch) => b.product?.name },
-            { key: 'pressDate', label: 'Pressed', render: (b: GBatch) => b.pressDate },
+            { key: 'pressDate', label: 'Pressed', render: (b: GBatch) => formatDay(b.pressDate) },
             { key: 'status', label: 'Status', render: (b: GBatch) => <Pill tone={batchStatusTone(b.status)}>{b.status.replace('_', ' ')}</Pill> },
             { key: 'yield', label: 'Yield (L)', numeric: true, render: (b: GBatch) => b.oilYieldLitres ?? '—' },
             { key: 'bull', label: 'Bull', render: (b: GBatch) => b.bull?.name },
             { key: 'operator', label: 'Operator', render: (b: GBatch) => b.operator?.name },
-            { key: 'bestBefore', label: 'Best before', render: (b: GBatch) => b.bestBeforeDate ?? '—' },
+            { key: 'bestBefore', label: 'Best before', render: (b: GBatch) => formatDay(b.bestBeforeDate ?? '') },
+            { key: 'advance', label: '', render: (b: GBatch) => NEXT_STATUS[b.status]
+              ? <Button variant="ghost" small onClick={() => setAdvance(b)}>→ {NEXT_STATUS[b.status]!.replace(/_/g, ' ')}</Button>
+              : <Pill tone="green">released</Pill> },
           ] as never} />
       </div>
       <BatchModal open={open} onClose={() => setOpen(false)} onCreated={() => { setOpen(false); toast('success', 'Batch recorded'); reload() }} />
+      <ConfirmModal open={!!advance}
+        title={`Advance ${advance?.batchCode ?? ''}`}
+        sub={advance && NEXT_STATUS[advance.status]
+          ? `Move this batch from ${advance.status.replace(/_/g, ' ')} to ${NEXT_STATUS[advance.status]!.replace(/_/g, ' ')}? The lifecycle only moves forward.`
+          : undefined}
+        confirmLabel="Advance status" busy={busy}
+        onClose={() => setAdvance(null)} onConfirm={doAdvance} />
     </section>
   )
 }
@@ -255,7 +295,7 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const [bulls, setBulls] = useState<GBull[]>([])
   const [operators, setOperators] = useState<GOperator[]>([])
   const [presses, setPresses] = useState<GPress[]>([])
-  const [form, setForm] = useState({ batchCode: '', productId: '', pressDate: '', seedType: '', seedQtyKg: '', seedCostTotal: '', farmerId: '', bullId: '', operatorId: '', pressId: '', weatherNotes: '' })
+  const [form, setForm] = useState({ batchCode: '', productId: '', pressDate: new Date().toISOString().slice(0, 10), seedType: '', seedQtyKg: '', seedCostTotal: '', farmerId: '', bullId: '', operatorId: '', pressId: '', weatherNotes: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -384,7 +424,7 @@ function QualityModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
         moisturePct: form.moisturePct ? Number(form.moisturePct) : null,
         aflatoxinPpb: form.aflatoxinPpb ? Number(form.aflatoxinPpb) : null,
         oilTempCelsius: form.oilTempCelsius ? Number(form.oilTempCelsius) : null,
-        overallPass: form.pass === 'true', notes: form.notes.trim() || null, checkedBy: 'demo',
+        overallPass: form.pass === 'true', notes: form.notes.trim() || null, checkedBy: currentUsername(),
       })
       onCreated()
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
@@ -447,7 +487,7 @@ export function GStock() {
             { key: 'available', label: 'Available', numeric: true, render: (s: GStockLevel) =>
               <Pill tone={available(s) < 10 ? 'rust' : 'green'}>{available(s)}</Pill> },
             { key: 'unitCost', label: 'Unit cost', numeric: true, render: (s: GStockLevel) => (s.unitCost != null ? formatINR(s.unitCost) : '—') },
-            { key: 'expiryDate', label: 'Expires', render: (s: GStockLevel) => s.expiryDate ?? '—' },
+            { key: 'expiryDate', label: 'Expires', render: (s: GStockLevel) => formatDay(s.expiryDate ?? '') },
           ] as never} />
       </div>
     </section>
@@ -613,7 +653,7 @@ export function GPrices() {
               const m = margin(p)
               return m === null ? '—' : <Pill tone={m >= 20 ? 'green' : m >= 10 ? 'gold' : 'rust'}>{m}%</Pill>
             } },
-            { key: 'effectiveFrom', label: 'Effective' },
+            { key: 'effectiveFrom', label: 'Effective', render: (p: GPriceConfig) => formatDay(p.effectiveFrom) },
             { key: 'active', label: 'Status', render: (p: GPriceConfig) => <Pill tone={p.active ? 'green' : 'slate'}>{p.active ? 'ACTIVE' : 'superseded'}</Pill> },
             { key: 'notes', label: 'Notes' },
           ] as never} />

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { formatDay } from './api'
 import { formatDate } from './api'
 import {
   gaanugu, type GCountLine, type GCountPlan, type GWarehouse,
 } from './gaanugu-api'
 import { useList, View } from './gaanugu-screens'
-import { Button, DataTable, Field, Modal, Pill, useToast } from './ui'
+import { Button, ConfirmModal, DataTable, Field, Modal, Pill, useToast } from './ui'
 
 /* ================= STOCK COUNTS ================= */
 const COUNT_TABS = ['Count Plans', 'Execute Count', 'Reconciliation'] as const
@@ -37,7 +38,7 @@ function planCols(onOpen: (id: number) => void) {
     { key: 'planCode', label: 'Plan #' },
     { key: 'scopeDesc', label: 'Scope' },
     { key: 'warehouse', label: 'Warehouse', render: (p: GCountPlan) => p.warehouse ?? 'All' },
-    { key: 'plannedDate', label: 'Planned' },
+    { key: 'plannedDate', label: 'Planned', render: (p: GCountPlan) => formatDay(p.plannedDate ?? '') },
     { key: 'status', label: 'Status', render: (p: GCountPlan) => <Pill tone={COUNT_TONE[p.status] ?? 'plain'}>{p.status.replace(/_/g, ' ')}</Pill> },
     { key: 'lineCount', label: 'Lines', numeric: true },
     { key: 'varianceCount', label: 'Variances', numeric: true, render: (p: GCountPlan) =>
@@ -105,14 +106,16 @@ function PlanModal({ open, onClose, onCreated }: { open: boolean; onClose: () =>
   )
 }
 
-function usePlanDetail(plans: ReturnType<typeof useList<GCountPlan>>, activeId: number | null) {
+function usePlanDetail(activeId: number | null) {
   const [detail, setDetail] = useState<GCountPlan | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const load = () => {
+  // Reload only when the selected plan changes or explicitly asked — reloading on every
+  // plans-list refresh would wipe unsaved counted quantities mid-entry.
+  const load = useCallback(() => {
     if (!activeId) { setDetail(null); return }
     gaanugu.get<GCountPlan>(`/counts/plans/${activeId}`).then(setDetail).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-  }
-  useEffect(load, [activeId, plans.data])
+  }, [activeId])
+  useEffect(load, [load])
   return { detail, error, reload: load }
 }
 
@@ -120,7 +123,7 @@ function ExecutePlan({ plans, activeId, setActiveId }: {
   plans: ReturnType<typeof useList<GCountPlan>>; activeId: number | null; setActiveId: (id: number) => void
 }) {
   const candidates = useMemo(() => plans.data?.filter((p) => p.status === 'PLANNED' || p.status === 'IN_PROGRESS') ?? [], [plans.data])
-  const { detail, error, reload } = usePlanDetail(plans, activeId)
+  const { detail, error, reload } = usePlanDetail(activeId)
   const toast = useToast()
   const [drafts, setDrafts] = useState<Record<number, string>>({})
   const [busy, setBusy] = useState(false)
@@ -169,6 +172,9 @@ function ExecutePlan({ plans, activeId, setActiveId }: {
           <div className="toolbar" style={{ padding: '12px 16px' }}>
             <strong>{detail?.planCode ?? 'Loading…'}</strong>
             {detail && <Pill tone={COUNT_TONE[detail.status] ?? 'plain'}>{detail.status.replace(/_/g, ' ')}</Pill>}
+            {detail?.status === 'IN_PROGRESS' && detail.lines && (
+              <Pill tone="plain">{detail.lines.filter((l) => l.countedQty != null).length} / {detail.lines.length} counted</Pill>
+            )}
             <div className="spacer" />
             {detail?.status === 'PLANNED' && <Button variant="gold" small disabled={busy} onClick={start}>Start count</Button>}
             {detail?.status === 'IN_PROGRESS' && <Button variant="gold" small disabled={busy} onClick={complete}>Complete count</Button>}
@@ -204,15 +210,17 @@ function Reconciliation({ plans, activeId, setActiveId }: {
   plans: ReturnType<typeof useList<GCountPlan>>; activeId: number | null; setActiveId: (id: number) => void
 }) {
   const candidates = useMemo(() => plans.data?.filter((p) => p.status === 'COMPLETED' || p.status === 'RECONCILED') ?? [], [plans.data])
-  const { detail, error, reload } = usePlanDetail(plans, activeId)
+  const { detail, error, reload } = usePlanDetail(activeId)
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [confirmReconcile, setConfirmReconcile] = useState(false)
   const reconcile = async () => {
     if (!detail) return
     setBusy(true)
     try {
       const res = await gaanugu.post<{ adjustmentsPosted: number }>(`/counts/plans/${detail.id}/reconcile`)
       toast('success', `Reconciled — ${res.adjustmentsPosted} adjustment(s) posted to the ledger`)
+      setConfirmReconcile(false)
       plans.reload(); reload()
     } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
@@ -236,12 +244,17 @@ function Reconciliation({ plans, activeId, setActiveId }: {
             {detail.completedAt && <span style={{ fontSize: 12, color: 'var(--muted)' }}>completed {formatDate(detail.completedAt)}</span>}
             <div className="spacer" />
             {detail.status === 'COMPLETED' && (
-              <Button variant="gold" small disabled={busy} onClick={reconcile}>
-                {busy ? 'Posting…' : `Reconcile — post ${variances.length} adjustment(s)`}
+              <Button variant="gold" small disabled={busy} onClick={() => setConfirmReconcile(true)}>
+                Reconcile — post {variances.length} adjustment(s)
               </Button>
             )}
             <Button variant="ghost" small onClick={reload}>Reload</Button>
           </div>
+          <ConfirmModal open={confirmReconcile}
+            title={`Reconcile ${detail.planCode}`}
+            sub={`${variances.length} variance line(s) will become permanent ledger adjustments (ADJUSTMENT_IN/OUT) referencing this count. This cannot be undone.`}
+            confirmLabel="Post adjustments" busy={busy}
+            onClose={() => setConfirmReconcile(false)} onConfirm={reconcile} />
           {error && <p style={{ padding: '0 16px', color: 'var(--rust)' }}>{error}</p>}
           {variances.length === 0 ? (
             <p style={{ padding: '0 16px 14px', color: 'var(--muted)' }}>Zero variance — physical matches system. Nothing to post.</p>

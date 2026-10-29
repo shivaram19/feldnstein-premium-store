@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { formatDate, formatINR } from './api'
+import { formatDate, formatDay, formatINR } from './api'
 import {
   gaanugu, type GBull, type GBullWorkLog, type GGoodsReceipt, type GMovement, type GPurchaseOrder,
   type GSeedProcurement, type GStockLevel, type GSupplier, type GWarehouse, type NamedRef,
@@ -44,7 +44,7 @@ function SeedProcurementTable() {
       </div>
       <View loading={loading} error={error} rows={data as never[] | null} empty="No seed purchases recorded." onRetry={reload}
         cols={[
-          { key: 'procurementDate', label: 'Date' },
+          { key: 'procurementDate', label: 'Date', render: (s: GSeedProcurement) => formatDay(s.procurementDate) },
           { key: 'seedType', label: 'Seed' },
           { key: 'farmer', label: 'Farmer', render: (s: GSeedProcurement) => s.farmer?.name },
           { key: 'qtyKg', label: 'Qty (kg)', numeric: true },
@@ -134,8 +134,8 @@ function PurchaseOrderTable() {
           { key: 'poNumber', label: 'PO #' },
           { key: 'supplier', label: 'Supplier', render: (p: GPurchaseOrder) => p.supplier?.name },
           { key: 'warehouse', label: 'Deliver to', render: (p: GPurchaseOrder) => p.deliveryWarehouse?.name },
-          { key: 'orderDate', label: 'Ordered' },
-          { key: 'expected', label: 'Expected', render: (p: GPurchaseOrder) => p.expectedDelivery ?? '—' },
+          { key: 'orderDate', label: 'Ordered', render: (p: GPurchaseOrder) => formatDay(p.orderDate) },
+          { key: 'expected', label: 'Expected', render: (p: GPurchaseOrder) => formatDay(p.expectedDelivery ?? '') },
           { key: 'status', label: 'Status', render: (p: GPurchaseOrder) => <Pill tone={PO_TONE[p.status] ?? 'plain'}>{p.status.replace(/_/g, ' ')}</Pill> },
           { key: 'notes', label: 'Notes' },
         ] as never} />
@@ -324,7 +324,7 @@ export function GWarehouses() {
                 { key: 'onHand', label: 'On hand', numeric: true },
                 { key: 'reserved', label: 'Reserved', numeric: true },
                 { key: 'available', label: 'Available', numeric: true, render: (s: GStockLevel) => <Pill tone={avail(s) < 10 ? 'rust' : 'green'}>{avail(s)}</Pill> },
-                { key: 'expiry', label: 'Expires', render: (s: GStockLevel) => s.expiryDate ?? '—' },
+                { key: 'expiry', label: 'Expires', render: (s: GStockLevel) => formatDay(s.expiryDate ?? '') },
               ] as never} rows={stockRows as never[]} />}
         </div>
       )}
@@ -371,7 +371,7 @@ function WorkLogTable() {
   const { data, error, loading, reload } = useList<GBullWorkLog>('/bull-work-logs?size=500')
   return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No work sessions logged." onRetry={reload}
     cols={[
-      { key: 'workDate', label: 'Date' },
+      { key: 'workDate', label: 'Date', render: (w: GBullWorkLog) => formatDay(w.workDate) },
       { key: 'bull', label: 'Bull', render: (w: GBullWorkLog) => w.bull?.name },
       { key: 'batch', label: 'Batch', render: (w: GBullWorkLog) => w.batch?.code ?? '—' },
       { key: 'hours', label: 'Hours worked', numeric: true, render: (w: GBullWorkLog) =>
@@ -567,7 +567,7 @@ export function GGrn() {
           cols={[
             { key: 'grnNumber', label: 'GRN #' },
             { key: 'po', label: 'PO', render: (g: GGoodsReceipt) => g.po?.code },
-            { key: 'receiptDate', label: 'Received' },
+            { key: 'receiptDate', label: 'Received', render: (g: GGoodsReceipt) => formatDay(g.receiptDate) },
             { key: 'deliveryNoteNo', label: 'Delivery note' },
             { key: 'condition', label: 'Condition', render: (g: GGoodsReceipt) => g.conditionNote ?? '—' },
             { key: 'receivedBy', label: 'Received by' },

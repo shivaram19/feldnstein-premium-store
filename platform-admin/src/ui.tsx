@@ -14,10 +14,33 @@ export function Button({
 /* ---------- pill ---------- */
 export type PillTone = 'green' | 'rust' | 'gold' | 'forest' | 'slate' | 'plain'
 export function Pill({ tone = 'plain', children, onClick, selected }: { tone?: PillTone; children: ReactNode; onClick?: () => void; selected?: boolean }) {
+  const interactive = !!onClick
   return (
-    <span className={`pill pill-${tone}${selected ? ' selected' : ''}`} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
+    <span
+      className={`pill pill-${tone}${selected ? ' selected' : ''}`}
+      onClick={onClick}
+      style={interactive ? { cursor: 'pointer' } : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={interactive ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
+    >
       {children}
     </span>
+  )
+}
+
+/* ---------- confirm dialog ---------- */
+export function ConfirmModal({ open, title, sub, confirmLabel = 'Confirm', busy, onClose, onConfirm }: {
+  open: boolean; title: string; sub?: string; confirmLabel?: string; busy?: boolean
+  onClose: () => void; onConfirm: () => void
+}) {
+  return (
+    <Modal title={title} sub={sub} open={open} onClose={onClose}>
+      <div className="modal-actions">
+        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="gold" disabled={busy} onClick={onConfirm}>{busy ? 'Working…' : confirmLabel}</Button>
+      </div>
+    </Modal>
   )
 }
 

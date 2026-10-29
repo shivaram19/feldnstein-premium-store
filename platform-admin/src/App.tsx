@@ -14,7 +14,7 @@ import {
 } from './gaanugu-alerts'
 import { GCounts } from './gaanugu-counts'
 import { GReports } from './gaanugu-reports'
-import { clearAuth, getAuth, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
+import { clearAuth, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
 type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
 type NavGroup = { section: string; icon: string; items: NavItem[] }
@@ -205,9 +205,9 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
       <div className="login-card">
         <div className="brand">FELD·N·STEIN</div>
         <div className="brand-sub">Platform Admin · RBAC</div>
-        <input className="input" placeholder="Username" value={user} autoFocus
+        <input className="input" placeholder="Username" value={user} autoFocus aria-label="Username"
           onChange={(e) => setUser(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && pass && submit()} />
-        <input className="input" placeholder="Password" type="password" value={pass}
+        <input className="input" placeholder="Password" type="password" value={pass} aria-label="Password"
           onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && user && submit()} />
         <Button variant="primary" disabled={!user || !pass || busy} onClick={submit}>
           {busy ? 'Signing in…' : 'Sign in'}
@@ -224,6 +224,11 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 /* ---------- shell ---------- */
 function Shell({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = useState<NavId>('g-dashboard')
+  useEffect(() => {
+    const handler = (e: Event) => setTab((e as CustomEvent<string>).detail as NavId)
+    navEvents.addEventListener('nav', handler)
+    return () => navEvents.removeEventListener('nav', handler)
+  }, [])
   const active = FLAT.find((n) => n.id === tab)!
   return (
     <div className="shell">

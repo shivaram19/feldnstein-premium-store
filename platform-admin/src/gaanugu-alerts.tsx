@@ -183,19 +183,35 @@ export function GSettings() {
 function SettingsGroup({ prefixes }: { prefixes: string[] }) {
   const { data, error, loading, reload } = useList<GAppSetting>('/settings')
   const [drafts, setDrafts] = useState<Record<number, string>>({})
+  const [invalid, setInvalid] = useState<Record<number, string>>({})
   const [busy, setBusy] = useState(false)
   const toast = useToast()
   const rows = useMemo(
     () => data?.filter((s) => prefixes.some((p) => s.settingKey.startsWith(p))) ?? null,
     [data, prefixes])
+  const validate = (s: GAppSetting, value: string): string | null => {
+    if (value.trim() === '') return null
+    switch (s.valueType) {
+      case 'INTEGER': return /^\d+$/.test(value.trim()) ? null : 'whole number expected'
+      case 'DECIMAL': return /^\d+(\.\d+)?$/.test(value.trim()) ? null : 'number expected'
+      case 'BOOLEAN': return /^(true|false)$/i.test(value.trim()) ? null : 'true or false'
+      default: return null
+    }
+  }
   const save = async (s: GAppSetting) => {
     const value = drafts[s.id]
     if (value === undefined) return
+    const problem = validate(s, value)
+    if (problem) {
+      setInvalid((d) => ({ ...d, [s.id]: problem }))
+      return
+    }
     setBusy(true)
     try {
       await gaanugu.update(`/settings/${s.id}`, { ...s, settingValue: value })
       toast('success', `${s.settingKey} updated`)
       setDrafts((d) => { const n = { ...d }; delete n[s.id]; return n })
+      setInvalid((d) => { const n = { ...d }; delete n[s.id]; return n })
       reload()
     } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
@@ -205,8 +221,12 @@ function SettingsGroup({ prefixes }: { prefixes: string[] }) {
         cols={[
           { key: 'settingKey', label: 'Key', render: (s: GAppSetting) => <code style={{ fontSize: 12 }}>{s.settingKey}</code> },
           { key: 'value', label: 'Value', render: (s: GAppSetting) => (
-            <input className="input" style={{ width: 220 }} defaultValue={s.settingValue ?? ''}
-              onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))} />
+            <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 4 }}>
+              <input className="input" style={{ width: 220, borderColor: invalid[s.id] ? 'var(--rust)' : undefined }}
+                aria-invalid={!!invalid[s.id]} defaultValue={s.settingValue ?? ''}
+                onChange={(e) => setDrafts((d) => ({ ...d, [s.id]: e.target.value }))} />
+              {invalid[s.id] && <span style={{ fontSize: 11, color: 'var(--rust)', fontWeight: 600 }}>{invalid[s.id]}</span>}
+            </span>
           ) },
           { key: 'type', label: 'Type', render: (s: GAppSetting) => <Pill tone="plain">{s.valueType}</Pill> },
           { key: 'description', label: 'What it controls' },

@@ -4,7 +4,7 @@ import {
   gaanugu, type GReportRun, type GReportSchedule, type GStockLevel, type GWarehouse,
 } from './gaanugu-api'
 import { useList, View } from './gaanugu-screens'
-import { Button, Field, Pill, useToast } from './ui'
+import { Button, Field, LoadingRows, Pill, useToast } from './ui'
 
 /* ================= REPORTS ================= */
 const REPORT_TABS = ['Standard Reports', 'Custom Builder', 'Scheduled Reports'] as const
@@ -80,7 +80,7 @@ function ReportTable({ reportId, params }: { reportId: string; params?: string }
         <Button variant="ghost" small onClick={csv}>Download CSV</Button>
         <Button variant="ghost" small onClick={load}>Refresh</Button>
       </div>
-      {loading ? <p style={{ padding: 16, color: 'var(--muted)' }}>Loading…</p>
+      {loading ? <div style={{ padding: '8px 16px' }}><LoadingRows cols={cols.length || 4} /></div>
         : error ? <p style={{ padding: 16, color: 'var(--rust)' }}>{error}</p>
         : !rows || rows.length === 0 ? <p style={{ padding: 16, color: 'var(--muted)' }}>No rows for this report.</p>
         : (
