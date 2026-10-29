@@ -89,4 +89,35 @@ public class ProductionBatch extends PanacheEntity {
 
     @Column(name = "best_before_date")
     public LocalDate bestBeforeDate;
+
+    /** Status as loaded from the DB — used to enforce the forward-only lifecycle gate. */
+    @jakarta.persistence.Transient
+    private BatchStatus loadedStatus;
+
+    @jakarta.persistence.PostLoad
+    void rememberLoadedStatus() {
+        this.loadedStatus = this.status;
+    }
+
+    /**
+     * Phase-1 spec gate: batches advance exactly one lifecycle step, forward only.
+     * Without this, an API client could jump PRESSING → RELEASED and skip QC entirely.
+     */
+    @jakarta.persistence.PreUpdate
+    void enforceLifecycleGate() {
+        if (loadedStatus == null || loadedStatus == status) return;
+        BatchStatus expected = switch (loadedStatus) {
+            case PRESSING -> BatchStatus.SEDIMENTATION;
+            case SEDIMENTATION -> BatchStatus.BOTTLING_READY;
+            case BOTTLING_READY -> BatchStatus.BOTTLING;
+            case BOTTLING -> BatchStatus.QC_PENDING;
+            case QC_PENDING -> BatchStatus.QC_PASSED;
+            case QC_PASSED -> BatchStatus.RELEASED;
+            case RELEASED -> null;
+        };
+        if (status != expected) {
+            throw new IllegalStateException("Illegal batch transition " + loadedStatus + " → " + status
+                    + (expected != null ? "; next allowed: " + expected : "; batch is already RELEASED"));
+        }
+    }
 }

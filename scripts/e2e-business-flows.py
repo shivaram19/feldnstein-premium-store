@@ -318,6 +318,127 @@ def flow6_reports_rbac():
         check("6.11 RBAC: anonymous blocked", e.code == 401, str(e.code))
 
 
+# ---------------------------------------------------------------- Flow 7
+def flow7_negative_and_boundary():
+    print("\n=== Flow 7 (expert): negative paths, boundaries, security probes ===")
+    s, levels = get("ops", "/g/stock-levels?size=500")
+    target = next((x for x in levels if x["onHand"] >= 3), None)
+    check("7.0 fixture position with stock", target is not None)
+    if not target:
+        return
+    th = target["onHand"]
+
+    s, _ = post("ops", "/g/stock/transfers", {"stockLevelId": target["id"], "toWarehouseId": 2, "quantity": 0})
+    check("7.1 transfer qty=0 rejected", s == 400, str(s))
+    s, _ = post("ops", "/g/stock/transfers", {"stockLevelId": target["id"], "toWarehouseId": 2, "quantity": th + 9999})
+    check("7.2 transfer beyond available rejected", s == 400, str(s))
+    s, _ = post("ops", "/g/stock/transfers", {"stockLevelId": target["id"], "toWarehouseId": 2, "quantity": -5})
+    check("7.3 transfer negative rejected", s == 400, str(s))
+    s, _ = post("ops", "/g/stock/transfers", {"stockLevelId": 99999999, "toWarehouseId": 2, "quantity": 1})
+    check("7.4 transfer unknown stock level → 404", s == 404, str(s))
+
+    s, _ = post("ops", "/g/stock/adjustments", {"stockLevelId": target["id"], "adjustedQty": -1, "type": "DAMAGE", "reason": "x"})
+    check("7.5 adjustment to negative rejected", s == 400, str(s))
+    s, r = post("ops", "/g/stock/adjustments", {"stockLevelId": target["id"], "adjustedQty": th, "type": "COUNT", "reason": "noop"})
+    check("7.6 no-op adjustment is safe (delta 0)", s in (200, 201) and r.get("delta") == 0, f"{s} {r}")
+
+    s, r = post("ops", "/g/stock/hold", {"stockLevelId": target["id"], "quantity": 999999})
+    check("7.7 hold beyond available rejected", s == 400, str(s))
+    s, _ = post("ops", "/g/stock/release", {"stockLevelId": target["id"], "quantity": 999999})
+    check("7.8 release beyond on-hold rejected", s == 400, str(s))
+
+    dup = f"DUP-{TAG}"
+    s, b1 = post("ops", "/g/production-batches?size=500", {
+        "batchCode": dup, "product": {"id": 1}, "pressDate": str(date.today()),
+        "seedType": "x", "seedQtyKg": 1, "seedCostTotal": 1, "status": "PRESSING"})
+    check("7.9 create batch for gate test", s == 201, f"{s}")
+    s, _ = post("ops", "/g/production-batches?size=500", {
+        "batchCode": dup, "product": {"id": 1}, "pressDate": str(date.today()),
+        "seedType": "x", "seedQtyKg": 1, "seedCostTotal": 1, "status": "PRESSING"})
+    check("7.10 duplicate batch code rejected", s in (400, 409, 500), str(s))
+    s, _ = put("ops", f"/g/production-batches/{b1['id']}", {**b1, "status": "RELEASED"})
+    check("7.11 lifecycle skip PRESSING→RELEASED rejected", s not in (200, 201, 204), str(s))
+    s, now = get("ops", f"/g/production-batches/{b1['id']}")
+    check("7.12 skipped transition left status unchanged", now.get("status") == "PRESSING", str(now.get("status")))
+    s, _ = put("ops", f"/g/production-batches/{b1['id']}", {**now, "status": "SEDIMENTATION"})
+    check("7.13 valid one-step transition accepted", s in (200, 204), str(s))
+    s, _ = put("ops", f"/g/production-batches/{b1['id']}", {**now, "status": "PRESSING"})
+    check("7.14 backward transition rejected", s not in (200, 201, 204), str(s))
+
+    s, created = post("ops", "/g/counts/plans", {"warehouseId": 1, "scopeDesc": f"neg {TAG}", "plannedDate": str(date.today())})
+    plan = created["plan"]
+    s, det = get("ops", f"/g/counts/plans/{plan['id']}")
+    line = det["lines"][0]
+    s, _ = put("ops", f"/g/counts/lines/{line['id']}", {"countedQty": 1})
+    check("7.15 count line on PLANNED plan rejected (409)", s == 409, str(s))
+    post("ops", f"/g/counts/plans/{plan['id']}/start")
+    s, _ = post("ops", f"/g/counts/plans/{plan['id']}/complete")
+    check("7.16 complete with uncounted lines rejected (409)", s == 409, str(s))
+    for l in det["lines"]:
+        put("ops", f"/g/counts/lines/{l['id']}", {"countedQty": l["systemQty"]})
+    s, _ = post("ops", f"/g/counts/plans/{plan['id']}/complete")
+    check("7.17 complete after full count accepted", s in (200, 201), str(s))
+    s, _ = post("ops", f"/g/counts/plans/{plan['id']}/reconcile")
+    check("7.18 first reconcile accepted", s in (200, 201), str(s))
+    s, _ = post("ops", f"/g/counts/plans/{plan['id']}/reconcile")
+    check("7.19 double reconcile rejected (409)", s == 409, str(s))
+
+    s, _ = get("admin", "/g/reports/ledger?type=ORDER_OUT%27%20OR%20%271%27=%271")
+    check("7.20 SQL-injection probe harmless", s == 200, str(s))
+    s, evil = post("ops", "/g/suppliers", {"code": f"X-{TAG}", "type": "FARMER", "name": "<script>alert(1)</script>", "active": True})
+    check("7.21 XSS payload stored without server error", s == 201, f"{s}")
+    s, page_html = 0, None
+    req = urllib.request.Request("http://localhost:8080/g/suppliers?size=500") if BASE.endswith("8080") else urllib.request.Request(f"{BASE}/g/suppliers?size=500")
+    req.add_header("Authorization", "Basic " + base64.b64encode(b"ops:ops123").decode())
+    with urllib.request.urlopen(req) as res:
+        body = res.read().decode()
+    check("7.22 XSS payload returned as data (React escapes on render)", "<script>alert(1)</script>" in body)
+
+
+# ---------------------------------------------------------------- Flow 8
+def flow8_rbac_sweep():
+    print("\n=== Flow 8 (expert): RBAC matrix sweep ===")
+    cases = [
+        ("GET /g/stock-levels", "ops", "GET", "/g/stock-levels?size=1", 200),
+        ("GET /g/audit-events", "ops", "GET", "/g/audit-events", 403),
+        ("GET /g/settings", "ops", "GET", "/g/settings", 403),
+        ("PUT /g/settings/1", "ops", "PUT", "/g/settings/1", 403),
+        ("GET /g/reports/runs", "ops", "GET", "/g/reports/runs", 403),
+        ("GET /g/report-schedules", "ops", "GET", "/g/report-schedules", 403),
+        ("POST /g/report-schedules", "ops", "POST", "/g/report-schedules", 403),
+        ("GET /g/analytics/dashboard", "ops", "GET", "/g/analytics/dashboard", 403),
+        ("POST /g/alerts-ops/regenerate", "ops", "POST", "/g/alerts-ops/regenerate", 200),
+        ("POST /g/stock/transfers", "ops", "POST", "/g/stock/transfers", 400),  # authed; body invalid → 400 not 403
+        ("POST /g/production-batches", "cust", "POST", "/g/production-batches", 403),
+        ("GET /g/stock-levels anon", "anon", "GET", "/g/stock-levels", 401),
+    ]
+    # 'cust' is not in USERS — handle manually
+    ok = True
+    for name, user, method, path, expect in cases:
+        if user == "cust":
+            req = urllib.request.Request(BASE + path, data=b"{}", method=method)
+            req.add_header("Authorization", "Basic " + base64.b64encode(b"cust:cust123").decode())
+            req.add_header("Content-Type", "application/json")
+            try:
+                urllib.request.urlopen(req)
+                s = 200
+            except urllib.error.HTTPError as e:
+                s = e.code
+        elif user == "anon":
+            req = urllib.request.Request(BASE + path, method=method)
+            try:
+                urllib.request.urlopen(req)
+                s = 200
+            except urllib.error.HTTPError as e:
+                s = e.code
+        else:
+            s, _ = (get if method == "GET" else call)(user, path) if method == "GET" else call(method, path, user, {} if method == "POST" else None)
+        passed_case = s == expect
+        ok = ok and passed_case
+        print(f"  {'PASS' if passed_case else 'FAIL'}  {name} → {s} (expected {expect})")
+    check("8.x RBAC sweep", ok)
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -327,6 +448,8 @@ def main():
         flow4_alerts(variant)
         flow5_po_grn()
         flow6_reports_rbac()
+        flow7_negative_and_boundary()
+        flow8_rbac_sweep()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

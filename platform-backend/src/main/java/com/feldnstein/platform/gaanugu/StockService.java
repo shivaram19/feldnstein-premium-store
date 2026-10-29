@@ -33,6 +33,8 @@ public class StockService {
     @Transactional
     @Audited("STOCK_TRANSFER")
     public Response transfer(TransferRequest req) {
+        if (req == null || req.stockLevelId() == null || req.toWarehouseId() == null || req.quantity() <= 0)
+            return Response.status(400).entity(Map.of("error", "stockLevelId, toWarehouseId and a positive quantity are required")).build();
         StockLevel from = StockLevel.findById(req.stockLevelId());
         if (from == null) return Response.status(404).entity(Map.of("error", "stock level not found")).build();
         Warehouse toWh = Warehouse.findById(req.toWarehouseId());
@@ -75,6 +77,8 @@ public class StockService {
     @Transactional
     @Audited("STOCK_ADJUSTMENT")
     public Response adjust(AdjustmentRequest req) {
+        if (req == null || req.stockLevelId() == null || req.adjustedQty() < 0)
+            return Response.status(400).entity(Map.of("error", "stockLevelId and a non-negative adjustedQty are required")).build();
         StockLevel sl = StockLevel.findById(req.stockLevelId());
         if (sl == null) return Response.status(404).entity(Map.of("error", "stock level not found")).build();
         if (req.adjustedQty() < 0) return Response.status(400).entity(Map.of("error", "adjustedQty must be >= 0")).build();
@@ -96,6 +100,8 @@ public class StockService {
     @Transactional
     @Audited("STOCK_HOLD")
     public Response hold(HoldRequest req) {
+        if (req == null || req.stockLevelId() == null || req.quantity() <= 0)
+            return Response.status(400).entity(Map.of("error", "stockLevelId and a positive quantity are required")).build();
         StockLevel sl = StockLevel.findById(req.stockLevelId());
         if (sl == null) return Response.status(404).entity(Map.of("error", "stock level not found")).build();
         if (req.quantity() <= 0 || req.quantity() > sl.getAvailable())
@@ -109,6 +115,8 @@ public class StockService {
     @Transactional
     @Audited("STOCK_RELEASE")
     public Response release(HoldRequest req) {
+        if (req == null || req.stockLevelId() == null || req.quantity() <= 0)
+            return Response.status(400).entity(Map.of("error", "stockLevelId and a positive quantity are required")).build();
         StockLevel sl = StockLevel.findById(req.stockLevelId());
         if (sl == null) return Response.status(404).entity(Map.of("error", "stock level not found")).build();
         if (req.quantity() <= 0 || req.quantity() > sl.onHold)
