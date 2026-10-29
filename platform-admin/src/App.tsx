@@ -204,6 +204,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 /* ---------- shell ---------- */
 function Shell({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = useState<NavId>('g-dashboard')
+  const [navOpen, setNavOpen] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth > 860)
   useEffect(() => {
     const handler = (e: Event) => setTab((e as CustomEvent<string>).detail as NavId)
     navEvents.addEventListener('nav', handler)
@@ -212,31 +213,41 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const active = FLAT.find((n) => n.id === tab)!
   return (
     <div className="shell">
-      <aside className="sidebar">
-        <div className="brand">FELD·N·<em>STEIN</em></div>
-        <div className="brand-sub">Platform Admin</div>
-        <nav className="nav">
-          {NAV.map((g) => (
-            <div key={g.section}>
-              <div className="nav-section">{g.icon} {g.section}</div>
-              {g.items.map((n) => (
-                <button key={n.id} className={n.id === tab ? 'active' : ''} onClick={() => setTab(n.id)}>
-                  <span className="dot" />{n.label}
-                </button>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <span>Signed in via HTTP Basic — demo realm (ADR-0005).</span>
-          <Button variant="ghost-light" small onClick={onLogout}>Sign out</Button>
-        </div>
-      </aside>
-      <main className="content">
-        <h1 className="page-title">{active.title}</h1>
-        <p className="page-sub">{active.sub}</p>
-        <active.Component />
-      </main>
+      <header className="topbar">
+        <button className="hamburger" aria-label="Toggle navigation" aria-expanded={navOpen}
+          onClick={() => setNavOpen((o) => !o)}>☰</button>
+        <div className="topbar-brand">FELD·N·<em>STEIN</em></div>
+        <div className="topbar-sub">Platform Admin</div>
+      </header>
+      <div className="shell-body">
+        {navOpen && window.innerWidth <= 860 && (
+          <div className="nav-overlay" onClick={() => setNavOpen(false)} />
+        )}
+        <aside className={`sidebar${navOpen ? ' open' : ' closed'}`}>
+          <nav className="nav">
+            {NAV.map((g) => (
+              <div key={g.section}>
+                <div className="nav-section">{g.icon} {g.section}</div>
+                {g.items.map((n) => (
+                  <button key={n.id} className={n.id === tab ? 'active' : ''}
+                    onClick={() => { setTab(n.id); if (window.innerWidth <= 860) setNavOpen(false) }}>
+                    <span className="dot" />{n.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <span>Signed in via HTTP Basic — demo realm (ADR-0005).</span>
+            <Button variant="ghost-light" small onClick={onLogout}>Sign out</Button>
+          </div>
+        </aside>
+        <main className="content">
+          <h1 className="page-title">{active.title}</h1>
+          <p className="page-sub">{active.sub}</p>
+          <active.Component />
+        </main>
+      </div>
     </div>
   )
 }
