@@ -45,7 +45,12 @@ body {
 .brand { font-family: var(--serif); font-size: 26px; letter-spacing: 0.02em; margin-bottom: 4px; }
 .brand em { color: var(--gold); font-style: italic; }
 .brand-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(242, 241, 237, 0.55); margin-bottom: 28px; }
-.nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav {
+  display: flex; flex-direction: column; gap: 4px; flex: 1;
+  /* 22 nav items exceed 100vh — scroll inside the sidebar instead of spilling
+     onto the page background, which both hid the labels and stretched the page */
+  overflow-y: auto; min-height: 0; overscroll-behavior: contain;
+}
 .nav button {
   display: flex; align-items: center; gap: 10px;
   background: transparent; border: none; color: rgba(242, 241, 237, 0.75);
