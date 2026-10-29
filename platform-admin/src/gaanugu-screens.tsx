@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { formatDate, formatDay, formatINR, currentUsername, navigate } from './api'
+import { formatDate, formatDay, formatINR, formatPct, currentUsername, navigate } from './api'
 import {
   batchStatusTone, BATCH_STATUSES, gaanugu,
   type GBull, type GBatch, type GDashboard, type GMovement, type GOperator, type GPress,
@@ -93,7 +93,7 @@ export function GDashboard() {
         </div>
         <div className="kpi">
           <div className="kpi-label">QC pass rate</div>
-          <div className="kpi-value">{dash.qcPassRate === null ? '—' : `${dash.qcPassRate}%`}</div>
+          <div className="kpi-value">{formatPct(dash.qcPassRate)}</div>
         </div>
       </div>
 
@@ -734,7 +734,7 @@ export function GAnalytics() {
         <Kpi label="Yield to date (L)" value={dash.totalYieldLitres} />
         <Kpi label="Procurement paid" value={formatINR(dash.procurementPaid)} />
         <Kpi label="Procurement pending" value={formatINR(dash.procurementPending)} />
-        <Kpi label="QC pass rate" value={dash.qcPassRate === null ? '—' : `${dash.qcPassRate}%`} />
+        <Kpi label="QC pass rate" value={formatPct(dash.qcPassRate)} />
         <Kpi label="Reserved units" value={dash.reservedUnits} />
       </div>
 

@@ -142,6 +142,12 @@ export function formatDate(iso: string): string {
   return isNaN(d.getTime()) ? iso : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+/** Percentages from the API are raw BigDecimals — round for display. */
+export function formatPct(v: number | null | undefined): string {
+  if (v === null || v === undefined) return '—'
+  return `${Math.round(v * 10) / 10}%`
+}
+
 /** Date-only formatting — for DATE columns where a time component would be misleading. */
 export function formatDay(iso: string): string {
   if (!iso) return '—'
