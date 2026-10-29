@@ -5,7 +5,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -27,7 +26,8 @@ public class ReportRun extends PanacheEntity {
     @Column(name = "run_at", nullable = false)
     public Instant runAt = Instant.now();
 
-    @Lob
-    @Column(name = "csv_content")
+    /** CSV payload — reports are small (KBs), bounded varchar rather than a LOB for
+     *  cross-database portability (H2 TEXT/Postgres TEXT). */
+    @Column(name = "csv_content", length = 1_000_000)
     public String csvContent;
 }

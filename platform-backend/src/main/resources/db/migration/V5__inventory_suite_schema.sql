@@ -88,7 +88,7 @@ CREATE TABLE report_run (
     report_type VARCHAR(64) NOT NULL,
     params_json VARCHAR(2000),
     run_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    csv_content CLOB
+    csv_content TEXT
 );
 
 -- ============ HOLD & RELEASE ============
