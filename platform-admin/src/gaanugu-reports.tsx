@@ -3,11 +3,11 @@ import { download, formatDate } from './api'
 import {
   gaanugu, type GReportRun, type GReportSchedule, type GStockLevel, type GWarehouse,
 } from './gaanugu-api'
-import { useList, View } from './gaanugu-screens'
+import { useList, View, GAnalytics } from './gaanugu-screens'
 import { Button, Field, LoadingRows, Pill, useToast } from './ui'
 
 /* ================= REPORTS ================= */
-const REPORT_TABS = ['Standard Reports', 'Custom Builder', 'Scheduled Reports'] as const
+const REPORT_TABS = ['Overview', 'Standard Reports', 'Custom Builder', 'Scheduled Reports'] as const
 
 const STANDARD_REPORTS = [
   { id: 'inventory-summary', label: 'Inventory Summary', desc: 'Every stock position: on hand, reserved, hold, value, expiry.' },
@@ -27,6 +27,7 @@ export function GReports() {
           ))}
         </div>
       </div>
+      {sub === 'Overview' && <GAnalytics />}
       {sub === 'Standard Reports' && <StandardReports />}
       {sub === 'Custom Builder' && <CustomBuilder />}
       {sub === 'Scheduled Reports' && <ScheduledReports />}

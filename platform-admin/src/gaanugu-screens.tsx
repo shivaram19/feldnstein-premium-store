@@ -3,7 +3,7 @@ import { formatDate, formatDay, formatINR, formatPct, currentUsername, navigate 
 import {
   batchStatusTone, BATCH_STATUSES, gaanugu,
   type GBull, type GBatch, type GDashboard, type GMovement, type GOperator, type GPress,
-  type GPriceConfig, type GQualityCheck, type GStockLevel, type GSupplier, type GVariant, type GWarehouse,
+  type GPriceConfig, type GQualityCheck, type GStockLevel, type GSupplier, type GVariant,
 } from './gaanugu-api'
 import {
   Button, ConfirmModal, DataTable, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, Pill,
@@ -525,87 +525,6 @@ export function GMovements() {
       </div>
     </section>
   )
-}
-
-/* ================= MASTERS ================= */
-const MASTER_TABS = ['Warehouses', 'Suppliers', 'Bulls', 'Operators', 'Presses'] as const
-
-export function GMasters() {
-  const [sub, setSub] = useState<(typeof MASTER_TABS)[number]>('Warehouses')
-  return (
-    <section>
-      <div className="toolbar">
-        <div className="filter-row">
-          {MASTER_TABS.map((t) => (
-            <Pill key={t} tone={sub === t ? 'forest' : 'plain'} selected={sub === t} onClick={() => setSub(t)}>{t}</Pill>
-          ))}
-        </div>
-      </div>
-      {sub === 'Warehouses' && <WarehouseTable />}
-      {sub === 'Suppliers' && <SupplierTable />}
-      {sub === 'Bulls' && <BullTable />}
-      {sub === 'Operators' && <OperatorTable />}
-      {sub === 'Presses' && <PressTable />}
-    </section>
-  )
-}
-
-function WarehouseTable() {
-  const { data, error, loading, reload } = useList<GWarehouse>('/warehouses?size=500')
-  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No warehouses." onRetry={reload}
-    cols={[
-      { key: 'code', label: 'Code', render: (w: GWarehouse) => <Pill tone="forest">{w.code}</Pill> },
-      { key: 'name', label: 'Name' },
-      { key: 'type', label: 'Type', render: (w: GWarehouse) => <Pill tone="plain">{w.type.replace('_', ' ')}</Pill> },
-      { key: 'manager', label: 'Manager', render: (w: GWarehouse) => w.managerName ?? '—' },
-    ] as never} /></div>
-}
-
-function SupplierTable() {
-  const { data, error, loading, reload } = useList<GSupplier>('/suppliers?size=500')
-  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No suppliers." onRetry={reload}
-    cols={[
-      { key: 'code', label: 'Code', render: (s: GSupplier) => <Pill tone="forest">{s.code}</Pill> },
-      { key: 'type', label: 'Type', render: (s: GSupplier) => <Pill tone={s.type === 'FARMER' ? 'green' : 'gold'}>{s.type}</Pill> },
-      { key: 'name', label: 'Name' },
-      { key: 'phone', label: 'Phone' },
-      { key: 'gst', label: 'GST' },
-    ] as never} /></div>
-}
-
-function BullTable() {
-  const { data, error, loading, reload } = useList<GBull>('/bulls')
-  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No bulls registered." onRetry={reload}
-    cols={[
-      { key: 'code', label: 'Code', render: (b: GBull) => <Pill tone="forest">{b.code}</Pill> },
-      { key: 'name', label: 'Name' },
-      { key: 'breed', label: 'Breed' },
-      { key: 'health', label: 'Health', render: (b: GBull) =>
-        <Pill tone={b.healthStatus === 'FIT' ? 'green' : b.healthStatus === 'RESTING' ? 'gold' : 'rust'}>{b.healthStatus}</Pill> },
-      { key: 'limit', label: 'Daily limit (h)', numeric: true, render: (b: GBull) => b.dailyWorkLimitHrs },
-    ] as never} /></div>
-}
-
-function OperatorTable() {
-  const { data, error, loading, reload } = useList<GOperator>('/press-operators')
-  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No operators." onRetry={reload}
-    cols={[
-      { key: 'code', label: 'Code', render: (o: GOperator) => <Pill tone="forest">{o.code}</Pill> },
-      { key: 'name', label: 'Name' },
-      { key: 'phone', label: 'Phone' },
-      { key: 'wage', label: 'Wage', render: (o: GOperator) => `${o.wageType} · ${formatINR(o.rate)}` },
-    ] as never} /></div>
-}
-
-function PressTable() {
-  const { data, error, loading, reload } = useList<GPress>('/presses')
-  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No presses." onRetry={reload}
-    cols={[
-      { key: 'code', label: 'Code', render: (p: GPress) => <Pill tone="forest">{p.code}</Pill> },
-      { key: 'type', label: 'Type' },
-      { key: 'beam', label: 'Beam', render: (p: GPress) => <Pill tone={p.beamCondition === 'GOOD' ? 'green' : p.beamCondition === 'FAIR' ? 'gold' : 'rust'}>{p.beamCondition}</Pill> },
-      { key: 'status', label: 'Status', render: (p: GPress) => <Pill tone={p.status === 'ACTIVE' ? 'green' : 'slate'}>{p.status.replace('_', ' ')}</Pill> },
-    ] as never} /></div>
 }
 
 /* ================= PRICES (ADR-0007) ================= */

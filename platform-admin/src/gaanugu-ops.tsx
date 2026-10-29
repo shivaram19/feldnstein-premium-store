@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDate, formatDay, formatINR } from './api'
 import {
-  gaanugu, type GBull, type GBullWorkLog, type GGoodsReceipt, type GMovement, type GPurchaseOrder,
-  type GSeedProcurement, type GStockLevel, type GSupplier, type GWarehouse, type NamedRef,
+  gaanugu, type GBull, type GBullWorkLog, type GGoodsReceipt, type GMovement, type GOperator,
+  type GPurchaseOrder, type GSeedProcurement, type GStockLevel, type GSupplier, type GWarehouse, type NamedRef,
 } from './gaanugu-api'
 import { useList, View } from './gaanugu-screens'
 import { Button, DataTable, Field, Modal, Pill, useToast } from './ui'
@@ -333,7 +333,7 @@ export function GWarehouses() {
 }
 
 /* ================= BULL & PRESS ================= */
-const BP_TABS = ['Bulls', 'Work Logs', 'Presses'] as const
+const BP_TABS = ['Bulls', 'Work Logs', 'Presses', 'Operators'] as const
 
 export function GBullPress() {
   const [sub, setSub] = useState<(typeof BP_TABS)[number]>('Bulls')
@@ -349,8 +349,20 @@ export function GBullPress() {
       {sub === 'Bulls' && <BullTable />}
       {sub === 'Work Logs' && <WorkLogTable />}
       {sub === 'Presses' && <PressTable />}
+      {sub === 'Operators' && <OperatorTable />}
     </section>
   )
+}
+
+function OperatorTable() {
+  const { data, error, loading, reload } = useList<GOperator>('/press-operators?size=500')
+  return <div className="card"><View loading={loading} error={error} rows={data as never[] | null} empty="No operators registered." onRetry={reload}
+    cols={[
+      { key: 'code', label: 'Code', render: (o: GOperator) => <Pill tone="forest">{o.code}</Pill> },
+      { key: 'name', label: 'Name' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'wage', label: 'Wage', render: (o: GOperator) => `${o.wageType} · ${formatINR(o.rate)}` },
+    ] as never} /></div>
 }
 
 function BullTable() {

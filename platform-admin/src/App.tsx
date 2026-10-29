@@ -1,10 +1,7 @@
 import { useEffect, useState, type ReactElement } from 'react'
 import { Button, ToastProvider } from './ui'
 import {
-  AnalyticsTab, LoyaltyTab, OrdersTab, PointsLedgerTab, ProductsTab, StockMovementsTab,
-} from './tabs'
-import {
-  GAnalytics, GBatches, GDashboard, GMasters, GMovements, GPrices, GProducts, GQuality, GStock,
+  GBatches, GDashboard, GMovements, GPrices, GProducts, GQuality, GStock,
 } from './gaanugu-screens'
 import {
   GAdjustment, GBullPress, GGrn, GProcurement, GTransfer, GWarehouses,
@@ -47,7 +44,7 @@ const NAV: NavGroup[] = [
         'Every pressing session, from seed to release gate.'),
       N('g-bullpress', 'Bull & Press', GBullPress,
         <>Bull &amp; <em>press</em> management</>,
-        'Bull directory, work logs (4-hour welfare limit), press condition.'),
+        'Bulls, operators, work logs (4-hour welfare limit), press condition.'),
     ],
   },
   {
@@ -113,12 +110,9 @@ const NAV: NavGroup[] = [
   {
     section: 'Reports', icon: '📈',
     items: [
-      N('g-analytics', 'Analytics', GAnalytics,
-        <><em>Analytics</em></>,
-        'Stock value, yields, procurement spend, traceability.'),
       N('g-reports', 'Reports', GReports,
         <><em>Reports</em></>,
-        'Standard reports, whitelisted custom builder, schedules (ADR-0011).'),
+        'Analytics overview, standard reports, custom builder, schedules (ADR-0011).'),
     ],
   },
   {
@@ -130,9 +124,6 @@ const NAV: NavGroup[] = [
       N('g-prices', 'Prices', GPrices,
         <>Price <em>configurations</em></>,
         'MRP, selling and cost prices per SKU — history preserved (ADR-0007).'),
-      N('g-masters', 'Directory', GMasters,
-        <>Master <em>directory</em></>,
-        'Warehouses, farmers & suppliers, bulls, operators, presses.'),
     ],
   },
   {
@@ -149,17 +140,6 @@ const NAV: NavGroup[] = [
       N('g-audit', 'Audit Log', GAuditLog,
         <>Audit <em>log</em></>,
         'Who changed what — transfers, adjustments, counts, QC (ADR-0010). ADMIN-only.'),
-    ],
-  },
-  {
-    section: 'Demo · ADR-0004', icon: '🧪',
-    items: [
-      N('products', 'Products', ProductsTab, <>The <em>catalog</em></>, 'Demo domain — replaced by gaanugu pages.'),
-      N('stock-movements', 'Movements', StockMovementsTab, <>Stock <em>ledger</em></>, 'Demo domain.'),
-      N('purchase-orders', 'Orders', OrdersTab, <><em>Orders</em></>, 'Demo domain.'),
-      N('loyalty-accounts', 'Loyalty', LoyaltyTab, <>Loyalty <em>members</em></>, 'Demo domain.'),
-      N('loyalty-transactions', 'Points', PointsLedgerTab, <>Points <em>ledger</em></>, 'Demo domain.'),
-      N('analytics', 'Analytics', AnalyticsTab, <><em>Analytics</em></>, 'Demo domain.'),
     ],
   },
 ]
