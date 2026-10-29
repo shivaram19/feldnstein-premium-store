@@ -13,4 +13,13 @@ COPY --from=build /app/target/quarkus-app ./
 EXPOSE 8080
 # Render free tier gives the container 512 MB — leave headroom for metaspace/threads
 ENV JAVA_OPTS="-Xms128m -Xmx320m"
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar quarkus-run.jar"]
+# Pre-flight probe: print the effective DB wiring and test TCP reachability BEFORE Java
+# starts, so a failed deploy's log shows whether the env vars even arrived.
+ENTRYPOINT ["bash", "-c", "\
+  echo \"[startup-probe] DB_HOST=$${DB_HOST:-<unset>} DB_PORT=$${DB_PORT:-<unset>} DB_NAME=$${DB_NAME:-<unset>} DB_USER=$${DB_USER:-<unset>} DB_JDBC_URL=$${DB_JDBC_URL:-<unset>}\"; \
+  if [ -n \"$${DB_HOST}\" ] && [ -n \"$${DB_PORT}\" ]; then \
+    timeout 6 bash -c \"echo > /dev/tcp/$${DB_HOST}/$${DB_PORT}\" \
+      && echo \"[startup-probe] TCP $${DB_HOST}:$${DB_PORT} reachable\" \
+      || echo \"[startup-probe] TCP $${DB_HOST}:$${DB_PORT} UNREACHABLE\"; \
+  fi; \
+  exec java $${JAVA_OPTS} -jar quarkus-run.jar"]
