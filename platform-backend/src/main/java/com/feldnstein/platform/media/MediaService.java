@@ -59,7 +59,7 @@ public class MediaService {
     }
 
     /** Verify the uploaded object (size + magic bytes), then queue variant generation. */
-    @Transactional
+    @Transactional(dontRollbackOn = IllegalArgumentException.class)
     public void finalizeAsset(long id) {
         MediaAsset asset = assets.findById(id);
         if (asset == null) throw new NotFoundException("asset not found");
