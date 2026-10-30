@@ -1,15 +1,18 @@
 package com.feldnstein.platform.media;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.arc.lookup.LookupIfProperty;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Map;
 
 @ApplicationScoped
+@LookupIfProperty(name = "media.storage.type", stringValue = "disk", lookupIfMissing = true)
 public class LocalDiskStorage implements MediaStorage {
 
     @ConfigProperty(name = "media.disk.dir", defaultValue = "media")
@@ -42,8 +45,10 @@ public class LocalDiskStorage implements MediaStorage {
     public byte[] read(String storageKey) {
         try {
             return Files.readAllBytes(resolve(storageKey));
+        } catch (NoSuchFileException e) {
+            throw new MediaObjectNotFoundException(storageKey);
         } catch (IOException e) {
-            throw new IllegalStateException("media object not found: " + storageKey);
+            throw new UncheckedIOException(e);
         }
     }
 

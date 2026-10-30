@@ -10,7 +10,11 @@ public interface MediaStorage {
 
     UploadTarget presignPut(String storageKey, String contentType, long sizeBytes);
 
-    /** Read object bytes; throw IllegalStateException if missing. */
+    /**
+     * Read object bytes.
+     *
+     * @throws MediaObjectNotFoundException if the object does not exist
+     */
     byte[] read(String storageKey);
 
     void write(String storageKey, InputStream bytes, long sizeBytes, String contentType);
