@@ -5,3 +5,6 @@ platform-backend/target/
 platform-admin/node_modules/
 platform-admin/dist/
 .tools/
+platform-backend/media/
+/media/
+platform-backend/.mvn/wrapper/maven-wrapper.jar
