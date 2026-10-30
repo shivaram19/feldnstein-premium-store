@@ -90,9 +90,9 @@ Original is always kept so specs can be regenerated.
 
 ## Media pipeline
 
-1. Admin requests presign: `POST /g/media/presign {assetKey, filename, contentType, sizeBytes}` → returns `{uploadUrl, storageKey, assetId}` (asset row created in DRAFT).
-2. Browser PUTs the file direct to R2 (or dev storage URL).
-3. Admin confirms upload: `POST /g/media/{id}/finalize` → enqueues async variant generation.
+1. Admin requests presign: `POST /g/media/presign {assetKey, filename, contentType, sizeBytes}` → returns `{uploadUrl, storageKey, assetId}` (asset row created in DRAFT). URL TTL 10 min, single-use intent.
+2. Browser PUTs the file direct to R2 (or dev storage URL). The bucket needs a CORS rule allowing `PUT` from the admin/storefront origins (R2 CORS is bucket-level config, part of rollout).
+3. Admin confirms upload: `POST /g/media/{id}/finalize` → **verifies the actual object**: size ≤ 10 MB and magic-byte sniffing matches the declared jpeg/png/webp (a presigned PUT pins content-type but not size, so the check must happen here) → mismatch marks the asset ERROR, deletes the object, and returns a friendly 400 → on success, enqueues async variant generation.
 4. Worker: fetch original → center-crop to each applicable slot ratio → resize to spec → upload variants → write `media_variant` rows → mark asset `READY` (awaiting publish).
 5. Admin previews variants; `POST /g/media/{id}/publish` (or unpublish) flips status.
 6. Delete removes variants + original + row (PUBLISHED assets blocked unless unpublished first).
@@ -110,7 +110,7 @@ Image library: Thumbnailator (`net.coobird:thumbnailator`) — small, battle-tes
 - `GET /site/products` — catalog: for each oil product: id, name, sku, prices (from price-configs, SELLING), marketing fields, resolved variant URLs (card + thumb), alt text; only PUBLISHED assets.
 - `GET /site/content` — all published content blocks keyed, with resolved media URLs.
 - `GET /site/media/{assetKey}` — single asset + variants.
-- Response cache headers (`Cache-Control: public, max-age=60`); backend in-memory TTL cache (60 s) so R2/DB isn't hit per page view. `/site/*` deliberately excluded from the Basic-auth realm; verify OPTIONS/CORS for the storefront origin.
+- Response cache headers (`Cache-Control: public, max-age=60, stale-while-revalidate=300` — the standard pattern for public catalog APIs per current HTTP caching guidance); backend in-memory TTL cache (60 s) so R2/DB isn't hit per page view. `/site/*` deliberately excluded from the Basic-auth realm; verify OPTIONS/CORS for the storefront origin. SVG is excluded from the upload allowlist (SVG XSS), so media URLs are safe to serve cross-origin.
 
 ## Admin UI (platform-admin)
 
@@ -158,6 +158,17 @@ All editors follow the existing modal/table/toast patterns (gold primary action,
 3. Storefront: ContentContext + component wiring + fallback.
 4. Deploy: env vars (R2) on Render; Pages root swap (storefront) + `/admin/` move; runbook/matrix URL updates.
 5. Seed: existing bundled images imported as initial PUBLISHED assets so day-one content matches today's site.
+
+## Internet-resource checks (2026-10-30)
+
+Design validated against current references; two hardening changes adopted above:
+
+- **Presigned PUT enforcement gap** — [files-sdk.dev](https://files-sdk.dev/guides/presigned-upload-validation) and [fast.io](https://fast.io/resources/s3-presigned-url-file-size-limit/): a presigned `PUT` pins content-type but **not** size, so verification must happen at finalize (now step 3). Presigned POST with `content-length-range` policy was the alternative; kept PUT for simplicity.
+- **R2 CORS** — [Cloudflare R2 presigned-URL docs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/): browser-direct uploads need a bucket CORS rule allowing PUT from our origins; added to rollout.
+- **Short presign TTL** — [Prateeksha](https://prateeksha.com/blog/nextjs-file-uploads-s3-presigned-urls-server-actions-secure-validation): 5–10 min TTL is the recommended norm; spec says 10 min.
+- **Cache headers** — [frontend-performance.com SWR blueprint](http://frontend-performance.com/advanced-caching-strategies-cdn-architecture/stale-while-revalidate-implementation/): public catalog APIs → `max-age=60, stale-while-revalidate=300`; adopted.
+- **SVG XSS** — [eddyter.com upload guide](https://eddyter.com/blogs/how-to-handle-image-uploads-react-rich-text-editor-2026): SVG is the classic upload XSS vector; our jpeg/png/webp allowlist already excludes it — now noted in the spec.
+- **Image library** — Thumbnailator confirmed the standard lightweight JVM choice; imgproxy would add a service to host (rejected, consistent with Approach A).
 
 ## Open questions (none blocking)
 
