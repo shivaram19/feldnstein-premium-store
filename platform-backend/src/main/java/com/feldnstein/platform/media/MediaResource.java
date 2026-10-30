@@ -101,7 +101,7 @@ public class MediaResource {
                 Map.entry("createdBy", a.createdBy == null ? "" : a.createdBy))).toList();
     }
 
-    /** Public, cache-immutable media byte serving. */
+    /** Public, cache-immutable media byte serving. No storage guard: an unusable backend fails the read below. */
     @GET @Path("/site/media/file/{key:.+}") @PermitAll
     @Produces("image/jpeg")
     public Response file(@PathParam("key") String key) {

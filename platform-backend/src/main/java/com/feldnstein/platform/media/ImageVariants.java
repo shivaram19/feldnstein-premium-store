@@ -15,6 +15,15 @@ public final class ImageVariants {
         try {
             BufferedImage src = ImageIO.read(new ByteArrayInputStream(original));
             if (src == null) throw new IllegalArgumentException("not a decodable image");
+            if (src.getColorModel().hasAlpha()) {
+                BufferedImage flat = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
+                java.awt.Graphics2D g = flat.createGraphics();
+                g.setColor(java.awt.Color.WHITE);
+                g.fillRect(0, 0, flat.getWidth(), flat.getHeight());
+                g.drawImage(src, 0, 0, null);
+                g.dispose();
+                src = flat;
+            }
             double srcRatio = (double) src.getWidth() / src.getHeight();
             double targetRatio = (double) slot.ratioW() / slot.ratioH();
             int cropW = src.getWidth(), cropH = src.getHeight();

@@ -5,6 +5,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ServiceUnavailableException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ public class MediaService {
     @Inject Instance<MediaStorage> storageLookup;
     @Inject MediaAssetRepository assets;
     @Inject MediaVariantRepository variants;
+    @Inject MediaStorageConfig mediaConfig;
     @ConfigProperty(name = "media.upload.max-bytes", defaultValue = "10485760")
     long maxBytes;
 
@@ -28,6 +30,7 @@ public class MediaService {
 
     @Transactional
     public PresignResponse presign(PresignRequest req, String user) {
+        if (!mediaConfig.storageUsable()) throw new ServiceUnavailableException("media storage not configured");
         if (req.assetKey() == null || req.assetKey().isBlank() || !req.assetKey().matches("[a-z0-9:_-]{3,128}"))
             throw new IllegalArgumentException("assetKey must be 3-128 chars of a-z 0-9 : _ -");
         if (assets.find("assetKey", req.assetKey()).firstResult() != null)
@@ -55,12 +58,14 @@ public class MediaService {
     /** Local-disk profile only: receive the raw bytes the browser would have PUT to S3. */
     @Transactional
     public void devUpload(String storageKey, byte[] bytes, String contentType) {
+        if (!mediaConfig.storageUsable()) throw new ServiceUnavailableException("media storage not configured");
         storage().write(storageKey, new java.io.ByteArrayInputStream(bytes), bytes.length, contentType);
     }
 
     /** Verify the uploaded object (size + magic bytes), then queue variant generation. */
     @Transactional(dontRollbackOn = IllegalArgumentException.class)
     public void finalizeAsset(long id) {
+        if (!mediaConfig.storageUsable()) throw new ServiceUnavailableException("media storage not configured");
         MediaAsset asset = assets.findById(id);
         if (asset == null) throw new NotFoundException("asset not found");
         byte[] bytes = storage().read(asset.storageKey);
