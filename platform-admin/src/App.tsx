@@ -96,7 +96,7 @@ const NAV: NavGroup[] = [
     items: [
       N('g-alerts', 'Alerts', GAlerts,
         <>Active <em>alerts</em> &amp; rules</>,
-        'Low stock, near expiry, QC overdue — materialised from threshold rules (ADR-0008).'),
+        'Low stock, near expiry, QC overdue — raised automatically from your threshold rules.'),
     ],
   },
   {
@@ -104,7 +104,7 @@ const NAV: NavGroup[] = [
     items: [
       N('g-counts', 'Stock Counts', GCounts,
         <>Stock <em>counts</em></>,
-        'Count plans, execution, and reconciliation to the ledger (ADR-0009).'),
+        'Count plans, execution, and reconciliation to the ledger.'),
     ],
   },
   {
@@ -112,7 +112,7 @@ const NAV: NavGroup[] = [
     items: [
       N('g-reports', 'Reports', GReports,
         <><em>Reports</em></>,
-        'Analytics overview, standard reports, custom builder, schedules (ADR-0011).'),
+        'Analytics overview, standard reports, custom builder, schedules.'),
     ],
   },
   {
@@ -123,7 +123,7 @@ const NAV: NavGroup[] = [
         'Cold-pressed oils and their SKU variants.'),
       N('g-prices', 'Prices', GPrices,
         <>Price <em>configurations</em></>,
-        'MRP, selling and cost prices per SKU — history preserved (ADR-0007).'),
+        'MRP, selling and cost prices per SKU — history preserved.'),
     ],
   },
   {
@@ -139,7 +139,7 @@ const NAV: NavGroup[] = [
     items: [
       N('g-audit', 'Audit Log', GAuditLog,
         <>Audit <em>log</em></>,
-        'Who changed what — transfers, adjustments, counts, QC (ADR-0010). ADMIN-only.'),
+        'Who changed what — transfers, adjustments, counts, QC. ADMIN-only.'),
     ],
   },
 ]
@@ -238,7 +238,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <span>Signed in via HTTP Basic — demo realm (ADR-0005).</span>
+            <span>Signed in to the demo workspace — role-based access enforced.</span>
             <Button variant="ghost-light" small onClick={onLogout}>Sign out</Button>
           </div>
         </aside>

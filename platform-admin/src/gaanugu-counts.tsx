@@ -5,7 +5,7 @@ import {
   gaanugu, type GCountLine, type GCountPlan, type GWarehouse,
 } from './gaanugu-api'
 import { useList, View } from './gaanugu-screens'
-import { Button, ConfirmModal, DataTable, Field, Modal, Pill, useToast } from './ui'
+import { Button, ConfirmModal, DataTable, Field, LoadingRows, Modal, OptionsError, Pill, useToast } from './ui'
 
 /* ================= STOCK COUNTS ================= */
 const COUNT_TABS = ['Count Plans', 'Execute Count', 'Reconciliation'] as const
@@ -70,10 +70,12 @@ function PlanModal({ open, onClose, onCreated }: { open: boolean; onClose: () =>
   const [form, setForm] = useState({ warehouseId: '', scopeDesc: '', plannedDate: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GWarehouse>('/warehouses').then(setWarehouses).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    gaanugu.list<GWarehouse>('/warehouses').then(setWarehouses).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const valid = form.plannedDate
   const submit = async () => {
     setBusy(true); setError(null)
@@ -97,6 +99,7 @@ function PlanModal({ open, onClose, onCreated }: { open: boolean; onClose: () =>
         </Field>
         <Field label="Planned date"><input className="input" type="date" value={form.plannedDate} onChange={(e) => setForm((f) => ({ ...f, plannedDate: e.target.value }))} /></Field>
       </div>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -109,21 +112,25 @@ function PlanModal({ open, onClose, onCreated }: { open: boolean; onClose: () =>
 function usePlanDetail(activeId: number | null) {
   const [detail, setDetail] = useState<GCountPlan | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   // Reload only when the selected plan changes or explicitly asked — reloading on every
   // plans-list refresh would wipe unsaved counted quantities mid-entry.
   const load = useCallback(() => {
     if (!activeId) { setDetail(null); return }
-    gaanugu.get<GCountPlan>(`/counts/plans/${activeId}`).then(setDetail).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+    setLoading(true); setError(null)
+    gaanugu.get<GCountPlan>(`/counts/plans/${activeId}`).then(setDetail)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false))
   }, [activeId])
   useEffect(load, [load])
-  return { detail, error, reload: load }
+  return { detail, error, loading, reload: load }
 }
 
 function ExecutePlan({ plans, activeId, setActiveId }: {
   plans: ReturnType<typeof useList<GCountPlan>>; activeId: number | null; setActiveId: (id: number) => void
 }) {
   const candidates = useMemo(() => plans.data?.filter((p) => p.status === 'PLANNED' || p.status === 'IN_PROGRESS') ?? [], [plans.data])
-  const { detail, error, reload } = usePlanDetail(activeId)
+  const { detail, error, loading, reload } = usePlanDetail(activeId)
   const toast = useToast()
   const [drafts, setDrafts] = useState<Record<number, string>>({})
   const [busy, setBusy] = useState(false)
@@ -143,6 +150,7 @@ function ExecutePlan({ plans, activeId, setActiveId }: {
     try {
       await gaanugu.update(`/counts/lines/${lineId}`, { countedQty: Number(drafts[lineId]) })
       setDrafts((d) => { const n = { ...d }; delete n[lineId]; return n })
+      toast('success', 'Counted quantity saved')
       reload()
     } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
@@ -181,6 +189,7 @@ function ExecutePlan({ plans, activeId, setActiveId }: {
             <Button variant="ghost" small onClick={reload}>Reload</Button>
           </div>
           {error && <p style={{ padding: '0 16px', color: 'var(--rust)' }}>{error}</p>}
+          {loading && !detail && <div style={{ padding: '0 16px 12px' }}><LoadingRows cols={7} /></div>}
           {detail?.lines && (
             <DataTable columns={[
               { key: 'sku', label: 'SKU' },

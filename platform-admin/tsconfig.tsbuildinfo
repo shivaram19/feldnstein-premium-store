@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/api.ts","./src/gaanugu-alerts.tsx","./src/gaanugu-api.ts","./src/gaanugu-counts.tsx","./src/gaanugu-ops.tsx","./src/gaanugu-reports.tsx","./src/gaanugu-screens.tsx","./src/main.tsx","./src/tabs.tsx","./src/ui.tsx","./src/vite-env.d.ts"],"version":"5.9.3"}
+{"root":["./src/App.tsx","./src/api.ts","./src/gaanugu-alerts.tsx","./src/gaanugu-api.ts","./src/gaanugu-counts.tsx","./src/gaanugu-ops.tsx","./src/gaanugu-reports.tsx","./src/gaanugu-screens.tsx","./src/main.tsx","./src/ui.tsx","./src/vite-env.d.ts"],"version":"5.9.3"}

@@ -38,6 +38,29 @@ export function GReports() {
 /* ---------- standard ---------- */
 type ReportRow = Record<string, string>
 
+/** camelCase/snake_case API keys → readable column titles. */
+function prettyKey(k: string): string {
+  return k
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (c) => c.toUpperCase())
+}
+
+const NUMERIC_KEY = /(qty|quantity|units|cost|price|value|amount|litre|litres|kg|count|balance|yield)/i
+const DATE_KEY = /(date|before|at)$/i
+
+function fmtCell(key: string, v: string | undefined): { text: string; numeric: boolean } {
+  if (v === undefined || v === null || v === '') return { text: '—', numeric: false }
+  const n = Number(v)
+  if (NUMERIC_KEY.test(key) && !isNaN(n)) {
+    return { text: n.toLocaleString('en-IN', { maximumFractionDigits: 2 }), numeric: true }
+  }
+  if (DATE_KEY.test(key) && !isNaN(Date.parse(v))) {
+    return { text: formatDate(v), numeric: false }
+  }
+  return { text: v, numeric: false }
+}
+
 function StandardReports() {
   const [active, setActive] = useState<string | null>(null)
   return (
@@ -87,10 +110,13 @@ function ReportTable({ reportId, params }: { reportId: string; params?: string }
         : (
           <div className="table-scroll">
             <table className="data">
-              <thead><tr>{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+              <thead><tr>{cols.map((c) => <th key={c}>{prettyKey(c)}</th>)}</tr></thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={i}>{cols.map((c) => <td key={c}>{r[c] ?? '—'}</td>)}</tr>
+                  <tr key={i}>{cols.map((c) => {
+                    const cell = fmtCell(c, r[c])
+                    return <td key={c} className={cell.numeric ? 'num' : ''}>{cell.text}</td>
+                  })}</tr>
                 ))}
               </tbody>
             </table>
@@ -127,8 +153,8 @@ function CustomBuilder() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div className="card" style={{ padding: 16, maxWidth: 860 }}>
         <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--muted)' }}>
-          The custom builder operates on the stock-movement ledger only — group by a whitelisted
-          dimension, filter by date / SKU / warehouse / movement type. No arbitrary SQL (ADR-0011).
+          The custom builder operates on the stock-movement ledger only — group by a
+          dimension, filter by date / SKU / warehouse / movement type. No arbitrary SQL.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <Field label="From"><input className="input" type="date" value={form.from} onChange={(e) => setForm((f) => ({ ...f, from: e.target.value }))} /></Field>

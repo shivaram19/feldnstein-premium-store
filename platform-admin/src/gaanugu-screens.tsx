@@ -6,7 +6,7 @@ import {
   type GPriceConfig, type GQualityCheck, type GStockLevel, type GSupplier, type GVariant,
 } from './gaanugu-api'
 import {
-  Button, ConfirmModal, DataTable, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, Pill,
+  Button, ConfirmModal, DataTable, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, OptionsError, Pill,
   useToast, type Column,
 } from './ui'
 
@@ -298,14 +298,18 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const [form, setForm] = useState({ batchCode: '', productId: '', pressDate: new Date().toISOString().slice(0, 10), seedType: '', seedQtyKg: '', seedCostTotal: '', farmerId: '', bullId: '', operatorId: '', pressId: '', weatherNotes: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GOilProductRef>('/oil-products?size=500').then(setProducts).catch(() => undefined)
-    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
-    gaanugu.list<GBull>('/bulls').then(setBulls).catch(() => undefined)
-    gaanugu.list<GOperator>('/press-operators').then(setOperators).catch(() => undefined)
-    gaanugu.list<GPress>('/presses').then(setPresses).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    Promise.all([
+      gaanugu.list<GOilProductRef>('/oil-products?size=500').then(setProducts),
+      gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))),
+      gaanugu.list<GBull>('/bulls').then(setBulls),
+      gaanugu.list<GOperator>('/press-operators').then(setOperators),
+      gaanugu.list<GPress>('/presses').then(setPresses),
+    ]).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const valid = form.batchCode.trim() && form.productId && form.pressDate && Number(form.seedQtyKg) > 0 && Number(form.seedCostTotal) >= 0
   const submit = async () => {
@@ -367,6 +371,7 @@ function BatchModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
         </Field>
       </div>
       <Field label="Weather notes"><input className="input" style={{ width: '100%' }} value={form.weatherNotes} onChange={set('weatherNotes')} placeholder="Humidity, rain, temperature…" /></Field>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -414,7 +419,12 @@ function QualityModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
   const [form, setForm] = useState({ batchId: '', stage: 'PRE_RELEASE', moisturePct: '', aflatoxinPpb: '', oilTempCelsius: '', notes: '', pass: 'true' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => { if (open) gaanugu.list<GBatch>('/production-batches?size=500').then(setBatches).catch(() => undefined) }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    gaanugu.list<GBatch>('/production-batches?size=500').then(setBatches).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const valid = form.batchId
   const submit = async () => {
     setBusy(true); setError(null)
@@ -453,6 +463,7 @@ function QualityModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
         </Field>
       </div>
       <Field label="Notes"><input className="input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} /></Field>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -560,7 +571,9 @@ export function GPrices() {
         <Button variant="gold" small onClick={() => setOpen(true)}>+ Set price</Button>
       </div>
       <div className="card">
-        <View loading={loading} error={error} rows={filtered as never[] | null} empty="No price configurations yet." onRetry={reload}
+        <View loading={loading} error={error} rows={filtered as never[] | null}
+          empty={typeFilter === 'ALL' ? 'No price configurations yet.' : `No ${typeFilter.toLowerCase()} prices.`}
+          onRetry={reload}
           cols={[
             { key: 'sku', label: 'SKU', render: (p: GPriceConfig) => p.variant?.sku },
             { key: 'product', label: 'Oil', render: (p: GPriceConfig) => p.variant?.product?.name },
@@ -587,10 +600,12 @@ function PriceModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
   const [form, setForm] = useState({ variantId: '', priceType: 'SELLING', amount: '', gstPct: '5', effectiveFrom: '', notes: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GVariant>('/product-variants').then(setVariants).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    gaanugu.list<GVariant>('/product-variants').then(setVariants).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const valid = form.variantId && Number(form.amount) > 0 && form.effectiveFrom
   const submit = async () => {
     setBusy(true); setError(null)
@@ -604,7 +619,7 @@ function PriceModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
   return (
-    <Modal title="Set price" sub="Creates a new price row — history is preserved (ADR-0007)." open={open} onClose={onClose}>
+    <Modal title="Set price" sub="Creates a new price row — history is preserved." open={open} onClose={onClose}>
       <Field label="SKU / variant">
         <select className="input" style={{ width: '100%' }} value={form.variantId} onChange={(e) => setForm((f) => ({ ...f, variantId: e.target.value }))}>
           <option value="">Select variant…</option>
@@ -622,6 +637,7 @@ function PriceModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
         <Field label="Effective from"><input className="input" type="date" value={form.effectiveFrom} onChange={(e) => setForm((f) => ({ ...f, effectiveFrom: e.target.value }))} /></Field>
       </div>
       <Field label="Notes"><input className="input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="e.g. Festival pricing" /></Field>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -636,10 +652,11 @@ export function GAnalytics() {
   const [dash, setDash] = useState<GDashboard | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [trace, setTrace] = useState<Record<string, unknown>[] | null>(null)
+  const [traceError, setTraceError] = useState(false)
   const load = useCallback(() => {
-    setError(null)
+    setError(null); setTraceError(false)
     gaanugu.dashboard().then(setDash).catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-    gaanugu.traceability().then(setTrace).catch(() => undefined)
+    gaanugu.traceability().then(setTrace).catch(() => setTraceError(true))
   }, [])
   useEffect(load, [load])
 
@@ -677,7 +694,11 @@ export function GAnalytics() {
 
       <div className="card">
         <PanelTitle>Traceability — farmer → bull → press → batch</PanelTitle>
-        {!trace ? <LoadingRows cols={5} /> : (
+        {traceError ? (
+          <p style={{ padding: 16, color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>
+            Couldn’t load traceability — <button className="linklike" onClick={load}>retry</button>
+          </p>
+        ) : !trace ? <LoadingRows cols={5} /> : (
           <DataTable columns={[
             { key: 'batchCode', label: 'Batch' },
             { key: 'product', label: 'Oil' },

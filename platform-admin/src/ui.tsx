@@ -145,6 +145,16 @@ export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   )
 }
 
+/** Shown inside modals when the dropdown-option fetches fail, with a retry. */
+export function OptionsError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>
+      Couldn’t load the dropdown data — check the connection.{' '}
+      <button type="button" className="linklike" onClick={onRetry}>Retry</button>
+    </p>
+  )
+}
+
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="state">

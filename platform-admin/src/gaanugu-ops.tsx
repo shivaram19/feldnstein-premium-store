@@ -5,7 +5,7 @@ import {
   type GPurchaseOrder, type GSeedProcurement, type GStockLevel, type GSupplier, type GWarehouse, type NamedRef,
 } from './gaanugu-api'
 import { useList, View } from './gaanugu-screens'
-import { Button, DataTable, Field, Modal, Pill, useToast } from './ui'
+import { Button, ConfirmModal, DataTable, Field, Modal, OptionsError, Pill, useToast } from './ui'
 
 const avail = (s: GStockLevel) => s.onHand - s.reserved - (s.onHold ?? 0)
 
@@ -63,10 +63,14 @@ function SeedPurchaseModal({ open, onClose, onCreated }: { open: boolean; onClos
   const [form, setForm] = useState({ date: '', seedType: '', farmerId: '', qtyKg: '', ratePerKg: '', grade: 'A', transportCost: '0' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setFarmers(r.filter((s) => s.type === 'FARMER'))).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    gaanugu.list<GSupplier>('/suppliers?size=500')
+      .then((r) => setFarmers(r.filter((s) => s.type === 'FARMER')))
+      .catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const total = (Number(form.qtyKg) || 0) * (Number(form.ratePerKg) || 0)
   const valid = form.date && form.seedType.trim() && form.farmerId && Number(form.qtyKg) > 0
   const submit = async () => {
@@ -104,6 +108,7 @@ function SeedPurchaseModal({ open, onClose, onCreated }: { open: boolean; onClos
         </Field>
       </div>
       <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--muted)' }}>Total cost: <strong>{formatINR(total)}</strong></p>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -150,11 +155,15 @@ function POModal({ open, onClose, onCreated }: { open: boolean; onClose: () => v
   const [form, setForm] = useState({ poNumber: '', supplierId: '', warehouseId: '', orderDate: '', expected: '', notes: '', itemType: 'BOTTLE', spec: '', qty: '', price: '', tax: '18' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setSuppliers(r.filter((s) => s.type === 'PACKAGING'))).catch(() => undefined)
-    gaanugu.list<GWarehouse>('/warehouses?size=500').then(setWarehouses).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    Promise.all([
+      gaanugu.list<GSupplier>('/suppliers?size=500').then((r) => setSuppliers(r.filter((s) => s.type === 'PACKAGING'))),
+      gaanugu.list<GWarehouse>('/warehouses?size=500').then(setWarehouses),
+    ]).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const valid = form.poNumber.trim() && form.supplierId && form.warehouseId && form.orderDate && Number(form.qty) > 0
   const submit = async () => {
     setBusy(true); setError(null)
@@ -206,6 +215,7 @@ function POModal({ open, onClose, onCreated }: { open: boolean; onClose: () => v
         <Field label="Tax %"><input className="input" type="number" min="0" value={form.tax} onChange={(e) => setForm((f) => ({ ...f, tax: e.target.value }))} /></Field>
       </div>
       <Field label="Notes"><input className="input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} /></Field>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -413,14 +423,16 @@ export function GTransfer() {
   const warehouses = useList<GWarehouse>('/warehouses?size=500')
   const [form, setForm] = useState({ stockLevelId: '', toWarehouseId: '', quantity: '', reason: '' })
   const [busy, setBusy] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
   const from = stock.data?.find((s) => String(s.id) === form.stockLevelId)
+  const to = warehouses.data?.find((w) => String(w.id) === form.toWarehouseId)
   const transfers = useMemo(
     () => movements.data?.filter((m) => m.type.startsWith('TRANSFER')).slice(0, 12) ?? null,
     [movements.data])
   const valid = form.stockLevelId && form.toWarehouseId && form.stockLevelId !== form.toWarehouseId && Number(form.quantity) > 0
-  const submit = async () => {
+  const doPost = async () => {
     setBusy(true); setError(null)
     try {
       await gaanugu.post('/stock/transfers', {
@@ -428,6 +440,7 @@ export function GTransfer() {
         quantity: Number(form.quantity), reason: form.reason.trim() || null,
       })
       toast('success', 'Transfer posted')
+      setConfirming(false)
       setForm({ stockLevelId: '', toWarehouseId: '', quantity: '', reason: '' })
       stock.reload(); movements.reload()
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
@@ -455,12 +468,19 @@ export function GTransfer() {
             <Field label="Quantity"><input className="input" type="number" min="1" max={from ? avail(from) : undefined} value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} /></Field>
             <Field label="Reason"><input className="input" value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Dispatch to fulfilment hub" style={{ minWidth: 240 }} /></Field>
           </div>
+          {stock.loading && <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Loading stock positions…</p>}
+          {stock.error && <OptionsError onRetry={() => { stock.reload(); warehouses.reload() }} />}
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
           <div>
-            <Button variant="gold" disabled={!valid || busy} onClick={submit}>{busy ? 'Posting…' : 'Post transfer'}</Button>
+            <Button variant="gold" disabled={!valid || busy || stock.loading} onClick={() => setConfirming(true)}>{busy ? 'Posting…' : 'Post transfer'}</Button>
           </div>
         </div>
       </div>
+      <ConfirmModal open={confirming}
+        title="Post transfer"
+        sub={from && to ? `Move ${form.quantity} units of ${from.variant?.sku} from ${from.warehouse?.name} to ${to.name}? This writes a permanent ledger entry.` : undefined}
+        confirmLabel="Post transfer" busy={busy}
+        onClose={() => setConfirming(false)} onConfirm={doPost} />
       <div className="card" style={{ marginTop: 22 }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--hairline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           Recent transfers
@@ -487,14 +507,16 @@ export function GAdjustment() {
   const movements = useList<GMovement>('/stock-movements?size=500')
   const [form, setForm] = useState({ stockLevelId: '', adjustedQty: '', type: 'DAMAGE', reason: '' })
   const [busy, setBusy] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
   const selected = stock.data?.find((s) => String(s.id) === form.stockLevelId)
+  const delta = selected && form.adjustedQty !== '' ? Number(form.adjustedQty) - selected.onHand : null
   const adjustments = useMemo(
     () => movements.data?.filter((m) => m.type.startsWith('ADJUSTMENT')).slice(0, 12) ?? null,
     [movements.data])
   const valid = form.stockLevelId && form.adjustedQty !== '' && Number(form.adjustedQty) >= 0
-  const submit = async () => {
+  const doPost = async () => {
     setBusy(true); setError(null)
     try {
       const res = await gaanugu.post<{ delta: number }>('/stock/adjustments', {
@@ -502,6 +524,7 @@ export function GAdjustment() {
         type: form.type, reason: form.reason.trim() || null,
       })
       toast('success', `Adjustment posted (delta ${res.delta > 0 ? '+' : ''}${res.delta})`)
+      setConfirming(false)
       setForm({ stockLevelId: '', adjustedQty: '', type: 'DAMAGE', reason: '' })
       stock.reload(); movements.reload()
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
@@ -537,12 +560,19 @@ export function GAdjustment() {
               </strong> — a ledger entry will be written automatically.
             </p>
           )}
+          {stock.loading && <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>Loading stock positions…</p>}
+          {stock.error && <OptionsError onRetry={() => stock.reload()} />}
           {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
           <div>
-            <Button variant="gold" disabled={!valid || busy} onClick={submit}>{busy ? 'Posting…' : 'Post adjustment'}</Button>
+            <Button variant="gold" disabled={!valid || busy || stock.loading} onClick={() => setConfirming(true)}>{busy ? 'Posting…' : 'Post adjustment'}</Button>
           </div>
         </div>
       </div>
+      <ConfirmModal open={confirming}
+        title="Post adjustment"
+        sub={selected && delta !== null ? `Set ${selected.variant?.sku} at ${selected.warehouse?.name} to ${form.adjustedQty} units (delta ${delta > 0 ? '+' : ''}${delta})? This writes a permanent ledger entry and cannot be undone.` : undefined}
+        confirmLabel="Post adjustment" busy={busy}
+        onClose={() => setConfirming(false)} onConfirm={doPost} />
       <div className="card" style={{ marginTop: 22 }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--hairline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           Recent adjustments
@@ -595,10 +625,12 @@ function GrnModal({ open, onClose, onCreated }: { open: boolean; onClose: () => 
   const [form, setForm] = useState({ grnNumber: '', poId: '', receiptDate: '', deliveryNote: '', condition: '', receivedBy: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    if (!open) return
-    gaanugu.list<GPurchaseOrder>('/purchase-orders?size=500').then(setPos).catch(() => undefined)
-  }, [open])
+  const [optionsError, setOptionsError] = useState(false)
+  const loadOptions = () => {
+    setOptionsError(false)
+    gaanugu.list<GPurchaseOrder>('/purchase-orders?size=500').then(setPos).catch(() => setOptionsError(true))
+  }
+  useEffect(() => { if (open) loadOptions() }, [open])
   const valid = form.grnNumber.trim() && form.poId && form.receiptDate
   const submit = async () => {
     setBusy(true); setError(null)
@@ -612,7 +644,7 @@ function GrnModal({ open, onClose, onCreated }: { open: boolean; onClose: () => 
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
   return (
-    <Modal title="Record goods receipt" sub="Header entry — line-level received/damaged/short via API for now." open={open} onClose={onClose}>
+    <Modal title="Record goods receipt" sub="Match the delivery against its purchase order — note any damage or shortage." open={open} onClose={onClose}>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Field label="GRN #"><input className="input" value={form.grnNumber} onChange={(e) => setForm((f) => ({ ...f, grnNumber: e.target.value }))} placeholder="GRN-2026-007" autoFocus /></Field>
         <Field label="Receipt date"><input className="input" type="date" value={form.receiptDate} onChange={(e) => setForm((f) => ({ ...f, receiptDate: e.target.value }))} /></Field>
@@ -626,6 +658,7 @@ function GrnModal({ open, onClose, onCreated }: { open: boolean; onClose: () => 
       </Field>
       <Field label="Condition note"><input className="input" style={{ width: '100%' }} value={form.condition} onChange={(e) => setForm((f) => ({ ...f, condition: e.target.value }))} placeholder="One carton smashed in transit" /></Field>
       <Field label="Received by"><input className="input" style={{ width: '100%' }} value={form.receivedBy} onChange={(e) => setForm((f) => ({ ...f, receivedBy: e.target.value }))} /></Field>
+      {optionsError && <OptionsError onRetry={loadOptions} />}
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>

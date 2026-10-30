@@ -38,11 +38,12 @@ function ActiveAlerts() {
   const open = useMemo(() => data?.filter((a) => a.status === 'OPEN') ?? [], [data])
   const others = useMemo(() => data?.filter((a) => a.status !== 'OPEN').slice(0, 20) ?? [], [data])
   const dismiss = async (a: GAlert) => {
+    setBusy(true)
     try {
       await gaanugu.update(`/alerts/${a.id}`, { ...a, status: 'DISMISSED' })
       toast('success', 'Alert dismissed')
       reload()
-    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) }
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
   const regenerate = async () => {
     setBusy(true)
@@ -73,7 +74,7 @@ function ActiveAlerts() {
       {open.length > 0 && (
         <DataTable columns={[
           ...cols,
-          { key: 'dismiss', label: '', render: (a: GAlert) => <Button variant="ghost" small onClick={() => dismiss(a)}>Dismiss</Button> },
+          { key: 'dismiss', label: '', render: (a: GAlert) => <Button variant="ghost" small disabled={busy} onClick={() => dismiss(a)}>Dismiss</Button> },
         ] as never} rows={open as never[]} />
       )}
       {others.length > 0 && (
@@ -90,12 +91,15 @@ function ActiveAlerts() {
 function AlertRules() {
   const { data, error, loading, reload } = useList<GAlertRule>('/alert-rules?size=500')
   const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
   const toast = useToast()
   const toggle = async (r: GAlertRule) => {
+    setBusy(true)
     try {
       await gaanugu.update(`/alert-rules/${r.id}`, { ...r, active: !r.active })
+      toast('success', r.active ? 'Rule paused' : 'Rule activated')
       reload()
-    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) }
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
   return (
     <div className="card">
@@ -112,7 +116,7 @@ function AlertRules() {
           { key: 'threshold', label: 'Threshold', numeric: true, render: (r: GAlertRule) =>
             r.ruleType === 'NEAR_EXPIRY' ? `${r.thresholdValue} days` : r.ruleType === 'QC_OVERDUE' ? `${r.thresholdValue} days` : `${r.thresholdValue} units` },
           { key: 'active', label: 'Status', render: (r: GAlertRule) => <Pill tone={r.active ? 'green' : 'slate'}>{r.active ? 'ACTIVE' : 'paused'}</Pill> },
-          { key: 'toggle', label: '', render: (r: GAlertRule) => <Button variant="ghost" small onClick={() => toggle(r)}>{r.active ? 'Pause' : 'Activate'}</Button> },
+          { key: 'toggle', label: '', render: (r: GAlertRule) => <Button variant="ghost" small disabled={busy} onClick={() => toggle(r)}>{r.active ? 'Pause' : 'Activate'}</Button> },
         ] as never} />
       <RuleModal open={open} onClose={() => setOpen(false)} onCreated={() => { setOpen(false); toast('success', 'Rule created'); reload() }} />
     </div>
@@ -284,10 +288,13 @@ export function GAuditLog() {
           ))}
         </div>
         <div className="spacer" />
+        {rows && <Pill tone="plain">{rows.length} events</Pill>}
         <Button variant="ghost" small onClick={reload}>Refresh</Button>
       </div>
       <div className="card">
-        <View loading={loading} error={error} rows={rows as never[] | null} empty="No audit events captured yet." onRetry={reload}
+        <View loading={loading} error={error} rows={rows as never[] | null}
+          empty={action === 'ALL' ? 'No audit events captured yet.' : `No ${action.replace(/_/g, ' ').toLowerCase()} events.`}
+          onRetry={reload}
           cols={[
             { key: 'at', label: 'When', render: (e: GAuditEvent) => formatDate(e.at) },
             { key: 'actor', label: 'Actor', render: (e: GAuditEvent) => <Pill tone="forest">{e.actor}</Pill> },

@@ -88,7 +88,21 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 403) {
     throw new Error('Access denied — this screen needs the ADMIN role.')
   }
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    let serverMsg = ''
+    try {
+      const body = await res.json()
+      serverMsg = typeof body?.message === 'string' ? body.message : ''
+    } catch {
+      // non-JSON error body — fall through to the friendly default
+    }
+    throw new Error(
+      serverMsg ||
+        (res.status >= 500
+          ? 'The server hit an error — try again in a moment.'
+          : 'The request was rejected — check the entered values.'),
+    )
+  }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }
@@ -111,7 +125,9 @@ export async function download(path: string, filename: string): Promise<void> {
   if (res.status === 403) {
     throw new Error('Access denied — this screen needs the ADMIN role.')
   }
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    throw new Error('The export failed — try again in a moment.')
+  }
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
