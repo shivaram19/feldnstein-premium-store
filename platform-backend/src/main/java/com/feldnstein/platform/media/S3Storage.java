@@ -32,8 +32,8 @@ public class S3Storage implements MediaStorage {
     @ConfigProperty(name = "media.s3.secret-key") String secretKey;
     @ConfigProperty(name = "media.s3.region", defaultValue = "auto") String region;
 
-    private S3Client client;
-    private S3Presigner presigner;
+    private volatile S3Client client;
+    private volatile S3Presigner presigner;
 
     private S3Client client() {
         S3Client c = client;
