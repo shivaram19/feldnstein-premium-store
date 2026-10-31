@@ -1,0 +1,15 @@
+[package]
+name = "ui-flow-tests"
+version = "0.1.0"
+edition = "2021"
+description = "UI flow tests for the feldnstein admin SPA + storefront (chromiumoxide)"
+
+[dependencies]
+chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+futures = "0.3"
+anyhow = "1"
+
+[profile.dev]
+opt-level = 1

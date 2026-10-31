@@ -1,5 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { Agent } from 'node:http'
+
+// The backend (Quarkus/undertow) drops the connection on 401 auth challenges; with
+// keep-alive pooling, http-proxy can hand the dead socket to the next request, which
+// then hangs forever in the browser. Per-request sockets in dev avoid that.
+const proxyTarget = {
+  target: 'http://localhost:8080',
+  agent: new Agent({ keepAlive: false }),
+}
 
 // VITE_BASE=/repo-name/ for the GitHub Pages build (project site subpath);
 // default '/' for local dev. See .github/workflows/deploy.yml (ADR-0012).
@@ -9,15 +18,15 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/products': 'http://localhost:8080',
-      '/stock-movements': 'http://localhost:8080',
-      '/purchase-orders': 'http://localhost:8080',
-      '/loyalty-accounts': 'http://localhost:8080',
-      '/loyalty-transactions': 'http://localhost:8080',
-      '/analytics': 'http://localhost:8080',
-      '/g': 'http://localhost:8080',
+      '/products': proxyTarget,
+      '/stock-movements': proxyTarget,
+      '/purchase-orders': proxyTarget,
+      '/loyalty-accounts': proxyTarget,
+      '/loyalty-transactions': proxyTarget,
+      '/analytics': proxyTarget,
+      '/g': proxyTarget,
       // media variants are served by the backend at /site/media/... (ADR-0013)
-      '/site': 'http://localhost:8080',
+      '/site': proxyTarget,
     },
   },
 })

@@ -9,7 +9,8 @@
 ## Day-before rehearsal (30 min)
 
 1. Start backend dev server and Vite; confirm both up.
-2. Run `python3 scripts/e2e-business-flows.py` — must be 77/77 green. If red, fix or re-seed before the meeting.
+2. Run `python3 scripts/e2e-business-flows.py` — must be 91/91 green. If red, fix or re-seed before the meeting.
+3. UI flows: `node scripts/ui-flow-tests.js` (or `cargo run --manifest-path uitests/Cargo.toml` — same checks via chromiumoxide) — 35/35 green; build the storefront preview first with `VITE_SITE_API=http://localhost:8080 npm run build && npx vite preview --port 4173` (from `feldnstein-react/`).
 3. Walk the full run-of-show once, in order, clicking every demo action below.
 4. Wake the live backend once (`curl https://feldnstein-platform-backend.onrender.com/q/health`) so you know its cold-start time; free Render sleeps after ~15 min idle and the first hit takes 30–50 s while Flyway replays.
 5. Prepare a re-seed path (restart backend dev or rerun E2E script) in case demo data is dirtied mid-meeting.

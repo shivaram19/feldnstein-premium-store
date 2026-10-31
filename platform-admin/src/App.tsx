@@ -13,7 +13,7 @@ import { GCounts } from './gaanugu-counts'
 import { GMedia } from './gaanugu-media'
 import { GSiteContent } from './gaanugu-content'
 import { GReports } from './gaanugu-reports'
-import { clearAuth, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
+import { clearAuth, currentUsername, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
 type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
 type NavGroup = { section: string; icon: string; items: NavItem[] }
@@ -215,6 +215,11 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 }
 
 /* ---------- shell ---------- */
+// Role-based nav: the demo realm maps username → role (ADR-0005). OPERATOR gets daily
+// ops but not reports, settings, or audit (matches the settings permissions matrix);
+// the server enforces the same boundaries — this keeps the UI honest about them.
+const ADMIN_ONLY_SECTIONS = new Set(['Reports', 'Settings', 'Audit'])
+
 function Shell({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = useState<NavId>('g-dashboard')
   const [navOpen, setNavOpen] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth > 860)
@@ -223,6 +228,8 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     navEvents.addEventListener('nav', handler)
     return () => navEvents.removeEventListener('nav', handler)
   }, [])
+  const isAdmin = currentUsername() === 'admin'
+  const visibleNav = isAdmin ? NAV : NAV.filter((g) => !ADMIN_ONLY_SECTIONS.has(g.section))
   const active = FLAT.find((n) => n.id === tab)!
   return (
     <div className="shell">
@@ -238,7 +245,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
         )}
         <aside className={`sidebar${navOpen ? ' open' : ' closed'}`}>
           <nav className="nav">
-            {NAV.map((g) => (
+            {visibleNav.map((g) => (
               <div key={g.section}>
                 <div className="nav-section">{g.icon} {g.section}</div>
                 {g.items.map((n) => (
