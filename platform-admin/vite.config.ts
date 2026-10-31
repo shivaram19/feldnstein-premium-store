@@ -16,6 +16,8 @@ export default defineConfig({
       '/loyalty-transactions': 'http://localhost:8080',
       '/analytics': 'http://localhost:8080',
       '/g': 'http://localhost:8080',
+      // media variants are served by the backend at /site/media/... (ADR-0013)
+      '/site': 'http://localhost:8080',
     },
   },
 })

@@ -10,6 +10,7 @@ import {
   GAlerts, GAuditLog, GHoldRelease, GSettings,
 } from './gaanugu-alerts'
 import { GCounts } from './gaanugu-counts'
+import { GMedia } from './gaanugu-media'
 import { GReports } from './gaanugu-reports'
 import { clearAuth, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
@@ -140,6 +141,14 @@ const NAV: NavGroup[] = [
       N('g-audit', 'Audit Log', GAuditLog,
         <>Audit <em>log</em></>,
         'Who changed what — transfers, adjustments, counts, QC. ADMIN-only.'),
+    ],
+  },
+  {
+    section: 'Media', icon: '🖼️',
+    items: [
+      N('g-media', 'Media Library', GMedia,
+        <>Media <em>library</em></>,
+        'Upload photos — auto-cropped to card, hero, banner, and thumb specs.'),
     ],
   },
 ]
