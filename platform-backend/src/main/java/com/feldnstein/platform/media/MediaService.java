@@ -163,8 +163,13 @@ public class MediaService {
     }
 
     public String variantUrl(MediaAsset asset, String slotName) {
-        MediaVariant v = variants.find("asset ?1 and variantName ?2", asset, slotName).firstResult();
+        MediaVariant v = variants.find("asset = ?1 and variantName = ?2", asset, slotName).firstResult();
         return v == null ? null : "/site/media/file/" + v.storageKey;
+    }
+
+    /** Raw object read for the public byte-serving endpoint (SiteResource). */
+    public byte[] read(String storageKey) {
+        return storage().read(storageKey);
     }
 
     public Map<String, String> variantUrls(MediaAsset asset) {

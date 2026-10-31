@@ -100,20 +100,4 @@ public class MediaResource {
                 Map.entry("variants", mediaService.variantUrls(a)),
                 Map.entry("createdBy", a.createdBy == null ? "" : a.createdBy))).toList();
     }
-
-    /** Public, cache-immutable media byte serving. No storage guard: an unusable backend fails the read below. */
-    @GET @Path("/site/media/file/{key:.+}") @PermitAll
-    @Produces("image/jpeg")
-    public Response file(@PathParam("key") String key) {
-        byte[] bytes;
-        try {
-            bytes = storageLookup.get().read(key);
-        } catch (MediaObjectNotFoundException e) {
-            throw new NotFoundException("media not found");
-        }
-        return Response.ok(bytes)
-                .type("image/jpeg")
-                .header("Cache-Control", "public, max-age=86400, immutable")
-                .build();
-    }
 }

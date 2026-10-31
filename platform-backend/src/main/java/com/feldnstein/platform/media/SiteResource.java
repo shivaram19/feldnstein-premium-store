@@ -99,6 +99,23 @@ public class SiteResource {
         return ok(out);
     }
 
+    /** Public, cache-immutable media byte serving. */
+    @GET
+    @Path("/media/file/{key:.+}")
+    @Produces("image/jpeg")
+    public Response file(@PathParam("key") String key) {
+        byte[] bytes;
+        try {
+            bytes = mediaService.read(key);
+        } catch (MediaObjectNotFoundException e) {
+            throw new NotFoundException("media not found");
+        }
+        return Response.ok(bytes)
+                .type("image/jpeg")
+                .header("Cache-Control", "public, max-age=86400, immutable")
+                .build();
+    }
+
     /** Public metadata for one published asset (storefront previews). */
     @GET
     @Path("/media/{assetKey:.+}")
