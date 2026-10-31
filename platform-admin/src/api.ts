@@ -146,6 +146,7 @@ export const api = {
     req<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   post: <T>(path: string, body?: unknown) =>
     req<T>(path, { method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined }),
+  delete: <T>(path: string) => req<T>(path, { method: 'DELETE' }),
 }
 
 export function formatINR(v: number): string {

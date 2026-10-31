@@ -176,14 +176,14 @@ export function Kpi({ label, value, dark }: { label: string; value: ReactNode; d
 }
 
 /* ---------- toast ---------- */
-interface ToastItem { id: number; kind: 'success' | 'error'; message: string }
-const ToastCtx = createContext<(kind: 'success' | 'error', message: string) => void>(() => {})
+interface ToastItem { id: number; kind: 'success' | 'error' | 'info'; message: string }
+const ToastCtx = createContext<(kind: 'success' | 'error' | 'info', message: string) => void>(() => {})
 export const useToast = () => useContext(ToastCtx)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const idRef = useRef(0)
-  const push = useCallback((kind: 'success' | 'error', message: string) => {
+  const push = useCallback((kind: 'success' | 'error' | 'info', message: string) => {
     const id = ++idRef.current
     setToasts((t) => [...t, { id, kind, message }])
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500)

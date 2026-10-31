@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, getAuth } from './api'
-import { Button, Field, LoadingRows, Modal, Pill, useToast, type PillTone } from './ui'
+import { Button, ConfirmModal, Field, LoadingRows, Modal, Pill, useToast, type PillTone } from './ui'
 
 export interface GMediaAsset {
   id: number
@@ -28,6 +28,8 @@ export function GMedia() {
   const [assets, setAssets] = useState<GMediaAsset[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<GMediaAsset | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const [tick, setTick] = useState(0)
   const toast = useToast()
 
@@ -47,18 +49,18 @@ export function GMedia() {
     } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) }
   }
 
-  const remove = async (a: GMediaAsset) => {
-    if (!window.confirm(`Delete ${a.assetKey}? This removes the stored files.`)) return
+  const doDelete = async () => {
+    if (!pendingDelete) return
+    setDeleteBusy(true)
     try {
-      await api.post(`/g/media/${a.id}/unpublish`).catch(() => undefined)
-      const res = await fetch(`${API_BASE}/g/media/${a.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: getAuth() ?? '' },
-      })
-      if (!res.ok) throw new Error(`delete failed (${res.status})`)
+      await api.post(`/g/media/${pendingDelete.id}/unpublish`).catch(() => undefined)
+      await api.delete(`/g/media/${pendingDelete.id}`)
       toast('success', 'Asset deleted')
+      setPendingDelete(null)
       load()
-    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) }
+    } catch (e) {
+      toast('error', e instanceof Error ? e.message : String(e))
+    } finally { setDeleteBusy(false) }
   }
 
   const saveAlt = async (a: GMediaAsset, altText: string) => {
@@ -101,14 +103,25 @@ export function GMedia() {
                 <Button variant="ghost" small onClick={() => togglePublish(a)}>{a.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}</Button>
               )}
               {a.status === 'ERROR' && (
-                <Button variant="ghost" small onClick={async () => { await api.post(`/g/media/${a.id}/retry`); setTick((t) => t + 1) }}>Retry</Button>
+                <Button variant="ghost" small onClick={async () => {
+                  try {
+                    await api.post(`/g/media/${a.id}/retry`)
+                    toast('success', 'Retry queued')
+                    setTick((t) => t + 1)
+                  } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) }
+                }}>Retry</Button>
               )}
-              <Button variant="ghost" small onClick={() => remove(a)}>Delete</Button>
+              <Button variant="ghost" small onClick={() => setPendingDelete(a)}>Delete</Button>
             </div>
           </div>
         ))}
       </div>
       <UploadModal open={open} onClose={() => setOpen(false)} onDone={() => { setOpen(false); setTick((t) => t + 1) }} />
+      <ConfirmModal open={!!pendingDelete}
+        title={`Delete ${pendingDelete?.assetKey ?? ''}`}
+        sub="This removes the stored files and all generated variants."
+        confirmLabel="Delete asset" busy={deleteBusy}
+        onClose={() => setPendingDelete(null)} onConfirm={doDelete} />
     </section>
   )
 }
@@ -119,12 +132,18 @@ function UploadModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
   const [busy, setBusy] = useState(false)
   const [phase, setPhase] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const runId = useRef(0)
   const toast = useToast()
+
+  useEffect(() => {
+    if (open) { setBusy(false); setPhase(''); setError(null) }
+  }, [open])
 
   const valid = assetKey.trim().length >= 3 && !!file
 
   const submit = async () => {
     if (!file) return
+    const myRun = ++runId.current
     setBusy(true); setError(null); setPhase('Requesting upload…')
     try {
       const presigned = await api.create<{ assetId: number; uploadUrl: string; method: string; headers: Record<string, string> }>(
@@ -141,18 +160,24 @@ function UploadModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
       if (!res.ok) throw new Error(`Upload failed (${res.status})`)
       setPhase('Processing variants…')
       await api.post(`/g/media/${presigned.assetId}/finalize`)
+      let ready = false
       for (let i = 0; i < 20; i++) {
+        if (runId.current !== myRun) return
         await new Promise((r) => setTimeout(r, 2000))
         const rows = await api.list<GMediaAsset>('/g/media')
         const row = rows.find((r) => r.id === presigned.assetId)
-        if (row?.status === 'READY') break
+        if (row?.status === 'READY') { ready = true; break }
         if (row?.status === 'ERROR') throw new Error(row.errorNote || 'variant generation failed')
       }
-      toast('success', 'Uploaded — variants ready')
+      if (runId.current !== myRun) return
+      if (ready) toast('success', 'Uploaded — variants ready')
+      else toast('info', 'Uploaded — still processing, watch the grid')
       onDone()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    } finally { setBusy(false); setPhase('') }
+      if (runId.current === myRun) setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      if (runId.current === myRun) { setBusy(false); setPhase('') }
+    }
   }
 
   return (

@@ -199,6 +199,7 @@ table.data tbody tr:hover { background: var(--cream); }
 }
 .toast-success { background: var(--herb); }
 .toast-error { background: var(--rust); }
+.toast-info { background: var(--charcoal); }
 
 /* ---------- states ---------- */
 .state { padding: 48px 24px; text-align: center; color: var(--muted); }
