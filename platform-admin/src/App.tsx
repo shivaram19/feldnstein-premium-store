@@ -11,6 +11,7 @@ import {
 } from './gaanugu-alerts'
 import { GCounts } from './gaanugu-counts'
 import { GMedia } from './gaanugu-media'
+import { GSiteContent } from './gaanugu-content'
 import { GReports } from './gaanugu-reports'
 import { clearAuth, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
 
@@ -149,6 +150,9 @@ const NAV: NavGroup[] = [
       N('g-media', 'Media Library', GMedia,
         <>Media <em>library</em></>,
         'Upload photos — auto-cropped to card, hero, banner, and thumb specs.'),
+      N('g-site-content', 'Site Content', GSiteContent,
+        <>Site <em>content</em></>,
+        'Hero, banners, testimonials, ticker, and per-oil descriptions that power the storefront.'),
     ],
   },
 ]
