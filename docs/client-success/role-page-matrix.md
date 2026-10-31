@@ -1,6 +1,6 @@
 # Role × Page Matrix — Client Demo Cheat Sheet
 
-Print one per person at the table. URLs are relative to `http://localhost:5173` (local primary) or `https://shivaram19.github.io/feldnstein-premium-store/` (live backup). Logins: **admin/admin123** · **ops/ops123** · **cust/cust123**.
+Print one per person at the table. Admin URLs are relative to `http://localhost:5173` (local primary) or `https://shivaram19.github.io/feldnstein-premium-store/admin/` (live backup; the public storefront lives at the site root). Logins: **admin/admin123** · **ops/ops123** · **cust/cust123**.
 
 | Nav section | Page(s) | Show to | Login | One-line "why it matters to you" |
 |---|---|---|---|---|

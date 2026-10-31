@@ -1,7 +1,7 @@
 # Client Demo Runbook — Customer Success Manager Instructions
 
 **Meeting:** 90 minutes, client stakeholders: Business owner/GM, Production supervisor, Quality/FSSAI compliance, Procurement/inventory ops.
-**Primary environment:** local (`http://localhost:5173`, backend `:8080`). **Backup:** live (`https://shivaram19.github.io/feldnstein-premium-store/` → `https://feldnstein-platform-backend.onrender.com`).
+**Primary environment:** local (`http://localhost:5173`, backend `:8080`). **Backup:** live — admin at `https://shivaram19.github.io/feldnstein-premium-store/admin/` (storefront at the root `/`, backend `https://feldnstein-platform-backend.onrender.com`).
 **Logins:** `admin/admin123` (ADMIN), `ops/ops123` (OPERATOR), `cust/cust123` (CUSTOMER). Same on local and live.
 
 ---
@@ -98,10 +98,10 @@ This is the differentiator; open with it while attention is highest.
 
 **Handoff:** *"Last thing — what your customer actually experiences."*
 
-### 80–90 min — Storefront + wrap (cust login, then admin)
+### 80–90 min — Storefront + wrap (public storefront, then admin)
 
-1. In the `cust` tab: the storefront home, products. Talking point: *customers only ever see this; everything else is staff-only.*
-2. Mention: customer login on admin URL gets a friendly 403 — RBAC enforced server-side, not just hidden in the UI.
+1. Open the storefront — locally at `http://localhost:4173` (or the live site root). Show the home and products. Talking point: *customers only ever see this — and everything on it, photos, descriptions, banners, the team can now update themselves from the admin's Media & Content section, no developer needed.* If time allows, change a headline in Site Content and refresh to prove it.
+2. In the `cust` tab on the admin URL: a friendly 403 — RBAC enforced server-side, not just hidden in the UI.
 3. **Wrap (3 min):** recap in one loop — *farmer → seed → bull → press → bottle → stock → customer, with traceability, quality gates, and cost capture at every step.*
 4. Next steps: pilot scope, data migration from their current records, training plan, go-live timeline. Agree the follow-up date before leaving the call.
 
@@ -117,6 +117,8 @@ This is the differentiator; open with it while attention is highest.
 | Client asks for something not built | Note it visibly (shared doc), say it's on the roadmap; never improvise a date. |
 | Running behind | Cut, in order: operators attendance (5 min), custom report builder (3 min), stock count execute (5 min). Never cut traceability or QC hold/release. |
 | Question you can't answer | "Good question — I'll confirm and come back to you within 24h." Then actually do. |
+| Live media upload returns 503 | R2 credentials aren't set in the Render dashboard yet — demo uploads on the **local** backend instead, and say so. |
+| R2 bucket CORS | One-time setup: the bucket must allow `PUT` from the GitHub Pages origin (spec rollout checklist). |
 
 ## Rules of the room
 

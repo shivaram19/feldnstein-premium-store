@@ -30,6 +30,21 @@ services:
         fromDatabase:
           name: feldnstein-db
           property: password
+      # Media storage (ADR-0013): set these in the Render dashboard once an R2 bucket
+      # exists. sync:false = secret, entered manually. Until set, media admin endpoints
+      # return 503 with a clear message (startup probe logs the missing vars).
+      - key: MEDIA_PUBLIC_BASE_URL
+        value: https://feldnstein-platform-backend.onrender.com
+      - key: MEDIA_STORAGE_TYPE
+        value: s3
+      - key: MEDIA_S3_ENDPOINT
+        sync: false
+      - key: MEDIA_S3_BUCKET
+        sync: false
+      - key: MEDIA_S3_ACCESS_KEY
+        sync: false
+      - key: MEDIA_S3_SECRET_KEY
+        sync: false
 
 databases:
   - name: feldnstein-db

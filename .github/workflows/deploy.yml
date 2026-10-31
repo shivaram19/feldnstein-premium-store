@@ -30,25 +30,41 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: platform-admin/package-lock.json
+          cache-dependency-path: |
+            platform-admin/package-lock.json
+            feldnstein-react/package-lock.json
 
-      - name: Build SPA
-        working-directory: platform-admin
+      # storefront at the Pages root (public site), admin SPA under /admin/
+      - name: Build storefront (Pages root)
+        working-directory: feldnstein-react
         env:
-          # Backend origin the deployed SPA calls (set as a repo variable once the
-          # Render service exists). Falls back to same-origin for dry runs.
-          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
-          # Pages serves project sites under /<repo>/.
+          VITE_SITE_API: ${{ vars.VITE_API_BASE }}
           VITE_BASE: /${{ github.event.repository.name }}/
         run: |
           npm ci
           npm run build
 
+      - name: Build admin SPA (under /admin/)
+        working-directory: platform-admin
+        env:
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_BASE: /${{ github.event.repository.name }}/admin/
+        run: |
+          npm ci
+          npm run build
+
+      - name: Merge artifacts
+        run: |
+          mkdir -p _site
+          cp -r feldnstein-react/dist/* _site/
+          mkdir -p _site/admin
+          cp -r platform-admin/dist/* _site/admin/
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: platform-admin/dist
+          path: _site
 
       - id: deploy
         uses: actions/deploy-pages@v4

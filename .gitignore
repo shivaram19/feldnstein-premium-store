@@ -8,3 +8,4 @@ platform-admin/dist/
 platform-backend/media/
 /media/
 platform-backend/.mvn/wrapper/maven-wrapper.jar
+_site/
