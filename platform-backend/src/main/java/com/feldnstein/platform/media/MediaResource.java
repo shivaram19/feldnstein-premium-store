@@ -1,6 +1,5 @@
 package com.feldnstein.platform.media;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -22,7 +21,6 @@ public class MediaResource {
 
     @Inject MediaService mediaService;
     @Inject MediaAssetRepository assets;
-    @Inject jakarta.enterprise.inject.Instance<MediaStorage> storageLookup;
 
     private String user(SecurityContext ctx) { return ctx.getUserPrincipal() == null ? "unknown" : ctx.getUserPrincipal().getName(); }
 

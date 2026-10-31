@@ -78,6 +78,39 @@ def put(user, path, body):
     return call("PUT", path, user, body)
 
 
+def put_bytes(user, path, data, content_type):
+    """PUT raw bytes (media dev-upload), with auth but no JSON envelope."""
+    req = urllib.request.Request(BASE + path, data=data, method="PUT")
+    req.add_header("Authorization", "Basic " + base64.b64encode(f"{user}:{USERS[user]}".encode()).decode())
+    req.add_header("Content-Type", content_type)
+    try:
+        with urllib.request.urlopen(req) as res:
+            res.read()
+            return res.status
+    except urllib.error.HTTPError as e:
+        e.read()
+        return e.code
+
+
+def anon_call(method, path):
+    """Unauthenticated call returning (status, raw bytes)."""
+    req = urllib.request.Request(BASE + path, method=method)
+    try:
+        with urllib.request.urlopen(req) as res:
+            return res.status, res.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+
+
+def make_jpeg(w=120, h=150):
+    """A REAL decodable JPEG — ImageIO rejects tiny hand-rolled fixtures."""
+    from PIL import Image
+    import io
+    buf = io.BytesIO()
+    Image.new("RGB", (w, h), (200, 100, 50)).save(buf, "JPEG")
+    return buf.getvalue()
+
+
 def set_batch_status(user, batch_id, status):
     s, b = get(user, f"/g/production-batches/{batch_id}")
     if s != 200:
@@ -439,6 +472,94 @@ def flow8_rbac_sweep():
     check("8.x RBAC sweep", ok)
 
 
+# ---------------------------------------------------------------- Flow 9
+def flow9_media_content():
+    print("\n=== Flow 9 (expert): media pipeline, content blocks, site endpoints, RBAC ===")
+    asset_key = "e2e-test-card-" + TAG.lower()  # assetKey charset is [a-z0-9:_-]
+    jpeg = make_jpeg()
+    BLOCK_KEY = "hero:main"
+    headline = f"E2E Hero {TAG}"
+
+    # negative first: invalid assetKey must be rejected before any state is created
+    s, bad = post("admin", "/g/media/presign", {"assetKey": "BAD KEY", "filename": "photo.jpg",
+                                                "contentType": "image/jpeg", "sizeBytes": len(jpeg)})
+    check("9.1b presign invalid assetKey rejected (400)", s == 400, f"{s} {bad}")
+
+    s, pre = post("admin", "/g/media/presign", {"assetKey": asset_key, "filename": "photo.jpg",
+                                                "contentType": "image/jpeg", "sizeBytes": len(jpeg)})
+    check("9.1 presign", s == 200 and all(k in pre for k in ("uploadUrl", "assetId", "storageKey")),
+          f"{s} {pre}")
+    asset_id = pre.get("assetId")
+
+    upload_path = pre["uploadUrl"] if pre["uploadUrl"].startswith("/") else "/" + pre["uploadUrl"]
+    s = put_bytes("admin", upload_path, jpeg, "image/jpeg")
+    check("9.2 dev upload", s == 204, str(s))
+
+    s, fin = post("admin", f"/g/media/{asset_id}/finalize")
+    check("9.3 finalize", s == 200, f"{s} {fin}")
+
+    asset = None
+    for _ in range(20):  # VariantWorker polls every 2s; give it ~40s
+        s, listing = get("admin", "/g/media")
+        asset = next((a for a in listing if a["id"] == asset_id), None)
+        if asset and asset["status"] in ("READY", "ERROR"):
+            break
+        time.sleep(2)
+    check("9.4 variants generated", asset is not None and asset["status"] == "READY"
+          and all(k in asset["variants"] for k in ("card", "hero", "banner", "thumb")),
+          f"{asset and asset['status']} {asset and asset['errorNote']}")
+
+    s, body = anon_call("GET", asset["variants"]["card"] if asset else "/site/media/file/missing")
+    check("9.5 public file serving", s == 200 and body.startswith(b"\xff\xd8"), f"{s} {body[:8]!r}")
+
+    s, _ = post("admin", f"/g/media/{asset_id}/publish")
+    check("9.6 publish", s in (200, 201, 204), str(s))
+
+    s, body = anon_call("GET", "/site/products")
+    products = json.loads(body) if s == 200 else []
+    check("9.7 anon site products", s == 200 and len(products) > 0, f"{s} {body[:120]!r}")
+
+    s0, prev = get("admin", f"/g/site-content/{BLOCK_KEY}")  # capture for restore at cleanup
+    payload = {"headline": headline, "cta": "Shop now", "tag": TAG}
+    s, _ = put("admin", f"/g/site-content/{BLOCK_KEY}", {"payload": json.dumps(payload)})
+    check("9.8 content put", s in (200, 201, 204), str(s))
+
+    s, block = get("admin", f"/g/site-content/{BLOCK_KEY}")
+    check("9.9 content get", s == 200 and block.get("payload", {}).get("headline") == headline,
+          f"{s} {block}")
+
+    seen = None  # /site/content is cached 60s in-memory; poll until the new value surfaces
+    for _ in range(15):
+        s, body = anon_call("GET", "/site/content")
+        data = json.loads(body) if s == 200 else {}
+        seen = data.get(BLOCK_KEY, {}).get("headline")
+        if s == 200 and seen == headline:
+            break
+        time.sleep(5)
+    check("9.10 anon site content", s == 200 and seen == headline, f"{s} hero:main={seen!r}")
+
+    req = urllib.request.Request(BASE + "/g/media")
+    req.add_header("Authorization", "Basic " + base64.b64encode(b"cust:cust123").decode())
+    try:
+        urllib.request.urlopen(req)
+        s = 200
+    except urllib.error.HTTPError as e:
+        s = e.code
+    check("9.11 cust blocked from media admin", s == 403, str(s))
+
+    s, _ = anon_call("GET", f"/g/site-content/{BLOCK_KEY}")
+    check("9.12 anon blocked from content admin", s == 401, str(s))
+
+    post("admin", f"/g/media/{asset_id}/unpublish")  # delete requires unpublished; ignore failure
+    s, _ = call("DELETE", f"/g/media/{asset_id}", "admin")
+    s2, listing = get("admin", "/g/media")
+    check("9.13 delete asset", s in (200, 202, 204)
+          and all(a["id"] != asset_id for a in (listing or [])), f"delete={s} list={s2}")
+
+    if s0 == 200:  # restore prior block contents so re-runs and demos see the old value
+        put("admin", f"/g/site-content/{BLOCK_KEY}", {"payload": json.dumps(prev["payload"])})
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -450,6 +571,7 @@ def main():
         flow6_reports_rbac()
         flow7_negative_and_boundary()
         flow8_rbac_sweep()
+        flow9_media_content()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")
