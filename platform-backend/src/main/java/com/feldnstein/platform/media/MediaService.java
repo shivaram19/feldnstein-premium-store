@@ -22,6 +22,8 @@ public class MediaService {
     @Inject MediaStorageConfig mediaConfig;
     @ConfigProperty(name = "media.upload.max-bytes", defaultValue = "10485760")
     long maxBytes;
+    @ConfigProperty(name = "media.public-base-url", defaultValue = "")
+    String publicBaseUrl;
 
     private MediaStorage storage() { return storageLookup.get(); }
 
@@ -174,7 +176,7 @@ public class MediaService {
 
     public String variantUrl(MediaAsset asset, String slotName) {
         MediaVariant v = variants.find("asset = ?1 and variantName = ?2", asset, slotName).firstResult();
-        return v == null ? null : "/site/media/file/" + v.storageKey;
+        return v == null ? null : publicUrl("/site/media/file/" + v.storageKey);
     }
 
     /** Raw object read for the public byte-serving endpoint (SiteResource). */
@@ -184,6 +186,13 @@ public class MediaService {
 
     public Map<String, String> variantUrls(MediaAsset asset) {
         return variants.stream("asset", asset).collect(Collectors.toMap(
-                v -> v.variantName, v -> "/site/media/file/" + v.storageKey, (a, b) -> a));
+                v -> v.variantName, v -> publicUrl("/site/media/file/" + v.storageKey), (a, b) -> a));
+    }
+
+    private String publicUrl(String path) {
+        // 'unset' is the empty-value sentinel: SmallRye rejects an empty-string config value at startup
+        String base = "unset".equals(publicBaseUrl) ? "" : publicBaseUrl;
+        base = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+        return base + path;
     }
 }
