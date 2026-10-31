@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ServiceUnavailableException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -156,10 +157,19 @@ public class MediaService {
         if (asset == null) throw new NotFoundException("asset not found");
         if (asset.status == MediaAsset.Status.PUBLISHED)
             throw new IllegalArgumentException("unpublish before deleting");
-        for (MediaVariant v : variants.list("asset", asset)) storage().delete(v.storageKey);
+        // scalar projection — do NOT load children as managed entities: a bulk delete
+        // won't evict them from the persistence context and flush then fails with
+        // TransientObjectException (managed child references removed parent)
+        List<String> keys = variants.getEntityManager()
+                .createQuery("select storageKey from MediaVariant where asset = ?1", String.class)
+                .setParameter(1, asset).getResultList();
+        variants.delete("asset = ?1", asset);   // children first (bulk delete)
+        assets.getEntityManager().flush();      // submit child removal before parent
+        assets.delete(asset);                   // then parent
+        // storage cleanup only after the DB deletions above are queued in-tx;
+        // if commit fails later the files remain, which is the safe direction (DB is source of truth)
+        for (String k : keys) storage().delete(k);
         storage().delete(asset.storageKey);
-        variants.delete("asset", asset);
-        assets.delete(asset);
     }
 
     public String variantUrl(MediaAsset asset, String slotName) {
