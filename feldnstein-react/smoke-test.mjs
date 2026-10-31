@@ -35,7 +35,7 @@ const server = createServer(async (req, res) => {
 await new Promise(r => server.listen(4173, r))
 
 const browser = await puppeteer.launch({
-  executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  executablePath: process.env.CHROME_PATH ?? (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : 'C:/Program Files/Google/Chrome/Application/chrome.exe'),
   headless: 'new',
   args: ['--no-sandbox', '--mute-audio'],
 })
