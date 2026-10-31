@@ -32,4 +32,10 @@ public class ProductMarketing extends PanacheEntity {
     @JoinColumn(name = "card_asset_id")
     @JsonIgnore
     public MediaAsset cardAsset;
+
+    @jakarta.persistence.Transient
+    public Long getProductId() { return product == null ? null : product.id; }
+
+    @jakarta.persistence.Transient
+    public Long getCardAssetId() { return cardAsset == null ? null : cardAsset.id; }
 }
