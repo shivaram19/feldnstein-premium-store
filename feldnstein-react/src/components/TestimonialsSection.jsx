@@ -1,4 +1,5 @@
 import Reveal from './Reveal'
+import { useContent } from '../context/ContentContext'
 
 const TESTIMONIALS = [
   {
@@ -30,6 +31,16 @@ const TESTIMONIALS = [
   },
 ]
 
+const AVATAR_CLASSES = [
+  'bg-brand-forest text-white',
+  'bg-brand-ochre text-brand-forestDark',
+  'bg-brand-forestDark text-white',
+]
+
+function initialsOf(name) {
+  return (name || '?').split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+}
+
 function Stars() {
   return (
     <div className="flex items-center gap-1 mb-4" role="img" aria-label="Rated 5 out of 5">
@@ -48,6 +59,18 @@ function Stars() {
 }
 
 export default function TestimonialsSection() {
+  const { testimonials } = useContent()
+  const items = testimonials && testimonials.length > 0
+    ? testimonials.map((t, i) => ({
+        quote: t.quote,
+        detail: '',
+        initials: initialsOf(t.author),
+        avatarClass: AVATAR_CLASSES[i % AVATAR_CLASSES.length],
+        name: t.author,
+        meta: t.location || 'Verified Customer',
+        badge: 'Verified',
+      }))
+    : TESTIMONIALS
   return (
     <section id="testimonials" className="py-20 lg:py-24 bg-white border-y border-brand-border">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -58,7 +81,7 @@ export default function TestimonialsSection() {
           <p className="section-sub">Unsolicited feedback from physicians, culinary artists, and conscious families across Andhra Pradesh.</p>
         </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map(t => (
+          {items.map(t => (
             <Reveal as="article" key={t.name} className="rounded-2xl bg-white border border-brand-border p-6 flex flex-col card-lift">
               <Stars />
               <p className="font-serif text-lg italic text-brand-charcoal leading-relaxed mb-4">“{t.quote}”</p>

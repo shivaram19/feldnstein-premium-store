@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { useContent } from '../context/ContentContext'
 
 // Kinetic typography: split the hero headline into staggered words.
 const HEADLINE = [
@@ -26,20 +27,30 @@ function buildSegments() {
   return segments
 }
 
-function KineticHeadline() {
+function KineticHeadline({ liveHeadline }) {
   const reduced = usePrefersReducedMotion()
   const [kineticIn, setKineticIn] = useState(false)
 
   useEffect(() => {
-    if (reduced) return undefined
+    if (reduced || liveHeadline) return undefined
     const raf = requestAnimationFrame(() =>
       requestAnimationFrame(() => setKineticIn(true))
     )
     return () => cancelAnimationFrame(raf)
-  }, [reduced])
+  }, [reduced, liveHeadline])
 
   const baseClass =
     'font-serif font-medium text-white tracking-tight text-[3rem] leading-[1.02] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.98] mt-4'
+
+  if (liveHeadline) {
+    const words = liveHeadline.trim().split(/\s+/)
+    const last = words.pop()
+    return (
+      <h1 id="heroTitle" className={baseClass}>
+        {words.join(' ')}{words.length ? ' ' : ''}<em className="italic font-normal text-brand-ochre">{last}</em>
+      </h1>
+    )
+  }
 
   if (reduced) {
     return (
@@ -67,14 +78,23 @@ function KineticHeadline() {
 }
 
 export default function Hero() {
+  const { hero } = useContent()
   return (
     <section id="hero" className="relative w-full min-h-[100svh] flex items-center overflow-hidden bg-brand-forestDark">
-      <AmbientVideo
-        className="ambient-video absolute inset-0 w-full h-full object-cover"
-        src="/assets/video/hero-cinematic.mp4"
-        poster="/assets/video/hero-cinematic-poster.jpg"
-        ariaLabel="Bulls circling the traditional gaanuga oil press at the Mothadaka farm"
-      />
+      {hero?.imageUrl ? (
+        <img
+          className="absolute inset-0 w-full h-full object-cover"
+          src={hero.imageUrl}
+          alt={hero.headline || 'FELD·N·STEIN farm'}
+        />
+      ) : (
+        <AmbientVideo
+          className="ambient-video absolute inset-0 w-full h-full object-cover"
+          src="/assets/video/hero-cinematic.mp4"
+          poster="/assets/video/hero-cinematic-poster.jpg"
+          ariaLabel="Bulls circling the traditional gaanuga oil press at the Mothadaka farm"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-r from-brand-forestDark/95 via-brand-forestDark/70 to-brand-forestDark/25 pointer-events-none"></div>
       <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-brand-forestDark/70 to-transparent pointer-events-none"></div>
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-28 lg:py-36 w-full">
@@ -82,9 +102,9 @@ export default function Hero() {
           <Reveal className="section-label">
             <span className="material-symbols-outlined text-sm">eco</span> Farm-Direct · Lab-Tested · Small Batch
           </Reveal>
-          <KineticHeadline />
+          <KineticHeadline liveHeadline={hero?.headline || null} />
           <Reveal className="mt-8 text-base sm:text-lg text-white/80 leading-relaxed max-w-md">
-            Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.
+            {hero?.subcopy || 'Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.'}
           </Reveal>
           <Reveal className="mt-10 flex flex-wrap items-center gap-4">
             <a href="#collection" className="btn btn-gold">Shop the Reserve <span className="material-symbols-outlined text-base">arrow_forward</span></a>

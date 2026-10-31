@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Reveal from './Reveal'
 import QuickViewModal from './QuickViewModal'
 import { useCart } from '../context/CartContext'
-import { products, categories } from '../data/products'
+import { useContent } from '../context/ContentContext'
 
 const DOT_COUNT = 4
 const CARD_WIDTH = 360
 
 export default function CollectionSection() {
   const { addToCart } = useCart()
+  const { products, categories } = useContent()
   const [filter, setFilter] = useState('all')
   const [currentDot, setCurrentDot] = useState(0)
   const [fadeL, setFadeL] = useState(false)

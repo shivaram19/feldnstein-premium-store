@@ -17,6 +17,8 @@ async function fetchJson(path, timeoutMs = 5000) {
 }
 
 /** Normalize the platform /site/products payload into the storefront product shape. */
+const abs = (u) => (u && !u.startsWith('http') ? API_BASE + u : u)
+
 function normalizeProducts(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return defaultProducts
   return rows.map((p) => {
@@ -40,7 +42,7 @@ function normalizeProducts(rows) {
       price: minPrice,
       priceRange: priced.length > 1 ? `₹${Math.round(minPrice)} – ₹${Math.round(maxPrice)}` : null,
       category: fallback?.category ?? 'staples',
-      img: p.imageUrl ?? fallback?.img ?? '/assets/img/img-02.jpg',
+      img: abs(p.imageUrl) ?? fallback?.img ?? '/assets/img/img-02.jpg',
       badge: p.badge ?? fallback?.badge ?? '',
       desc: p.shortDesc ?? fallback?.desc ?? '',
       longDesc: p.longDesc ?? fallback?.longDesc ?? undefined,
@@ -69,11 +71,13 @@ export function ContentProvider({ children }) {
           fetchJson('/site/content'),
         ])
         if (cancelled) return
+        const hero = content['hero:main'] ? { ...content['hero:main'], imageUrl: abs(content['hero:main'].imageUrl) } : null
+        const banner = content['banner:main'] ? { ...content['banner:main'], imageUrl: abs(content['banner:main'].imageUrl) } : null
         setState({
           products: normalizeProducts(products),
           categories: defaultCategories,
-          hero: content['hero:main'] ?? null,
-          banner: content['banner:main'] ?? null,
+          hero,
+          banner,
           testimonials: content['testimonials']?.items?.length ? content.testimonials.items : null,
           ticker: content['ticker:items']?.items?.length ? content['ticker:items'].items : null,
           live: true,

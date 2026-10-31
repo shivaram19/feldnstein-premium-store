@@ -1,11 +1,16 @@
+import { useContent } from '../context/ContentContext'
+
+const DEFAULT_ITEMS = [
+  '100% Bull Rotated Gaanuga Mill',
+  'Zero Chemical Refining',
+  'Unrefined & Bleach-Free',
+  'Glass Bottle Packaging',
+  'Direct From Mothadaka Farm',
+]
+
 export default function Ticker() {
-  const items = [
-    '100% Bull Rotated Gaanuga Mill',
-    'Zero Chemical Refining',
-    'Unrefined & Bleach-Free',
-    'Glass Bottle Packaging',
-    'Direct From Mothadaka Farm',
-  ]
+  const { ticker } = useContent()
+  const items = ticker && ticker.length > 0 ? ticker : DEFAULT_ITEMS
 
   return (
     <div id="ticker" className="w-full bg-brand-warmCard border-y border-brand-border py-4 overflow-hidden select-none">
