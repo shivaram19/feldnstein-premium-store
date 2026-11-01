@@ -1,8 +1,7 @@
 package com.feldnstein.platform.media;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.arc.lookup.LookupIfProperty;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -10,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Map;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 @LookupIfProperty(name = "media.storage.type", stringValue = "disk", lookupIfMissing = true)

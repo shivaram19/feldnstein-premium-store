@@ -1,17 +1,20 @@
 package com.feldnstein.platform.media;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.feldnstein.platform.gaanugu.catalog.OilProduct;
+import com.feldnstein.platform.gaanugu.settings.Audited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.ws.rs.*;
 
 @Path("/g/site-content")
 @ApplicationScoped
@@ -28,7 +31,7 @@ public class ContentResource {
 
     @PUT @Path("/{key:.+}")
     @Transactional
-    @com.feldnstein.platform.gaanugu.Audited("CONTENT_UPDATE")
+    @com.feldnstein.platform.gaanugu.settings.Audited("CONTENT_UPDATE")
     public Response putBlock(@PathParam("key") String key, BlockRequest req, @Context SecurityContext ctx) {
         if (!key.matches("[a-z0-9:.-]{3,128}")) throw new BadRequestException("invalid block key");
         try {
@@ -67,12 +70,12 @@ public class ContentResource {
 
     @PUT @Path("/product-marketing/{productId}")
     @Transactional
-    @com.feldnstein.platform.gaanugu.Audited("CONTENT_UPDATE")
+    @com.feldnstein.platform.gaanugu.settings.Audited("CONTENT_UPDATE")
     public Response putMarketing(@PathParam("productId") long productId, MarketingRequest req) {
         ProductMarketing pm = marketing.find("product.id", productId).firstResult();
         if (pm == null) {
             pm = new ProductMarketing();
-            pm.product = com.feldnstein.platform.gaanugu.OilProduct.findById(productId);
+            pm.product = com.feldnstein.platform.gaanugu.catalog.OilProduct.findById(productId);
             if (pm.product == null) throw new NotFoundException("product not found");
             pm.persist();
         }

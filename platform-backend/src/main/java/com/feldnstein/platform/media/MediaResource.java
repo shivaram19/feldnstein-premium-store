@@ -1,10 +1,10 @@
 package com.feldnstein.platform.media;
 
+import com.feldnstein.platform.gaanugu.settings.Audited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -12,6 +12,8 @@ import jakarta.ws.rs.core.SecurityContext;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.ws.rs.*;
 
 @Path("/")
 @ApplicationScoped
@@ -58,7 +60,7 @@ public class MediaResource {
     }
 
     @POST @Path("/g/media/{id}/publish") @RolesAllowed({"ADMIN", "OPERATOR"})
-    @com.feldnstein.platform.gaanugu.Audited("MEDIA_PUBLISH")
+    @com.feldnstein.platform.gaanugu.settings.Audited("MEDIA_PUBLISH")
     public Response publish(@PathParam("id") long id) {
         mediaService.setPublished(id, true);
         return Response.noContent().build();
@@ -77,7 +79,7 @@ public class MediaResource {
     }
 
     @DELETE @Path("/g/media/{id}") @RolesAllowed({"ADMIN", "OPERATOR"})
-    @com.feldnstein.platform.gaanugu.Audited("MEDIA_DELETE")
+    @com.feldnstein.platform.gaanugu.settings.Audited("MEDIA_DELETE")
     public Response delete(@PathParam("id") long id) {
         mediaService.delete(id);
         return Response.noContent().build();

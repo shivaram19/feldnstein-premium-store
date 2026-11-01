@@ -2,9 +2,9 @@ package com.feldnstein.platform.media;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.feldnstein.platform.gaanugu.OilProduct;
-import com.feldnstein.platform.gaanugu.PriceConfig;
-import com.feldnstein.platform.gaanugu.ProductVariant;
+import com.feldnstein.platform.gaanugu.catalog.OilProduct;
+import com.feldnstein.platform.gaanugu.catalog.ProductVariant;
+import com.feldnstein.platform.gaanugu.settings.PriceConfig;
 import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -16,6 +16,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.time.Instant;
+
 import java.util.*;
 
 @Path("/site")

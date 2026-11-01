@@ -1,0 +1,8 @@
+package com.feldnstein.platform.gaanugu.inventory;
+
+import io.quarkus.hibernate.orm.rest.data.panache.PanacheRepositoryResource;
+import io.quarkus.rest.data.panache.ResourceProperties;
+
+@ResourceProperties(path = "g/warehouses", rolesAllowed = {"ADMIN", "OPERATOR"})
+public interface WarehouseResource extends PanacheRepositoryResource<WarehouseRepository, Warehouse, Long> {
+}

@@ -1,7 +1,7 @@
 package com.feldnstein.platform.media;
 
-import com.feldnstein.platform.gaanugu.OilProduct;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.feldnstein.platform.gaanugu.catalog.OilProduct;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,19 +1,24 @@
-import { useEffect, useState, type ReactElement } from 'react'
+import { useState, useEffect, type ReactElement } from 'react'
 import { Button, ToastProvider } from './ui'
-import {
-  GBatches, GDashboard, GMovements, GPrices, GProducts, GQuality, GStock,
-} from './gaanugu-screens'
-import {
-  GAdjustment, GBullPress, GGrn, GProcurement, GTransfer, GWarehouses,
-} from './gaanugu-ops'
-import {
-  GAlerts, GAuditLog, GHoldRelease, GSettings,
-} from './gaanugu-alerts'
-import { GCounts } from './gaanugu-counts'
-import { GMedia } from './gaanugu-media'
-import { GSiteContent } from './gaanugu-content'
-import { GReports } from './gaanugu-reports'
-import { clearAuth, currentUsername, getAuth, navEvents, saveAuth, setUnauthorizedHandler, verifyCredentials } from './api'
+import { getAuth, saveAuth, clearAuth, currentUsername, verifyCredentials, setUnauthorizedHandler, navEvents } from './api/client'
+import { DashboardScreen } from './screens/dashboard'
+import { ProductsScreen } from './screens/products'
+import { BatchesScreen } from './screens/batches'
+import { QualityScreen } from './screens/quality'
+import { StockScreen } from './screens/stock'
+import { MovementsScreen } from './screens/movements'
+import { PricesScreen } from './screens/prices'
+import { ProcurementScreen } from './screens/procurement'
+import { WarehousesScreen } from './screens/warehouses'
+import { BullPressScreen } from './screens/bull-press'
+import { TransferScreen } from './screens/transfer'
+import { AdjustmentScreen } from './screens/adjustment'
+import { GrnScreen } from './screens/grn'
+import { AlertsScreen, SettingsScreen, AuditLogScreen, HoldReleaseScreen } from './screens/alerts'
+import { CountsScreen } from './screens/counts'
+import { MediaScreen } from './screens/media'
+import { SiteContentScreen } from './screens/content'
+import { ReportsScreen } from './screens/reports'
 
 type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
 type NavGroup = { section: string; icon: string; items: NavItem[] }
@@ -25,7 +30,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Dashboard', icon: '📊',
     items: [
-      N('g-dashboard', 'Inventory Dashboard', GDashboard,
+      N('g-dashboard', 'Inventory Dashboard', DashboardScreen,
         <>Operations <em>dashboard</em></>,
         'Stock, batches, QC queue, expiry radar — the first screen of the day.'),
     ],
@@ -33,7 +38,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Stock', icon: '📦',
     items: [
-      N('g-stock', 'Stock Levels', GStock,
+      N('g-stock', 'Stock Levels', StockScreen,
         <>Stock <em>levels</em></>,
         'On hand, reserved, on hold, available — per SKU, batch, warehouse.'),
     ],
@@ -41,10 +46,10 @@ const NAV: NavGroup[] = [
   {
     section: 'Production', icon: '🏭',
     items: [
-      N('g-batches', 'Batches', GBatches,
+      N('g-batches', 'Batches', BatchesScreen,
         <><em>Production</em> batches</>,
         'Every pressing session, from seed to release gate.'),
-      N('g-bullpress', 'Bull & Press', GBullPress,
+      N('g-bullpress', 'Bull & Press', BullPressScreen,
         <>Bull &amp; <em>press</em> management</>,
         'Bulls, operators, work logs (4-hour welfare limit), press condition.'),
     ],
@@ -52,7 +57,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Warehouses', icon: '🏢',
     items: [
-      N('g-warehouses', 'Warehouses', GWarehouses,
+      N('g-warehouses', 'Warehouses', WarehousesScreen,
         <><em>Warehouse</em> network</>,
         'Production unit, fulfilment hubs — with per-warehouse stock views.'),
     ],
@@ -60,16 +65,16 @@ const NAV: NavGroup[] = [
   {
     section: 'Movements', icon: '🔄',
     items: [
-      N('g-movements', 'Transaction Ledger', GMovements,
+      N('g-movements', 'Transaction Ledger', MovementsScreen,
         <>Movement <em>ledger</em></>,
         'Immutable audit trail of every unit in and out.'),
-      N('g-transfer', 'Transfer Stock', GTransfer,
+      N('g-transfer', 'Transfer Stock', TransferScreen,
         <>Stock <em>transfer</em></>,
         'Move units between warehouses — writes paired ledger entries.'),
-      N('g-adjustment', 'Stock Adjustment', GAdjustment,
+      N('g-adjustment', 'Stock Adjustment', AdjustmentScreen,
         <>Stock <em>adjustment</em></>,
         'Correct system stock to physical count — damage, spoilage, expiry, theft.'),
-      N('g-grn', 'Goods Receipt (GRN)', GGrn,
+      N('g-grn', 'Goods Receipt (GRN)', GrnScreen,
         <>Goods <em>receipt</em></>,
         'Record packaging deliveries against purchase orders.'),
     ],
@@ -77,7 +82,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Procurement', icon: '🌾',
     items: [
-      N('g-procurement', 'Procurement', GProcurement,
+      N('g-procurement', 'Procurement', ProcurementScreen,
         <><em>Seed</em> &amp; packaging procurement</>,
         'Seed purchases from farmers, packaging POs, supplier directory.'),
     ],
@@ -85,10 +90,10 @@ const NAV: NavGroup[] = [
   {
     section: 'Quality', icon: '✅',
     items: [
-      N('g-quality', 'QC Dashboard', GQuality,
+      N('g-quality', 'QC Dashboard', QualityScreen,
         <>Quality <em>checks</em></>,
         'FSSAI panel — aflatoxin, temperature, pass/fail.'),
-      N('g-holdrelease', 'Hold & Release', GHoldRelease,
+      N('g-holdrelease', 'Hold & Release', HoldReleaseScreen,
         <>Stock hold &amp; <em>release</em></>,
         'Quarantine and release units at a stock position.'),
     ],
@@ -96,7 +101,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Alerts', icon: '🔔',
     items: [
-      N('g-alerts', 'Alerts', GAlerts,
+      N('g-alerts', 'Alerts', AlertsScreen,
         <>Active <em>alerts</em> &amp; rules</>,
         'Low stock, near expiry, QC overdue — raised automatically from your threshold rules.'),
     ],
@@ -104,7 +109,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Counts', icon: '📋',
     items: [
-      N('g-counts', 'Stock Counts', GCounts,
+      N('g-counts', 'Stock Counts', CountsScreen,
         <>Stock <em>counts</em></>,
         'Count plans, execution, and reconciliation to the ledger.'),
     ],
@@ -112,7 +117,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Reports', icon: '📈',
     items: [
-      N('g-reports', 'Reports', GReports,
+      N('g-reports', 'Reports', ReportsScreen,
         <><em>Reports</em></>,
         'Analytics overview, standard reports, custom builder, schedules.'),
     ],
@@ -120,10 +125,10 @@ const NAV: NavGroup[] = [
   {
     section: 'Catalog', icon: '🫙',
     items: [
-      N('g-products', 'Oils', GProducts,
+      N('g-products', 'Oils', ProductsScreen,
         <>Oil <em>catalog</em></>,
         'Cold-pressed oils and their SKU variants.'),
-      N('g-prices', 'Prices', GPrices,
+      N('g-prices', 'Prices', PricesScreen,
         <>Price <em>configurations</em></>,
         'MRP, selling and cost prices per SKU — history preserved.'),
     ],
@@ -131,7 +136,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Settings', icon: '⚙️',
     items: [
-      N('g-settings', 'Settings', GSettings,
+      N('g-settings', 'Settings', SettingsScreen,
         <><em>Settings</em></>,
         'General, reorder rules, expiry policy, bull & press config, permissions.'),
     ],
@@ -139,7 +144,7 @@ const NAV: NavGroup[] = [
   {
     section: 'Audit', icon: '🔍',
     items: [
-      N('g-audit', 'Audit Log', GAuditLog,
+      N('g-audit', 'Audit Log', AuditLogScreen,
         <>Audit <em>log</em></>,
         'Who changed what — transfers, adjustments, counts, QC. ADMIN-only.'),
     ],
@@ -147,10 +152,10 @@ const NAV: NavGroup[] = [
   {
     section: 'Media', icon: '🖼️',
     items: [
-      N('g-media', 'Media Library', GMedia,
+      N('g-media', 'Media Library', MediaScreen,
         <>Media <em>library</em></>,
         'Upload photos — auto-cropped to card, hero, banner, and thumb specs.'),
-      N('g-site-content', 'Site Content', GSiteContent,
+      N('g-site-content', 'Site Content', SiteContentScreen,
         <>Site <em>content</em></>,
         'Hero, banners, testimonials, ticker, and per-oil descriptions that power the storefront.'),
     ],
