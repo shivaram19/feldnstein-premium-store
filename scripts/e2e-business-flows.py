@@ -345,6 +345,16 @@ def flow6_reports_rbac():
     s, _ = get("admin", "/g/analytics/dashboard")
     check("6.10 analytics open for ADMIN", s == 200, str(s))
 
+    s, charts = get("admin", "/g/analytics/charts")
+    check("6.12 charts open for ADMIN", s == 200, str(s))
+    if s == 200:
+        keys = {"batchStatus", "qcTrend", "yieldByMonth", "stockByProduct", "availability", "expiry", "spendByMonth"}
+        check("6.13 charts series all present", keys.issubset(charts.keys()), str(sorted(charts.keys())))
+        pct_sum = sum(float(r["pct"]) for r in charts["availability"])
+        check("6.14 availability percentages sum to ~100", abs(pct_sum - 100) < 1.5, f"{pct_sum:.1f}")
+    s, _ = get("ops", "/g/analytics/charts")
+    check("6.15 RBAC: charts blocked for OPERATOR", s == 403, str(s))
+
     req = urllib.request.Request(f"{BASE}/g/stock-levels")
     try:
         urllib.request.urlopen(req)

@@ -307,6 +307,33 @@ async function flowStorefront(browser) {
   await page.close()
 }
 
+/* ---------- Flow H: analytics charts ---------- */
+async function flowAnalytics(browser) {
+  console.log('\nFlow H — analytics charts')
+  const page = await newPage(browser)
+  const r0 = await login(page, 'admin', 'admin123')
+  check('H0 admin login succeeds', r0 === 'ok', r0)
+  await nav(page, 'Reports')
+  await sleep(1500)
+  await page.evaluate(() => [...document.querySelectorAll('[role=button]')].find((e) => e.textContent.trim() === 'Overview')?.click())
+  await sleep(4000)
+  // H1: chart cards render (donuts + bars)
+  const cards = await page.evaluate(() => document.querySelectorAll('[data-testid^="chart-"]').length)
+  check('H1 chart cards render', cards >= 6, `${cards} cards`)
+  // H2: donut shows a computed percentage with legend
+  const qc = await page.evaluate(() => document.querySelector('[data-testid="chart-qc-rate"]')?.textContent ?? '')
+  check('H2 donut shows computed percentage', /%\s*QC passed/.test(qc.replace(/\s+/g, ' ')) || /\d+(\.\d+)?%/.test(qc), qc.replace(/\s+/g, ' ').slice(0, 60))
+  // H3: percentages in the availability legend sum to ~100
+  const sum = await page.evaluate(() => {
+    const el = document.querySelector('[data-testid="chart-availability"]')
+    if (!el) return -1
+    const pcts = [...el.querySelectorAll('strong')].map((s) => parseFloat(s.textContent)).filter((n) => !isNaN(n))
+    return pcts.reduce((a, b) => a + b, 0)
+  })
+  check('H3 availability percentages sum to ~100', sum > 98 && sum <= 100.5, String(sum))
+  await page.close()
+}
+
 async function main() {
   const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox'] })
   try {
@@ -317,6 +344,7 @@ async function main() {
     await flowMedia(browser)
     await flowContent(browser)
     await flowStorefront(browser)
+    await flowAnalytics(browser)
   } finally {
     await browser.close()
   }

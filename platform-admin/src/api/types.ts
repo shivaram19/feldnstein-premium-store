@@ -90,6 +90,18 @@ export interface DashboardSummary {
 /** Product rows as rendered by the oil-products list endpoints. */
 export type OilProductRef = OilProduct
 
+/* ---- chart-ready series from /g/analytics/charts (percentages computed server-side) ---- */
+export interface ChartsData {
+  batchStatus: { status: string; count: number; pct: number }[]
+  qcTrend: { month: string; checks: number; passed: number; passPct: number }[]
+  yieldByMonth: { month: string; litres: number }[]
+  yieldByBull: { name: string; litres: number }[]
+  stockByProduct: { product: string; value: number; pct: number }[]
+  availability: { label: string; units: number; pct: number }[]
+  expiry: { bucket: string; units: number }[]
+  spendByMonth: { month: string; paid: number; pending: number }[]
+}
+
 export const gaanugu = {
   list: <T>(path: string) => api.list<T>(`/g${path}`),
   get: <T>(path: string) => api.get<T>(`/g${path}`),
@@ -97,6 +109,7 @@ export const gaanugu = {
   update: <T>(path: string, body: unknown) => api.update<T>(`/g${path}`, body),
   post: <T>(path: string, body?: unknown) => api.post<T>(`/g${path}`, body),
   dashboard: () => api.get<DashboardSummary>('/g/analytics/dashboard'),
+  charts: () => api.get<ChartsData>('/g/analytics/charts'),
   traceability: () => api.get<Record<string, unknown>[]>('/g/analytics/traceability'),
 }
 

@@ -306,6 +306,29 @@ async fn flow_storefront(browser: &Browser) -> Result<()> {
     Ok(())
 }
 
+/* ---------- Flow H: analytics charts ---------- */
+async fn flow_analytics(browser: &Browser) -> Result<()> {
+    println!("\nFlow H — analytics charts");
+    let (ok, page) = login(browser, "admin", "admin123").await?;
+    check("H0 admin login succeeds", ok == "ok", &ok);
+    sleep(Duration::from_millis(1500)).await;
+    nav(&page, "Reports").await;
+    sleep(Duration::from_millis(1500)).await;
+    let _ = ev_bool(&page, r#"(() => { const e = [...document.querySelectorAll('[role=button]')].find(x => x.textContent.trim() === 'Overview'); if (e) { e.click(); return true; } return false; })()"#).await;
+    sleep(Duration::from_millis(4000)).await;
+    let cards = ev(&page, "document.querySelectorAll('[data-testid^=\"chart-\"]').length").await?;
+    let n = cards.as_u64().unwrap_or(0);
+    check("H1 chart cards render", n >= 6, &n.to_string());
+    let qc = ev_string(&page, "document.querySelector('[data-testid=\"chart-qc-rate\"]')?.textContent ?? ''").await;
+    let qc_flat: String = qc.split_whitespace().collect::<Vec<_>>().join(" ");
+    check("H2 donut shows computed percentage", qc_flat.contains('%') && qc_flat.contains("QC passed"), &qc_flat.chars().take(60).collect::<String>());
+    let sum = ev(&page, r#"(() => { const el = document.querySelector('[data-testid="chart-availability"]'); if (!el) return -1; return [...el.querySelectorAll('strong')].map(s => parseFloat(s.textContent)).filter(n => !isNaN(n)).reduce((a, b) => a + b, 0); })()"#).await?;
+    let total = sum.as_f64().unwrap_or(-1.0);
+    check("H3 availability percentages sum to ~100", total > 98.0 && total <= 100.5, &total.to_string());
+    page.close().await?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let (mut browser, mut handler) = Browser::launch(
@@ -327,6 +350,7 @@ async fn main() -> Result<()> {
         flow_media(&browser).await?;
         flow_content(&browser).await?;
         flow_storefront(&browser).await?;
+        flow_analytics(&browser).await?;
         Ok::<(), anyhow::Error>(())
     }
     .await;
