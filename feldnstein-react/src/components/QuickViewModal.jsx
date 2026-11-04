@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { useCart } from '../context/CartContext'
+import AddToCart from './AddToCart'
 
 export default function QuickViewModal({ product, onClose }) {
-  const { addToCart } = useCart()
   const closeBtnRef = useRef(null)
   const triggerRef = useRef(null)
   const open = product !== null
@@ -62,16 +61,11 @@ export default function QuickViewModal({ product, onClose }) {
               {product?.mrp && <span id="modalMrp" className="text-xs text-brand-subtle line-through">₹{product.mrp}</span>}
             </div>
             <div className="mt-6 flex flex-col gap-3">
-              <button
-                id="modalAddBtn"
-                className="btn btn-primary w-full text-xs font-bold uppercase tracking-wider"
-                onClick={() => {
-                  if (product) addToCart(product.name, product.price)
-                  close()
-                }}
-              >
-                <span className="material-symbols-outlined text-base">shopping_bag</span> Add to Reserve Cart
-              </button>
+              {product && (
+                <div onClick={close}>
+                  <AddToCart product={product} />
+                </div>
+              )}
             </div>
           </div>
         </div>

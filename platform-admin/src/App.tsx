@@ -10,6 +10,7 @@ import { MovementsScreen } from './screens/movements'
 import { PricesScreen } from './screens/prices'
 import { ProcurementScreen } from './screens/procurement'
 import { WarehousesScreen } from './screens/warehouses'
+import { OrdersScreen } from './screens/orders'
 import { BullPressScreen } from './screens/bull-press'
 import { TransferScreen } from './screens/transfer'
 import { AdjustmentScreen } from './screens/adjustment'
@@ -85,6 +86,14 @@ const NAV: NavGroup[] = [
       N('g-procurement', 'Procurement', ProcurementScreen,
         <><em>Seed</em> &amp; packaging procurement</>,
         'Seed purchases from farmers, packaging POs, supplier directory.'),
+    ],
+  },
+  {
+    section: 'Orders', icon: '🛒',
+    items: [
+      N('g-orders', 'Orders', OrdersScreen,
+        <>Customer <em>orders</em></>,
+        'Storefront orders — confirm, ship, deliver, cancel & refund.'),
     ],
   },
   {

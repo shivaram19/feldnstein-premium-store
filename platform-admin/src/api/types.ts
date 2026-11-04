@@ -31,6 +31,27 @@ export interface StockMovement {
   unitCost?: number; referenceId?: string; reason?: string; performedBy?: string
   variant?: ProductVariant & { product?: NamedRef }; fromWarehouse?: NamedRef; toWarehouse?: NamedRef
 }
+
+/* ---- commerce: orders & payments ---- */
+export interface OrderLineView {
+  variantId: number; sku: string; product: string; sizeMl: number
+  qty: number; unitPrice: number; gstPct: number; lineTotal: number
+}
+export interface PaymentView {
+  provider: string; providerRef: string; amount: number; status: string
+  paidAt?: string; refundedAt?: string
+}
+export interface OrderListItem {
+  orderCode: string; status: string; customerName: string; email: string; phone: string
+  address: string; subTotal: number; gstTotal: number; grandTotal: number; createdAt: string
+  itemCount: number
+}
+export interface OrderDetail extends OrderListItem {
+  lines: OrderLineView[]
+  payment?: PaymentView | null
+  timeline: Record<string, string>
+  cancelReason?: string
+}
 export interface Warehouse { id: number; code: string; name: string; type: string; managerName?: string; managerPhone?: string }
 export interface Supplier { id: number; code: string; type: string; name: string; phone?: string; gst?: string; active: boolean }
 export interface Bull { id: number; code: string; name: string; breed?: string; healthStatus: string; dailyWorkLimitHrs: number; active: boolean }

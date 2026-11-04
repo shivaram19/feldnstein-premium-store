@@ -1,0 +1,123 @@
+/* Shop API client — anonymous carts, checkout, demo payments, order tracking. */
+
+const API_BASE: string = (import.meta.env.VITE_SITE_API as string | undefined) ?? ''
+const TOKEN_KEY = 'feldnstein.cartToken'
+
+export interface CartLine {
+  variantId: number
+  sku: string
+  product: string
+  sizeMl: number
+  qty: number
+  unitPrice: number
+  gstPct: number
+  lineTotal: number
+  available: number
+}
+
+export interface Cart {
+  token?: string
+  lines: CartLine[]
+  subTotal: number
+  gstTotal: number
+  grandTotal: number
+  itemCount: number
+}
+
+export interface OrderLine {
+  variantId: number
+  sku: string
+  product: string
+  sizeMl: number
+  qty: number
+  unitPrice: number
+  gstPct: number
+  lineTotal: number
+}
+
+export interface PaymentInfo {
+  provider: string
+  providerRef: string
+  amount: number
+  status: string
+}
+
+export interface Order {
+  orderCode: string
+  status: string
+  customerName: string
+  email: string
+  phone: string
+  address: string
+  subTotal: number
+  gstTotal: number
+  grandTotal: number
+  createdAt: string
+  lines: OrderLine[]
+  payment?: PaymentInfo | null
+  timeline: Record<string, string>
+  cancelReason?: string
+}
+
+export interface CheckoutDetails {
+  customerName: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  pincode: string
+}
+
+function cartToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function rememberToken(token: string | undefined): void {
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+}
+
+async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  }
+  const token = cartToken()
+  if (token) headers['X-Cart-Token'] = token
+  const res = await fetch(API_BASE + path, { ...init, headers })
+  if (!res.ok) {
+    let message = `request failed (${res.status})`
+    try {
+      const body = await res.json()
+      if (typeof body?.error === 'string') message = body.error
+    } catch {
+      // non-JSON error body
+    }
+    throw new Error(message)
+  }
+  const data = (await res.json()) as Cart & Order & { token?: string }
+  rememberToken(data.token)
+  return data as T
+}
+
+export const shopApi = {
+  getCart: () => req<Cart>('/shop/cart'),
+  addItem: (variantId: number, qty: number) =>
+    req<Cart>('/shop/cart/add', { method: 'POST', body: JSON.stringify({ variantId, qty }) }),
+  setQty: (variantId: number, qty: number) =>
+    req<Cart>(`/shop/cart/items/${variantId}`, { method: 'PUT', body: JSON.stringify({ qty }) }),
+  removeItem: (variantId: number) =>
+    req<Cart>(`/shop/cart/items/${variantId}`, { method: 'DELETE' }),
+  checkout: (details: CheckoutDetails) =>
+    req<Order & { demoPayment: boolean }>('/shop/checkout', {
+      method: 'POST',
+      body: JSON.stringify(details),
+    }),
+  demoPay: (orderCode: string) =>
+    req<Order>(`/shop/payments/${orderCode}/demo-pay`, { method: 'POST' }),
+  track: (orderCode: string, email: string) =>
+    req<Order>('/shop/orders/lookup', {
+      method: 'POST',
+      body: JSON.stringify({ orderCode, email }),
+    }),
+}

@@ -297,7 +297,7 @@ async fn flow_storefront(browser: &Browser) -> Result<()> {
     check("G2 header reacts to scroll", shrunk, "");
     let _ = ev_bool(&page, "document.querySelector('#collection')?.scrollIntoView(); true").await;
     sleep(Duration::from_millis(1200)).await;
-    let clicked = ev_bool(&page, r#"(() => { const b = [...document.querySelectorAll('#collection button')].find(x => x.textContent.includes('Add to Reserve Cart')); if (b) { b.click(); return true; } return false; })()"#).await;
+    let clicked = ev_bool(&page, r#"(() => { const b = [...document.querySelectorAll('#collection button')].find(x => (x.classList.contains('quick-add') || x.textContent.includes('Add to Cart'))); if (b) { b.click(); return true; } return false; })()"#).await;
     sleep(Duration::from_millis(900)).await;
     let feedback = clicked && ev_bool(&page, "document.body.textContent.toLowerCase().includes('cart') || !!document.querySelector('[class*=toast]')").await;
     check("G3 add-to-cart gives feedback", feedback, "");
@@ -329,6 +329,38 @@ async fn flow_analytics(browser: &Browser) -> Result<()> {
     Ok(())
 }
 
+/* ---------- Flow I: commerce ---------- */
+async fn flow_commerce(browser: &Browser) -> Result<()> {
+    println!("\nFlow I — commerce (storefront cart/checkout + admin orders)");
+    let page = browser.new_page("about:blank").await?;
+    page.goto(SHOP).await?;
+    sleep(Duration::from_millis(5000)).await;
+    let _ = ev_bool(&page, "document.querySelector('#collection')?.scrollIntoView({ block: 'center' }); true").await;
+    sleep(Duration::from_millis(1500)).await;
+    let _ = ev_bool(&page, r#"(() => { const b = document.querySelector('#collection .quick-add'); if (b) { b.click(); return true; } return false; })()"#).await;
+    sleep(Duration::from_millis(2500)).await;
+    let _ = ev_bool(&page, r#"(() => { const b = [...document.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Cart'); if (b) { b.click(); return true; } return false; })()"#).await;
+    sleep(Duration::from_millis(2000)).await;
+    let has_line = ev_bool(&page, r#"!!document.querySelector('[data-testid="cart-line"]')"#).await;
+    check("I1 cart drawer shows the added line", has_line, "");
+    let _ = ev_bool(&page, r#"document.querySelector('[data-testid="cart-checkout-btn"]')?.click(); true"#).await;
+    sleep(Duration::from_millis(2000)).await;
+    let disabled = ev_bool(&page, r#"document.querySelector('[data-testid="place-order-btn"]')?.disabled ?? false"#).await;
+    check("I2 checkout submit disabled until form valid", disabled, "");
+    page.close().await?;
+
+    let (ok, ap) = login(browser, "admin", "admin123").await?;
+    check("I3a admin login succeeds", ok == "ok", &ok);
+    sleep(Duration::from_millis(1500)).await;
+    nav(&ap, "Orders").await;
+    sleep(Duration::from_millis(3000)).await;
+    let rows = ev(&ap, r#"document.querySelectorAll('[data-testid="orders-table"] tr').length"#).await?;
+    let n = rows.as_u64().unwrap_or(0);
+    check("I3b orders table renders with rows", n > 0, &n.to_string());
+    ap.close().await?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let (mut browser, mut handler) = Browser::launch(
@@ -354,13 +386,31 @@ async fn main() -> Result<()> {
         Ok::<(), anyhow::Error>(())
     }
     .await;
+    let _ = browser.close().await;
+
+    // commerce flow gets a fresh browser — long-lived headless renderers destabilise
+    // on media-heavy pages under memory pressure
+    let mut total_failed = if let Err(e) = result { println!("early flow error: {e:?}"); 1 } else { 0 };
+    let (mut browser2, mut handler2) = Browser::launch(
+        BrowserConfig::builder()
+            .chrome_executable("/usr/bin/chromium")
+            .arg("--no-sandbox")
+            .arg("--mute-audio")
+            .arg("--window-size=1440,900")
+            .build().map_err(anyhow::Error::msg)?,
+    )
+    .await?;
+    tokio::spawn(async move { while handler2.next().await.is_some() {} });
+    if let Err(e) = flow_commerce(&browser2).await {
+        println!("flow_commerce error: {e:?}");
+        total_failed += 1;
+    }
+    let _ = browser2.close().await;
 
     let passed = PASSED.load(Ordering::SeqCst);
-    let failed = FAILED.load(Ordering::SeqCst);
+    let failed = FAILED.load(Ordering::SeqCst) + total_failed;
     println!("\n============================================");
     println!("{passed} passed, {failed} failed");
-    let _ = browser.close().await;
-    result?;
     if failed > 0 {
         std::process::exit(1);
     }

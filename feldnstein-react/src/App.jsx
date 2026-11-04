@@ -9,23 +9,39 @@ import SubscriptionSection from './components/SubscriptionSection'
 import TestimonialsSection from './components/TestimonialsSection'
 import Footer from './components/Footer'
 import Toast from './components/Toast'
+import CartDrawer from './components/CartDrawer'
+import CheckoutView from './components/CheckoutView'
+import TrackOrder from './components/TrackOrder'
+import { useCart } from './context/CartContext'
 
 export default function App() {
+  const { view } = useCart()
   return (
     <>
       <Header />
-      <main>
-        <Hero />
-        <Ticker />
-        <ProcessSection />
-        <CreedSection />
-        <MatrixSection />
-        <CollectionSection />
-        <SubscriptionSection />
-        <TestimonialsSection />
-      </main>
+      {view === 'home' ? (
+        <main>
+          <Hero />
+          <Ticker />
+          <ProcessSection />
+          <CreedSection />
+          <MatrixSection />
+          <CollectionSection />
+          <SubscriptionSection />
+          <TestimonialsSection />
+        </main>
+      ) : view === 'checkout' ? (
+        <main>
+          <CheckoutView />
+        </main>
+      ) : (
+        <main>
+          <TrackOrder />
+        </main>
+      )}
       <Footer />
       <Toast />
+      <CartDrawer />
     </>
   )
 }

@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Reveal from './Reveal'
 import QuickViewModal from './QuickViewModal'
-import { useCart } from '../context/CartContext'
+import AddToCart from './AddToCart'
 import { useContent } from '../context/ContentContext'
 
 const DOT_COUNT = 4
 const CARD_WIDTH = 360
 
 export default function CollectionSection() {
-  const { addToCart } = useCart()
   const { products, categories } = useContent()
   const [filter, setFilter] = useState('all')
   const [currentDot, setCurrentDot] = useState(0)
@@ -120,12 +119,9 @@ export default function CollectionSection() {
                       <span className="font-serif text-xl font-bold text-brand-forest">₹{product.price}</span>
                       {product.priceRange && <span className="text-xs text-brand-charcoal/50">Range: {product.priceRange}</span>}
                     </div>
-                    <button
-                      className="btn btn-primary mt-4 w-full quick-add"
-                      onClick={() => addToCart(product.name, product.price)}
-                    >
-                      Add to Reserve Cart
-                    </button>
+                    <div className="mt-4">
+                      <AddToCart product={product} />
+                    </div>
                     <button
                       className="btn btn-ghost mt-2 w-full quick-view-btn"
                       onClick={e => openQuickView(product, e.currentTarget)}

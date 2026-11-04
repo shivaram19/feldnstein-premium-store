@@ -299,7 +299,7 @@ async function flowStorefront(browser) {
   // G3: add to cart → toast feedback
   await page.evaluate(() => document.querySelector('#collection')?.scrollIntoView())
   await sleep(1200)
-  await page.evaluate(() => { [...document.querySelectorAll('#collection button')].find((b) => b.textContent.includes('Add to Reserve Cart'))?.click() })
+  await page.evaluate(() => { [...document.querySelectorAll('#collection button')].find((b) => b.classList.contains('quick-add') || b.textContent.includes('Add to Cart'))?.click() })
   await sleep(800)
   const cartToast = await page.evaluate(() => document.body.textContent.includes('cart') || document.body.textContent.includes('Cart') || !!document.querySelector('.toast, [class*=toast]'))
   check('G3 add-to-cart gives feedback', cartToast)
@@ -334,8 +334,41 @@ async function flowAnalytics(browser) {
   await page.close()
 }
 
+/* ---------- Flow I: commerce ---------- */
+async function flowCommerce(browser) {
+  console.log('\nFlow I — commerce (storefront cart/checkout + admin orders)')
+  const page = await newPage(browser)
+  await page.goto(SHOP, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  await page.evaluate(() => document.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('autoplay') })).catch(() => {})
+  await sleep(4500)
+  await page.evaluate(() => document.querySelector('#collection')?.scrollIntoView({ block: 'center' }))
+  await sleep(1500)
+  await page.evaluate(() => document.querySelector('#collection .quick-add')?.click())
+  await sleep(2200)
+  await page.click('button[aria-label="Cart"]')
+  await sleep(1800)
+  const hasLine = await page.evaluate(() => !!document.querySelector('[data-testid="cart-line"]'))
+  check('I1 cart drawer shows the added line', hasLine)
+  await page.evaluate(() => document.querySelector('[data-testid="cart-checkout-btn"]')?.click())
+  await sleep(1800)
+  const disabledEmpty = await page.evaluate(() => document.querySelector('[data-testid="place-order-btn"]')?.disabled)
+  check('I2 checkout submit disabled until form valid', disabledEmpty === true)
+  await page.close()
+  const ap = await newPage(browser)
+  const r = await login(ap, 'admin', 'admin123')
+  check('I3a admin login succeeds', r === 'ok', r)
+  await nav(ap, 'Orders')
+  await sleep(3000)
+  const rows = await ap.evaluate(() => document.querySelectorAll('[data-testid="orders-table"] tr').length)
+  check('I3b orders table renders with rows', rows > 0, `${rows} rows`)
+  await ap.close()
+}
+
+const LAUNCH = { executablePath: '/usr/bin/chromium', protocolTimeout: 180000,
+  args: ['--no-sandbox', '--disable-dev-shm-usage', '--mute-audio'] }
+
 async function main() {
-  const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox'] })
+  let browser = await puppeteer.launch(LAUNCH)
   try {
     await flowAuth(browser)
     await flowRbac(browser)
@@ -345,6 +378,14 @@ async function main() {
     await flowContent(browser)
     await flowStorefront(browser)
     await flowAnalytics(browser)
+  } finally {
+    await browser.close()
+  }
+  // commerce flow gets a fresh browser — long-lived headless renderers destabilise on
+  // media-heavy pages under memory pressure
+  browser = await puppeteer.launch(LAUNCH)
+  try {
+    await flowCommerce(browser)
   } finally {
     await browser.close()
   }

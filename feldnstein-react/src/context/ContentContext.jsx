@@ -28,6 +28,7 @@ function normalizeProducts(rows) {
         || (p.name && String(p.name).toLowerCase().includes(d.id)),
     )
     const sizes = (p.variants ?? []).map((v) => ({
+      variantId: v.id,
       sku: v.sku,
       sizeMl: v.sizeMl,
       price: v.price != null ? Number(v.price) : undefined,

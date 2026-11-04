@@ -597,6 +597,131 @@ def flow9_media_content():
                 print(f"  FAIL  9.x cleanup: delete asset — still listed (GET {s2})")
 
 
+def flow10_commerce():
+    """Full e-commerce loop: cart → checkout → pay → fulfil → deliver; cancel+refund path."""
+    print("\n=== Flow 10: commerce — cart, checkout, payment, fulfilment, tracking ===")
+
+    def shop(method, path, body=None, token=None):
+        url = BASE + path
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Content-Type", "application/json")
+        if token:
+            req.add_header("X-Cart-Token", token)
+        try:
+            with urllib.request.urlopen(req) as res:
+                raw = res.read().decode()
+                return res.status, (json.loads(raw) if raw else None)
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode()
+            try:
+                return e.code, json.loads(raw)
+            except json.JSONDecodeError:
+                return e.code, {"raw": raw[:200]}
+
+    # pick a variant with real stock and a selling price
+    _, levels = call("GET", "/g/stock-levels?size=500", "admin")
+    _, site = shop("GET", "/site/products")
+    priced_ids = {v["id"] for p in site for v in p.get("variants", []) if v.get("price")}
+    best = max((l for l in levels if l["variant"]["id"] in priced_ids),
+               key=lambda l: l["onHand"] - l["reserved"] - (l.get("onHold") or 0), default=None)
+    check("10.0 a sellable priced variant exists", best is not None)
+    if not best:
+        return
+    vid = best["variant"]["id"]
+    sku = best["variant"]["sku"]
+    avail_before = best["onHand"] - best["reserved"] - (best.get("onHold") or 0)
+    reserved_before = best["reserved"]
+
+    # cart: anonymous add → token issued
+    s, cart = shop("POST", "/shop/cart/add", {"variantId": vid, "qty": 1})
+    token = cart.get("token") if cart else None
+    check("10.1 add to cart issues a cart token", s in (200, 201) and bool(token), str(s))
+    check("10.2 cart line priced with GST", bool(token) and cart["lines"][0]["sku"] == sku
+          and cart["gstTotal"] > 0, json.dumps(cart)[:120])
+
+    # oversell protection
+    s, err = shop("POST", "/shop/cart/add", {"variantId": vid, "qty": avail_before + 1000}, token=token)
+    check("10.3 oversell rejected with friendly error", s == 400 and "available" in str(err), str(s))
+
+    # qty update
+    s, cart = shop("PUT", f"/shop/cart/items/{vid}", {"qty": 2}, token=token)
+    check("10.4 quantity update recalculates totals", s == 200 and cart["lines"][0]["qty"] == 2
+          and abs(cart["grandTotal"] - (cart["subTotal"] + cart["gstTotal"])) < 0.01, str(s))
+
+    # RBAC on admin order endpoints
+    s, _ = call("GET", "/g/orders", "ops")
+    check("10.5 orders open for OPERATOR", s == 200, str(s))
+    req = urllib.request.Request(f"{BASE}/g/orders")
+    req.add_header("Authorization", "Basic " + base64.b64encode(b"cust:cust123").decode())
+    try:
+        urllib.request.urlopen(req)
+        check("10.6 orders blocked for CUSTOMER", False, "got 200")
+    except urllib.error.HTTPError as e:
+        check("10.6 orders blocked for CUSTOMER", e.code == 403, str(e.code))
+
+    # checkout validation + creation
+    s, bad = shop("POST", "/shop/checkout", {"customerName": "X", "email": "not-an-email"},
+                  token=token)
+    check("10.7 invalid checkout rejected", s == 400, str(s))
+    s, order = shop("POST", "/shop/checkout", {
+        "customerName": "E2E Buyer", "email": "e2e-buyer@example.com", "phone": "9876543210",
+        "address": "12 Temple Street", "city": "Vijayawada", "state": "AP", "pincode": "520001"}, token=token)
+    check("10.8 checkout creates PENDING order", s == 201 and order["status"] == "PENDING", str(s))
+    code = order["orderCode"]
+
+    # stock reserved by checkout
+    _, after = call("GET", f"/g/stock-levels/{best['id']}", "admin")
+    check("10.9 checkout reserves stock", after["reserved"] == reserved_before + 2,
+          f"reserved {after['reserved']} (was {reserved_before})")
+
+    # demo payment
+    s, paid = shop("POST", f"/shop/payments/{code}/demo-pay")
+    check("10.10 demo payment captures → PAID", s == 200 and paid["status"] == "PAID"
+          and paid["payment"]["status"] == "PAID", str(s))
+
+    # fulfilment pipeline
+    s, o = call("POST", f"/g/orders/{code}/confirm", "admin")
+    check("10.11 confirm → CONFIRMED", s == 200 and o["status"] == "CONFIRMED", str(s))
+    s, o = call("POST", f"/g/orders/{code}/ship", "admin")
+    check("10.12 ship → SHIPPED", s == 200 and o["status"] == "SHIPPED", str(s))
+
+    # stock deducted + ledger entry
+    _, after = call("GET", f"/g/stock-levels/{best['id']}", "admin")
+    check("10.13 ship deducts on-hand and frees reservation",
+          after["onHand"] == best["onHand"] - 2 and after["reserved"] == reserved_before,
+          f"onHand {after['onHand']}, reserved {after['reserved']}")
+    _, moves = call("GET", "/g/stock-movements?size=500", "admin")
+    check("10.14 ORDER_OUT ledger entry written", any(
+        m.get("referenceId") == code and m["type"] == "ORDER_OUT" for m in moves))
+
+    s, o = call("POST", f"/g/orders/{code}/deliver", "admin")
+    check("10.15 deliver → DELIVERED", s == 200 and o["status"] == "DELIVERED", str(s))
+    s, o = call("POST", f"/g/orders/{code}/cancel", "admin", {"reason": "too late"})
+    check("10.16 delivered order cannot be cancelled", s == 400, str(s))
+
+    # tracking
+    s, t = shop("POST", "/shop/orders/lookup", {"orderCode": code, "email": "e2e-buyer@example.com"})
+    check("10.17 tracking returns timeline", s == 200 and "DELIVERED" in t["timeline"], str(s))
+    s, _ = shop("POST", "/shop/orders/lookup", {"orderCode": code, "email": "other@x.com"})
+    check("10.18 tracking hides other people's orders", s == 404, str(s))
+
+    # cancel + refund path on a fresh order
+    s, cart2 = shop("POST", "/shop/cart/add", {"variantId": vid, "qty": 1})
+    s, order2 = shop("POST", "/shop/checkout", {
+        "customerName": "E2E Buyer", "email": "e2e-buyer@example.com", "phone": "9876543210",
+        "address": "12 Temple Street", "city": "Vijayawada", "state": "AP", "pincode": "520001"},
+        token=cart2["token"])
+    code2 = order2["orderCode"]
+    shop("POST", f"/shop/payments/{code2}/demo-pay")
+    s, o2 = call("POST", f"/g/orders/{code2}/cancel", "admin", {"reason": "customer request"})
+    check("10.19 cancel → CANCELLED + payment REFUNDED", s == 200 and o2["status"] == "CANCELLED"
+          and o2["payment"]["status"] == "REFUNDED", str(s))
+    _, after2 = call("GET", f"/g/stock-levels/{best['id']}", "admin")
+    check("10.20 cancel releases the reservation", after2["reserved"] == reserved_before,
+          f"reserved {after2['reserved']}")
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -609,6 +734,7 @@ def main():
         flow7_negative_and_boundary()
         flow8_rbac_sweep()
         flow9_media_content()
+        flow10_commerce()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

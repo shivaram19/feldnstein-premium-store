@@ -12,7 +12,8 @@ const NAV_LINKS = [
 const SECTION_IDS = ['collection', 'matrix', 'process', 'subscription']
 
 export default function Header() {
-  const { cartItems } = useCart()
+  const { cart, setDrawerOpen, setView } = useCart()
+  const cartItems = cart.itemCount
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuBtnRef = useRef(null)
@@ -101,7 +102,9 @@ export default function Header() {
             <button
               className="relative w-10 h-10 rounded-full flex items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors"
               aria-label="Cart"
+              onClick={() => setDrawerOpen(true)}
             >
+              <span className="sr-only">Open cart</span>
               <span className="material-symbols-outlined">shopping_bag</span>
               <span
                 id="cartCount"
@@ -111,6 +114,14 @@ export default function Header() {
               >
                 {cartItems}
               </span>
+            </button>
+            <button
+              className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors"
+              aria-label="Track order"
+              title="Track order"
+              onClick={() => setView('track')}
+            >
+              <span className="material-symbols-outlined">local_shipping</span>
             </button>
             <button
               ref={menuBtnRef}
