@@ -369,6 +369,7 @@ async fn main() -> Result<()> {
             .arg("--no-sandbox")
             .arg("--mute-audio")
             .arg("--window-size=1440,900")
+            .arg("--force-prefers-reduced-motion")
             .build().map_err(anyhow::Error::msg)?,
     )
     .await?;
@@ -397,6 +398,7 @@ async fn main() -> Result<()> {
             .arg("--no-sandbox")
             .arg("--mute-audio")
             .arg("--window-size=1440,900")
+            .arg("--force-prefers-reduced-motion")
             .build().map_err(anyhow::Error::msg)?,
     )
     .await?;

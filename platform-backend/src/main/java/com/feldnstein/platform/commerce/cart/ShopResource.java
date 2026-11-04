@@ -122,6 +122,27 @@ public class ShopResource {
         return Response.ok(views.detail(order)).build();
     }
 
+    public record VerifyRequest(String orderCode, String razorpayPaymentId, String razorpaySignature) {}
+
+    /** Verify a Razorpay checkout callback (HMAC-SHA256) and mark the order paid. */
+    @POST
+    @Path("/payments/verify")
+    @Transactional
+    public Response verify(VerifyRequest body) {
+        if (body == null || body.orderCode() == null)
+            return bad("orderCode is required");
+        if (payments.demoMode())
+            return bad("signature verification is only used with the razorpay provider");
+        CustomerOrder order = CustomerOrder.findByCode(body.orderCode().trim());
+        if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();
+        try {
+            payments.verifyPayment(order, body.razorpayPaymentId(), body.razorpaySignature());
+            return Response.ok(views.detail(order)).build();
+        } catch (DomainException e) {
+            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
+        }
+    }
+
     public record LookupRequest(String orderCode, String email) {}
 
     /** Order tracking: code + email, customer-facing status timeline. */

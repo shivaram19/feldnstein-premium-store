@@ -1,6 +1,23 @@
 import { useState, type FormEvent } from 'react'
 import { useCart } from '../context/CartContext'
-import type { CheckoutDetails } from '../api/shopApi'
+import { shopApi, type CheckoutDetails } from '../api/shopApi'
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void }
+  }
+}
+
+function loadRazorpayCheckout(): Promise<boolean> {
+  return new Promise(resolve => {
+    if (window.Razorpay) return resolve(true)
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
 
 const inr = (v: number) => `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
@@ -18,7 +35,7 @@ const FIELDS: { key: keyof CheckoutDetails; label: string; placeholder: string; 
 
 /** Checkout: address form → demo payment → confirmation with order code. */
 export default function CheckoutView() {
-  const { cart, placeOrder, payOrder, lastOrder, setView, showToast } = useCart()
+  const { cart, placeOrder, payOrder, lastOrder, setLastOrder, setView, showToast } = useCart()
   const [step, setStep] = useState<Step>('details')
   const [form, setForm] = useState<CheckoutDetails>({
     customerName: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
@@ -49,12 +66,50 @@ export default function CheckoutView() {
 
   const pay = () => {
     if (!lastOrder || paying) return
+    if (lastOrder.checkout?.provider === 'RAZORPAY') return payWithRazorpay()
     setPaying(true)
     setError('')
     payOrder(lastOrder.orderCode)
       .then(() => setStep('done'))
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Payment failed'))
       .finally(() => setPaying(false))
+  }
+
+  const payWithRazorpay = () => {
+    const checkout = lastOrder?.checkout
+    if (!checkout || !lastOrder) return
+    setPaying(true)
+    setError('')
+    loadRazorpayCheckout().then(loaded => {
+      if (!loaded || !window.Razorpay) {
+        setPaying(false)
+        setError('Could not load the payment gateway — check your connection and try again.')
+        return
+      }
+      const rzp = new window.Razorpay({
+        key: checkout.keyId,
+        order_id: checkout.orderId,
+        amount: checkout.amountPaise,
+        currency: checkout.currency,
+        name: 'Feld·n·Stein',
+        description: `Order ${checkout.orderCode}`,
+        theme: { color: '#184e32' },
+        prefill: { name: form.customerName, email: form.email, contact: form.phone },
+        handler: (response: Record<string, string>) => {
+          shopApi
+            .verifyPayment(checkout.orderCode, response.razorpay_payment_id, response.razorpay_signature)
+            .then(paid => {
+              setLastOrder(paid)
+              setStep('done')
+            })
+            .catch((err: unknown) =>
+              setError(err instanceof Error ? err.message : 'Payment verification failed'))
+            .finally(() => setPaying(false))
+        },
+        modal: { ondismiss: () => setPaying(false) },
+      })
+      rzp.open()
+    })
   }
 
   if (step === 'done' && lastOrder) {
@@ -126,13 +181,15 @@ export default function CheckoutView() {
               </p>
               <div className="mt-4 bg-brand-cream rounded-xl p-4 text-xs text-brand-charcoal/70 flex items-center gap-2">
                 <span className="material-symbols-outlined text-base">lock</span>
-                {lastOrder.payment?.provider !== 'RAZORPAY'
-                  ? 'Demo gateway — no real money moves. Razorpay goes live with one config change.'
-                  : 'Secure payment via Razorpay.'}
+                {lastOrder.checkout?.provider === 'RAZORPAY'
+                  ? 'Secure payment via Razorpay — UPI, cards and netbanking supported.'
+                  : 'Demo gateway — no real money moves. Razorpay goes live with one config change.'}
               </div>
               {error && <p className="text-sm text-red-700 mt-3" role="alert">{error}</p>}
               <button className="btn btn-primary w-full mt-5" data-testid="pay-btn" disabled={paying} onClick={pay}>
-                {paying ? 'Processing…' : `Pay ${inr(lastOrder.grandTotal)}`}
+                {paying ? 'Processing…' : lastOrder.checkout?.provider === 'RAZORPAY'
+                  ? `Pay ${inr(lastOrder.grandTotal)} securely`
+                  : `Pay ${inr(lastOrder.grandTotal)}`}
               </button>
             </div>
           )}

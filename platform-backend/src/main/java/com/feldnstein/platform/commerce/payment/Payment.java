@@ -74,6 +74,15 @@ public class Payment extends PanacheEntity {
         return find("order", order).firstResult();
     }
 
+    /** Gateway-assigned reference, set after a provider-side order is created. */
+    public void assignProviderRef(String ref) {
+        this.providerRef = ref;
+    }
+
+    public void rawJson(String raw) {
+        this.rawJson = raw;
+    }
+
     public void markPaid(Instant at, String raw) {
         if (status != Status.CREATED && status != Status.INITIATED)
             throw new DomainException("payment is already " + status);

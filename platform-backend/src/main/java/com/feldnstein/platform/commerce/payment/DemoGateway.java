@@ -25,11 +25,25 @@ public class DemoGateway implements PaymentGateway {
     }
 
     @Override
+    public CheckoutParams checkoutParams(CustomerOrder order, Payment payment) {
+        return new CheckoutParams("DEMO", "", payment.providerRef(),
+                payment.amount().movePointRight(2).longValueExact(), "INR",
+                order.orderCode(), order.grandTotal().amount().movePointRight(2).longValueExact(),
+                checkoutNote());
+    }
+
+    @Override
     public Payment capture(Payment payment) {
         if (payment.status() == Payment.Status.PAID) return payment;
         payment.markPaid(Instant.now(),
                 "{\"mode\":\"demo\",\"captured\":true,\"ref\":\"" + payment.providerRef() + "\"}");
         return payment;
+    }
+
+    @Override
+    public Payment verifyAndCapture(Payment payment, String paymentId, String signature) {
+        // demo "verification" — the demo-pay endpoint is the real capture path
+        return capture(payment);
     }
 
     @Override

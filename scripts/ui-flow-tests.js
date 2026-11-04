@@ -365,7 +365,7 @@ async function flowCommerce(browser) {
 }
 
 const LAUNCH = { executablePath: '/usr/bin/chromium', protocolTimeout: 180000,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--mute-audio'] }
+  args: ['--no-sandbox', '--disable-dev-shm-usage', '--mute-audio', '--single-process', '--force-prefers-reduced-motion'] }
 
 async function main() {
   let browser = await puppeteer.launch(LAUNCH)

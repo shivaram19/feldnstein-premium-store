@@ -42,6 +42,16 @@ export interface PaymentInfo {
   status: string
 }
 
+export interface CheckoutParams {
+  provider: string
+  keyId: string
+  orderId: string
+  amountPaise: number
+  currency: string
+  orderCode: string
+  note: string
+}
+
 export interface Order {
   orderCode: string
   status: string
@@ -57,6 +67,8 @@ export interface Order {
   payment?: PaymentInfo | null
   timeline: Record<string, string>
   cancelReason?: string
+  demoPayment?: boolean
+  checkout?: CheckoutParams
 }
 
 export interface CheckoutDetails {
@@ -109,9 +121,14 @@ export const shopApi = {
   removeItem: (variantId: number) =>
     req<Cart>(`/shop/cart/items/${variantId}`, { method: 'DELETE' }),
   checkout: (details: CheckoutDetails) =>
-    req<Order & { demoPayment: boolean }>('/shop/checkout', {
+    req<Order>('/shop/checkout', {
       method: 'POST',
       body: JSON.stringify(details),
+    }),
+  verifyPayment: (orderCode: string, razorpayPaymentId: string, razorpaySignature: string) =>
+    req<Order>('/shop/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify({ orderCode, razorpayPaymentId, razorpaySignature }),
     }),
   demoPay: (orderCode: string) =>
     req<Order>(`/shop/payments/${orderCode}/demo-pay`, { method: 'POST' }),

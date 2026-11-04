@@ -3,7 +3,7 @@ package com.feldnstein.platform.commerce.order;
 import com.feldnstein.platform.commerce.cart.Cart;
 import com.feldnstein.platform.commerce.cart.CartItem;
 import com.feldnstein.platform.commerce.fulfillment.StockAllocator;
-import com.feldnstein.platform.commerce.payment.Payment;
+import com.feldnstein.platform.commerce.payment.PaymentGateway;
 import com.feldnstein.platform.commerce.payment.PaymentService;
 import com.feldnstein.platform.commerce.shared.DeliveryAddress;
 import com.feldnstein.platform.commerce.shared.DomainException;
@@ -60,10 +60,19 @@ public class CheckoutService {
         return order;
     }
 
-    /** Order + payment view payload for the storefront (same shape as before). */
+    /** Order + payment + checkout view payload for the storefront. */
     public Map<String, Object> receipt(CustomerOrder order) {
         Map<String, Object> out = views.detail(order);
         out.put("demoPayment", payments.demoMode());
+        PaymentGateway.CheckoutParams cp = payments.checkoutParams(order);
+        out.put("checkout", Map.of(
+                "provider", cp.provider(),
+                "keyId", cp.keyId(),
+                "orderId", cp.providerOrderId(),
+                "amountPaise", cp.amountPaise(),
+                "currency", cp.currency(),
+                "orderCode", cp.orderCode(),
+                "note", cp.note()));
         return out;
     }
 }

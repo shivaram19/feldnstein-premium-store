@@ -8,27 +8,34 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 /**
  * Payment application service — selects the gateway adapter by configuration
- * (payment.provider=demo default; razorpay when keys are configured) and
- * orchestrates capture/refund. The payment aggregate guards its own transitions.
+ * and orchestrates checkout params, capture, verification and refund. The
+ * payment aggregate guards its own transitions; the gateway adapter is the
+ * anti-corruption layer to the provider.
  */
 @ApplicationScoped
 public class PaymentService {
+
+    private static final Logger LOG = Logger.getLogger(PaymentService.class);
 
     @ConfigProperty(name = "payment.provider", defaultValue = "demo")
     String provider;
 
     @Inject Instance<PaymentGateway> gateways;
+    @Inject RazorpayGateway razorpay;
 
     private PaymentGateway gateway() {
-        String want = "razorpay".equalsIgnoreCase(provider)
-                ? Payment.Provider.RAZORPAY.name() : Payment.Provider.DEMO.name();
+        if ("razorpay".equalsIgnoreCase(provider)) {
+            if (razorpay.configured()) return razorpay;
+            LOG.warn("payment.provider=razorpay but keys are missing — falling back to the demo gateway");
+        }
         return gateways.stream()
-                .filter(g -> g.provider().name().equalsIgnoreCase(want))
+                .filter(g -> g.provider() == Payment.Provider.DEMO)
                 .findFirst()
-                .orElseThrow(() -> new DomainException("no payment gateway adapter for provider " + provider));
+                .orElseThrow(() -> new DomainException("no payment gateway adapter available"));
     }
 
     public boolean demoMode() {
@@ -38,6 +45,13 @@ public class PaymentService {
     @Transactional
     public Payment initiate(CustomerOrder order) {
         return gateway().initiate(order);
+    }
+
+    /** Client-side parameters for opening the provider's checkout on this order. */
+    public PaymentGateway.CheckoutParams checkoutParams(CustomerOrder order) {
+        Payment p = Payment.findByOrder(order);
+        if (p == null) p = initiate(order);
+        return gateway().checkoutParams(order, p);
     }
 
     /** Demo capture — the stand-in for a gateway webhook confirmation. */
@@ -51,6 +65,18 @@ public class PaymentService {
         if (order.status() == CustomerOrder.Status.PENDING)
             order.markPaid(p.paidAt());
         return p;
+    }
+
+    /** Verify a checkout callback (razorpay signature) and mark order + payment paid. */
+    @Transactional
+    public CustomerOrder verifyPayment(CustomerOrder order, String paymentId, String signature) {
+        Payment p = Payment.findByOrder(order);
+        if (p == null) throw new DomainException("no payment found for this order");
+        if (p.status() == Payment.Status.PAID) return order; // idempotent
+        gateway().verifyAndCapture(p, paymentId, signature);
+        if (order.status() == CustomerOrder.Status.PENDING)
+            order.markPaid(p.paidAt());
+        return order;
     }
 
     @Transactional
