@@ -719,7 +719,7 @@ def flow10_commerce():
           and o2["payment"]["status"] == "REFUNDED", str(s))
     _, after2 = call("GET", f"/g/stock-levels/{best['id']}", "admin")
     check("10.20 cancel releases the reservation", after2["reserved"] == reserved_before,
-          f"reserved {after2['reserved']}")
+          f"reserved {after2['reserved']} (baseline {reserved_before}, level {best['id']}, variant {vid})")
 
 
 def main():

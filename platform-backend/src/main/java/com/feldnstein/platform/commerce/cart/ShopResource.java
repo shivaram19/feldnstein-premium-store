@@ -1,8 +1,10 @@
 package com.feldnstein.platform.commerce.cart;
 
+import com.feldnstein.platform.commerce.order.CheckoutService;
 import com.feldnstein.platform.commerce.order.CustomerOrder;
-import com.feldnstein.platform.commerce.order.OrderService;
+import com.feldnstein.platform.commerce.order.OrderViews;
 import com.feldnstein.platform.commerce.payment.PaymentService;
+import com.feldnstein.platform.commerce.shared.DomainException;
 import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -20,7 +22,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
-/** Public storefront API: cart, checkout, demo payment, order tracking. Anonymous. */
+/**
+ * Public storefront API — thin driving adapter. All behaviour lives in the
+ * application services and the aggregates; this class only maps HTTP.
+ */
 @Path("/shop")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
@@ -29,10 +34,13 @@ import java.util.Map;
 public class ShopResource {
 
     @Inject CartService carts;
-    @Inject OrderService orders;
+    @Inject CheckoutService checkout;
     @Inject PaymentService payments;
+    @Inject OrderViews views;
 
     public record QtyRequest(Integer qty) {}
+
+    public record AddRequest(Long variantId, Integer qty) {}
 
     @GET
     @Path("/cart")
@@ -42,8 +50,6 @@ public class ShopResource {
                 "subTotal", 0, "gstTotal", 0, "grandTotal", 0)).build();
         return Response.ok(carts.view(cart)).build();
     }
-
-    public record AddRequest(Long variantId, Integer qty) {}
 
     @POST
     @Path("/cart/add")
@@ -93,11 +99,14 @@ public class ShopResource {
     public Response checkout(@HeaderParam(CartService.TOKEN_HEADER) String token, CheckoutRequest body) {
         Cart cart = carts.resolve(token);
         if (cart == null) return bad("cart not found or expired");
-        Map<String, Object> result = orders.checkout(cart, new OrderService.CheckoutForm(
-                body.customerName(), body.email(), body.phone(),
-                body.address(), body.city(), body.state(), body.pincode()));
-        if (result.containsKey("error")) return Response.status(400).entity(result).build();
-        return Response.status(201).entity(result).build();
+        try {
+            CustomerOrder order = checkout.place(cart, new CheckoutService.CheckoutForm(
+                    body.customerName(), body.email(), body.phone(),
+                    body.address(), body.city(), body.state(), body.pincode()));
+            return Response.status(201).entity(checkout.receipt(order)).build();
+        } catch (DomainException e) {
+            return Response.status(400).entity(Map.of("error", e.getMessage())).build();
+        }
     }
 
     /** Demo payment capture — completes the purchase without a live gateway. */
@@ -110,7 +119,7 @@ public class ShopResource {
         CustomerOrder order = CustomerOrder.findByCode(code);
         if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();
         payments.demoCapture(order);
-        return Response.ok(orders.view(order)).build();
+        return Response.ok(views.detail(order)).build();
     }
 
     public record LookupRequest(String orderCode, String email) {}
@@ -122,9 +131,9 @@ public class ShopResource {
         if (body == null || body.orderCode() == null || body.email() == null)
             return bad("orderCode and email are required");
         CustomerOrder order = CustomerOrder.findByCode(body.orderCode().trim());
-        if (order == null || !order.email.equalsIgnoreCase(body.email().trim()))
+        if (order == null || !order.email().equalsIgnoreCase(body.email().trim()))
             return Response.status(404).entity(Map.of("error", "no order found for that code and email")).build();
-        Map<String, Object> view = orders.view(order);
+        Map<String, Object> view = views.detail(order);
         view.remove("payment");
         return Response.ok(view).build();
     }

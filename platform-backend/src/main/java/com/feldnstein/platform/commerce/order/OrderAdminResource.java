@@ -17,7 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/** Admin/ops order management: list, detail, and the fulfilment pipeline. */
+/** Admin/ops order management — thin driving adapter over the fulfilment use cases. */
 @Path("/g/orders")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
@@ -26,24 +26,18 @@ import java.util.Map;
 @Transactional
 public class OrderAdminResource {
 
-    @Inject OrderService orders;
+    @Inject FulfillmentService fulfillment;
+    @Inject OrderViews views;
 
     public record CancelRequest(String reason) {}
 
     @GET
     public Response list(@QueryParam("status") String status) {
         List<CustomerOrder> all = CustomerOrder.<CustomerOrder>streamAll()
-                .sorted(Comparator.comparing((CustomerOrder o) -> o.createdAt).reversed())
-                .filter(o -> status == null || status.isBlank() || o.status.name().equalsIgnoreCase(status))
+                .sorted(Comparator.comparing(CustomerOrder::createdAt).reversed())
+                .filter(o -> status == null || status.isBlank() || o.status().name().equalsIgnoreCase(status))
                 .toList();
-        return Response.ok(all.stream().map(o -> {
-            Map<String, Object> m = orders.view(o);
-            m.remove("lines");
-            m.remove("payment");
-            m.remove("timeline");
-            m.put("itemCount", o.lines.stream().mapToInt(l -> l.qty).sum());
-            return m;
-        }).toList()).build();
+        return Response.ok(all.stream().map(views::listRow).toList()).build();
     }
 
     @GET
@@ -51,25 +45,25 @@ public class OrderAdminResource {
     public Response detail(@PathParam("code") String code) {
         CustomerOrder order = CustomerOrder.findByCode(code);
         if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();
-        return Response.ok(orders.view(order)).build();
+        return Response.ok(views.detail(order)).build();
     }
 
     @POST
     @Path("/{code}/confirm")
     public Response confirm(@PathParam("code") String code) {
-        return act(code, orders::confirm);
+        return act(code, fulfillment::confirm);
     }
 
     @POST
     @Path("/{code}/ship")
     public Response ship(@PathParam("code") String code) {
-        return act(code, orders::ship);
+        return act(code, fulfillment::ship);
     }
 
     @POST
     @Path("/{code}/deliver")
     public Response deliver(@PathParam("code") String code) {
-        return act(code, orders::deliver);
+        return act(code, fulfillment::deliver);
     }
 
     @POST
@@ -77,16 +71,16 @@ public class OrderAdminResource {
     public Response cancel(@PathParam("code") String code, CancelRequest body) {
         CustomerOrder order = CustomerOrder.findByCode(code);
         if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();
-        OrderService.ActionResult r = orders.cancel(order, body == null ? null : body.reason());
+        FulfillmentService.ActionResult r = fulfillment.cancel(order, body == null ? null : body.reason());
         if (!r.ok()) return Response.status(400).entity(Map.of("error", r.message())).build();
-        return Response.ok(orders.view(order)).build();
+        return Response.ok(views.detail(order)).build();
     }
 
-    private Response act(String code, java.util.function.Function<CustomerOrder, OrderService.ActionResult> action) {
+    private Response act(String code, java.util.function.Function<CustomerOrder, FulfillmentService.ActionResult> action) {
         CustomerOrder order = CustomerOrder.findByCode(code);
         if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();
-        OrderService.ActionResult r = action.apply(order);
+        FulfillmentService.ActionResult r = action.apply(order);
         if (!r.ok()) return Response.status(400).entity(Map.of("error", r.message())).build();
-        return Response.ok(orders.view(order)).build();
+        return Response.ok(views.detail(order)).build();
     }
 }

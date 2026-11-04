@@ -1,26 +1,35 @@
 package com.feldnstein.platform.commerce.cart;
 
 import com.feldnstein.platform.commerce.Pricing;
+import com.feldnstein.platform.commerce.fulfillment.StockAllocator;
+import com.feldnstein.platform.commerce.shared.CartTotals;
+import com.feldnstein.platform.commerce.shared.DomainException;
+import com.feldnstein.platform.commerce.shared.Quantity;
 import com.feldnstein.platform.gaanugu.catalog.ProductVariant;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
-/** Anonymous-cart operations. The storefront identifies carts by an opaque token. */
+/**
+ * Cart session — application service for the anonymous cart. Holds no business
+ * rules beyond orchestration: variant existence and oversell checks delegate to
+ * the pricing policy and the stock allocator; the Cart aggregate owns its lines.
+ */
 @ApplicationScoped
 public class CartService {
 
     public static final String TOKEN_HEADER = "X-Cart-Token";
 
+    @Inject StockAllocator stock;
+    @Inject Pricing pricing;
+
     public Cart resolve(String token) {
         if (token == null || token.isBlank()) return null;
         Cart cart = Cart.findByToken(token.trim());
-        if (cart != null && cart.expiresAt.isBefore(Instant.now())) {
+        if (cart != null && cart.expired(Instant.now())) {
             cart.delete();
             return null;
         }
@@ -29,9 +38,7 @@ public class CartService {
 
     @Transactional
     public Cart create() {
-        Cart cart = new Cart();
-        cart.token = UUID.randomUUID().toString();
-        cart.expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
+        Cart cart = Cart.open();
         cart.persist();
         return cart;
     }
@@ -42,58 +49,48 @@ public class CartService {
         if (qty < 0) return "quantity must be zero or positive";
         ProductVariant variant = ProductVariant.findById(variantId);
         if (variant == null) return "product variant not found";
-        CartItem item = cart.items.stream()
-                .filter(i -> i.variant.id.equals(variantId)).findFirst().orElse(null);
-        if (qty == 0) {
-            if (item != null) cart.items.remove(item);
+        if (qty > 0) {
+            int inCart = cart.lines().stream()
+                    .filter(i -> i.variant().id.equals(variantId)).mapToInt(CartItem::qty).sum();
+            long sellable = stock.sellableUnits(variant);
+            if (qty > inCart && sellable < qty)
+                return "only " + sellable + " units available for " + variant.sku;
+        }
+        try {
+            if (qty == 0) cart.changeQuantity(variantId, Quantity.of(0));
+            else cart.addLine(variant, Quantity.of(qty), pricing.unitPrice(variant), pricing.gstRate(variant));
             return null;
+        } catch (DomainException e) {
+            return e.getMessage();
         }
-        long sellable = Pricing.sellableUnits(variant);
-        int inCart = cart.items.stream()
-                .filter(i -> i.variant.id.equals(variantId)).mapToInt(i -> i.qty).sum();
-        if (qty > inCart && sellable < qty) {
-            return "only " + sellable + " units available for " + variant.sku;
-        }
-        if (item == null) {
-            item = new CartItem();
-            item.cart = cart;
-            item.variant = variant;
-            item.unitPrice = Pricing.unitPrice(variant);
-            item.gstPct = Pricing.gstPct(variant);
-            cart.items.add(item);
-        }
-        item.qty = qty;
-        return null;
     }
 
-    /** JSON view: lines with availability, subtotal / GST / grand total. */
+    /** JSON view of the cart for the storefront. */
     public Map<String, Object> view(Cart cart) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("token", cart.token);
-        m.put("expiresAt", cart.expiresAt.toString());
-        var lines = cart.items.stream().map(i -> {
-            Map<String, Object> l = new LinkedHashMap<String, Object>();
-            l.put("variantId", i.variant.id);
-            l.put("sku", i.variant.sku);
-            l.put("product", i.variant.product != null ? i.variant.product.name : "");
-            l.put("sizeMl", i.variant.sizeMl);
-            l.put("qty", i.qty);
-            l.put("unitPrice", i.unitPrice);
-            l.put("gstPct", i.gstPct);
-            l.put("lineTotal", i.lineTotal());
-            l.put("available", Pricing.sellableUnits(i.variant));
-            return l;
-        }).toList();
-        m.put("lines", lines);
-        BigDecimal sub = cart.items.stream().map(CartItem::lineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal gst = cart.items.stream().map(CartItem::gstAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        m.put("subTotal", sub);
-        m.put("gstTotal", gst);
-        m.put("grandTotal", sub.add(gst));
-        m.put("itemCount", cart.items.stream().mapToInt(i -> i.qty).sum());
+        m.put("token", cart.token());
+        m.put("expiresAt", cart.expiresAt().toString());
+        m.put("lines", cart.lines().stream().map(this::lineView).toList());
+        CartTotals t = cart.totals();
+        m.put("subTotal", t.subTotal().amount());
+        m.put("gstTotal", t.gstTotal().amount());
+        m.put("grandTotal", t.grandTotal().amount());
+        m.put("itemCount", t.itemCount());
         return m;
+    }
+
+    private Map<String, Object> lineView(CartItem i) {
+        Map<String, Object> l = new LinkedHashMap<String, Object>();
+        l.put("variantId", i.variant().id);
+        l.put("sku", i.variant().sku);
+        l.put("product", i.variant().product != null ? i.variant().product.name : "");
+        l.put("sizeMl", i.variant().sizeMl);
+        l.put("qty", i.qty());
+        l.put("unitPrice", i.unitPrice().amount());
+        l.put("gstPct", i.gstRate().percent());
+        l.put("lineTotal", i.lineTotal().amount());
+        l.put("available", stock.sellableUnits(i.variant()));
+        return l;
     }
 
     @Transactional

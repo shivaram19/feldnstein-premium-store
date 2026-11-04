@@ -1,38 +1,33 @@
 package com.feldnstein.platform.commerce;
 
+import com.feldnstein.platform.commerce.shared.GstRate;
+import com.feldnstein.platform.commerce.shared.Money;
 import com.feldnstein.platform.gaanugu.catalog.ProductVariant;
 import com.feldnstein.platform.gaanugu.settings.PriceConfig;
-import java.math.BigDecimal;
+import jakarta.enterprise.context.ApplicationScoped;
 
-/** Selling-price resolution: active SELLING price config wins, then the variant's MRP. */
-public final class Pricing {
+/**
+ * Pricing policy — domain service of the Sales context. The active SELLING
+ * price configuration wins; the variant's MRP is the fallback. Prices are
+ * always ex-GST {@link Money}; the rate rides along as a {@link GstRate}.
+ */
+@ApplicationScoped
+public class Pricing {
 
-    private Pricing() {}
-
-    public static PriceConfig sellingConfig(ProductVariant variant) {
+    public PriceConfig sellingConfig(ProductVariant variant) {
         return PriceConfig.<PriceConfig>find(
                 "variant = ?1 and priceType = ?2 and active order by effectiveFrom desc",
                 variant, PriceConfig.PriceType.SELLING).firstResult();
     }
 
-    public static BigDecimal unitPrice(ProductVariant variant) {
+    public Money unitPrice(ProductVariant variant) {
         PriceConfig cfg = sellingConfig(variant);
-        if (cfg != null) return cfg.amount;
-        return variant.mrp != null ? variant.mrp : BigDecimal.ZERO;
+        if (cfg != null) return Money.of(cfg.amount);
+        return variant.mrp != null ? Money.of(variant.mrp) : Money.ZERO;
     }
 
-    public static BigDecimal gstPct(ProductVariant variant) {
+    public GstRate gstRate(ProductVariant variant) {
         PriceConfig cfg = sellingConfig(variant);
-        if (cfg != null) return cfg.gstPct;
-        return BigDecimal.ZERO;
-    }
-
-    /** Sellable units across all warehouses/stock positions of a variant. */
-    public static long sellableUnits(ProductVariant variant) {
-        return com.feldnstein.platform.gaanugu.inventory.StockLevel
-                .<com.feldnstein.platform.gaanugu.inventory.StockLevel>streamAll()
-                .filter(s -> s.variant != null && s.variant.id.equals(variant.id))
-                .mapToLong(s -> s.getAvailable())
-                .sum();
+        return GstRate.of(cfg != null ? cfg.gstPct : java.math.BigDecimal.ZERO);
     }
 }
