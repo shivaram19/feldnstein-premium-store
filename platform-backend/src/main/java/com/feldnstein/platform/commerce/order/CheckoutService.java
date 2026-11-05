@@ -9,6 +9,7 @@ import com.feldnstein.platform.commerce.shared.DeliveryAddress;
 import com.feldnstein.platform.commerce.shared.DomainException;
 import com.feldnstein.platform.commerce.shared.EmailAddress;
 import com.feldnstein.platform.commerce.shared.OrderNo;
+import com.feldnstein.platform.loyalty.LoyaltyService;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +28,11 @@ public class CheckoutService {
     @Inject StockAllocator stock;
     @Inject PaymentService payments;
     @Inject OrderViews views;
+    @Inject LoyaltyService loyalty;
 
     public record CheckoutForm(String customerName, String email, String phone,
-                               String address, String city, String state, String pincode) {}
+                               String address, String city, String state, String pincode,
+                               Integer pointsToRedeem) {}
 
     /** Places the order. Throws {@link DomainException} with a friendly message on rejection. */
     public CustomerOrder place(Cart cart, CheckoutForm form) {
@@ -54,6 +57,11 @@ public class CheckoutService {
                 email, form.phone(), delivery, drafts);
         order.persist();
 
+        if (form.pointsToRedeem() != null) {
+            if (form.pointsToRedeem() < 0) throw new DomainException("pointsToRedeem must be zero or positive");
+            if (form.pointsToRedeem() > 0) loyalty.redeemAtCheckout(order, form.pointsToRedeem());
+        }
+
         order.recordAllocations(stock.reserve(order));
         payments.initiate(order);
         cart.clear();
@@ -73,6 +81,9 @@ public class CheckoutService {
                 "currency", cp.currency(),
                 "orderCode", cp.orderCode(),
                 "note", cp.note()));
+        out.put("loyalty", Map.of(
+                "earned", loyalty.pointsFor(order.grandTotal()),
+                "redeemed", order.pointsRedeemed()));
         return out;
     }
 }

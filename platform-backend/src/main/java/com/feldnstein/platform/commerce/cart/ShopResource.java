@@ -5,6 +5,8 @@ import com.feldnstein.platform.commerce.order.CustomerOrder;
 import com.feldnstein.platform.commerce.order.OrderViews;
 import com.feldnstein.platform.commerce.payment.PaymentService;
 import com.feldnstein.platform.commerce.shared.DomainException;
+import com.feldnstein.platform.loyalty.LoyaltyAccount;
+import com.feldnstein.platform.loyalty.LoyaltyService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,6 +20,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
@@ -37,6 +40,7 @@ public class ShopResource {
     @Inject CheckoutService checkout;
     @Inject PaymentService payments;
     @Inject OrderViews views;
+    @Inject LoyaltyService loyalty;
 
     public record QtyRequest(Integer qty) {}
 
@@ -91,7 +95,8 @@ public class ShopResource {
     }
 
     public record CheckoutRequest(String customerName, String email, String phone,
-                                  String address, String city, String state, String pincode) {}
+                                  String address, String city, String state, String pincode,
+                                  Integer pointsToRedeem) {}
 
     @POST
     @Path("/checkout")
@@ -102,7 +107,8 @@ public class ShopResource {
         try {
             CustomerOrder order = checkout.place(cart, new CheckoutService.CheckoutForm(
                     body.customerName(), body.email(), body.phone(),
-                    body.address(), body.city(), body.state(), body.pincode()));
+                    body.address(), body.city(), body.state(), body.pincode(),
+                    body.pointsToRedeem()));
             return Response.status(201).entity(checkout.receipt(order)).build();
         } catch (DomainException e) {
             return Response.status(400).entity(Map.of("error", e.getMessage())).build();
@@ -157,6 +163,19 @@ public class ShopResource {
         Map<String, Object> view = views.detail(order);
         view.remove("payment");
         return Response.ok(view).build();
+    }
+
+    /** Loyalty balance — authorised by an existing order matching code + email. */
+    @GET
+    @Path("/loyalty/balance")
+    public Response loyaltyBalance(@QueryParam("email") String email,
+                                   @QueryParam("orderCode") String orderCode) {
+        if (email == null || email.isBlank() || orderCode == null || orderCode.isBlank())
+            return bad("email and orderCode are required");
+        CustomerOrder order = CustomerOrder.findByCode(orderCode.trim());
+        if (order == null || !order.email().equalsIgnoreCase(email.trim()))
+            return Response.status(404).entity(Map.of("error", "no order found for that code and email")).build();
+        return Response.ok(loyalty.balance(LoyaltyAccount.findByEmail(email), email)).build();
     }
 
     private static Response bad(String msg) {

@@ -361,11 +361,21 @@ async fn flow_commerce(browser: &Browser) -> Result<()> {
     Ok(())
 }
 
+fn profile_dir(name: &str) -> std::path::PathBuf {
+    let base = dirs::cache_dir().unwrap_or_else(std::env::temp_dir);
+    let dir = base.join("feldnstein-ui-flow-tests").join(name);
+    let _ = std::fs::create_dir_all(&dir);
+    dir
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let (mut browser, mut handler) = Browser::launch(
         BrowserConfig::builder()
             .chrome_executable("/usr/bin/chromium")
+            // keep the profile off /tmp (small tmpfs): two dev-mode page loads exhaust
+            // it and chromium fails module fetches with ERR_INSUFFICIENT_RESOURCES
+            .user_data_dir(profile_dir("rust-suite"))
             .arg("--no-sandbox")
             .arg("--mute-audio")
             .arg("--window-size=1440,900")
@@ -395,6 +405,7 @@ async fn main() -> Result<()> {
     let (mut browser2, mut handler2) = Browser::launch(
         BrowserConfig::builder()
             .chrome_executable("/usr/bin/chromium")
+            .user_data_dir(profile_dir("rust-suite-commerce"))
             .arg("--no-sandbox")
             .arg("--mute-audio")
             .arg("--window-size=1440,900")

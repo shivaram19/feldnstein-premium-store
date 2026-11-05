@@ -21,6 +21,9 @@ import { MediaScreen } from './screens/media'
 import { SiteContentScreen } from './screens/content'
 import { ReportsScreen } from './screens/reports'
 import { MarketingScreen } from './screens/marketing'
+import { LoyaltyScreen } from './screens/loyalty'
+import { B2BScreen } from './screens/b2b'
+import { CustomersScreen } from './screens/customers'
 
 type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
 type NavGroup = { section: string; icon: string; items: NavItem[] }
@@ -141,6 +144,20 @@ const NAV: NavGroup[] = [
       N('g-prices', 'Prices', PricesScreen,
         <>Price <em>configurations</em></>,
         'MRP, selling and cost prices per SKU — history preserved.'),
+    ],
+  },
+  {
+    section: 'Growth', icon: '🤝',
+    items: [
+      N('g-loyalty', 'Loyalty', LoyaltyScreen,
+        <>Loyalty <em>points</em></>,
+        'Points earned on delivered orders — view balances, adjust with a reason (ADMIN).'),
+      N('g-b2b', 'B2B', B2BScreen,
+        <>B2B <em>wholesale</em></>,
+        'Seller directory and wholesale orders — draft, confirm, dispatch, deliver.'),
+      N('g-customers', 'Customers', CustomersScreen,
+        <>Customer <em>CRM</em></>,
+        'Customer 360 — orders, spend, loyalty ledger, and subscription status by email.'),
     ],
   },
   {

@@ -4,7 +4,7 @@ import { formatDate } from '../api/formats'
 import { useList, View } from '../api/list'
 import {
   MARKETING_TASKS, providerTone, tryParseJson, useAiGenerate,
-  type MarketingTask, type Subscriber, type SubscribersResponse,
+  marketing, type Campaign, type MarketingTask, type Subscriber, type SubscribersResponse,
 } from '../api/marketing'
 import { PanelTitle } from './shared'
 
@@ -13,8 +13,20 @@ export function MarketingScreen() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <AiAssistantPanel />
       <SubscribersPanel />
+      <CampaignsPanel />
     </div>
   )
+}
+
+/** Campaign status pill tone — mirrors the order status tones. */
+function campaignTone(s: string): 'green' | 'rust' | 'gold' | 'forest' | 'slate' {
+  switch (s) {
+    case 'SENT': return 'green'
+    case 'SENDING': return 'forest'
+    case 'FAILED': return 'rust'
+    case 'DRAFT': return 'slate'
+    default: return 'gold'
+  }
 }
 
 /* ================= AI copy assistant ================= */
@@ -192,6 +204,70 @@ function SubscribersPanel() {
       </div>
       <View loading={loading} error={error} rows={rows as never[] | null} cols={cols}
         empty="No subscribers yet — the storefront form feeds this list." onRetry={reload} />
+    </div>
+  )
+}
+
+/* ================= bulk campaigns (ADR-0018) ================= */
+function CampaignsPanel() {
+  const campaigns = useList<Campaign>('/marketing/campaigns')
+  const [form, setForm] = useState({ name: '', subject: '', body: '' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [lastSent, setLastSent] = useState<Campaign | null>(null)
+  const toast = useToast()
+  const valid = !!form.name.trim() && !!form.subject.trim() && !!form.body.trim()
+
+  const send = async () => {
+    setBusy(true); setError(null)
+    try {
+      const c = await marketing.createCampaign({
+        name: form.name.trim(), subject: form.subject.trim(), body: form.body.trim(),
+      })
+      setLastSent(c)
+      toast('success', `Campaign sent to ${c.recipientCount} subscribers`)
+      setForm({ name: '', subject: '', body: '' })
+      campaigns.reload()
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const cols: Column<never>[] = [
+    { key: 'name', label: 'Campaign' },
+    { key: 'subject', label: 'Subject' },
+    { key: 'status', label: 'Status', render: (c: Campaign) => <Pill tone={campaignTone(c.status)}>{c.status}</Pill> },
+    { key: 'recipientCount', label: 'Recipients', numeric: true, render: (c: Campaign) => c.recipientCount.toLocaleString('en-IN') },
+    { key: 'sentAt', label: 'Sent', render: (c: Campaign) => c.sentAt ? formatDate(c.sentAt) : '—' },
+    { key: 'provider', label: 'Provider', render: (c: Campaign) => <Pill tone={providerTone(c.provider)}>{c.provider}</Pill> },
+  ] as never
+
+  return (
+    <div className="card" data-testid="campaigns-panel">
+      <PanelTitle action={lastSent && (
+        <Pill tone={providerTone(lastSent.provider)}>{lastSent.provider}</Pill>
+      )}>
+        Campaigns
+      </PanelTitle>
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <Field label="Name *"><input className="input" style={{ width: 220 }} value={form.name}
+            placeholder="Monsoon harvest launch" onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></Field>
+          <Field label="Subject *"><input className="input" style={{ width: 320 }} value={form.subject}
+            placeholder="Fresh-pressed and ready to ship" onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} /></Field>
+        </div>
+        <Field label="Body *">
+          <textarea className="input" rows={6} style={{ width: '100%' }} value={form.body}
+            placeholder="Write the campaign email… (the AI assistant above can draft it)"
+            onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} />
+        </Field>
+        {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="gold" disabled={!valid || busy} onClick={send}>
+            {busy ? 'Sending…' : 'Send campaign'}
+          </Button>
+        </div>
+      </div>
+      <View loading={campaigns.loading} error={campaigns.error} rows={campaigns.data as never[] | null}
+        cols={cols} empty="No campaigns sent yet." onRetry={campaigns.reload} />
     </div>
   )
 }

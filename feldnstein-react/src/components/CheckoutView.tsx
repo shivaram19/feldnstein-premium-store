@@ -43,28 +43,39 @@ export default function CheckoutView() {
   const [placing, setPlacing] = useState(false)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
+  const [points, setPoints] = useState('')
 
   const phoneDigits = form.phone.replace(/\D/g, '')
   const phoneValid = /^[6-9]\d{9}$/.test(phoneDigits)
   const phoneError = phoneDigits.length > 0 && !phoneValid
 
+  const emailValid = /.+@.+\..+/.test(form.email)
+  const pointsNum = points.trim() === '' ? 0 : Number(points)
+  const pointsValid = points.trim() === '' || (Number.isInteger(pointsNum) && pointsNum >= 0)
+  const pointsError = !pointsValid
+
   const valid =
     form.customerName.trim().length >= 2 &&
-    /.+@.+\..+/.test(form.email) &&
+    emailValid &&
     phoneValid &&
     form.address.trim().length >= 5 &&
     form.city.trim().length >= 2 &&
     form.state.trim().length >= 2 &&
-    /^\d{6}$/.test(form.pincode)
+    /^\d{6}$/.test(form.pincode) &&
+    pointsValid
 
   const submitDetails = (e: FormEvent) => {
     e.preventDefault()
     if (!valid || placing) return
     setPlacing(true)
     setError('')
-    placeOrder(form)
+    placeOrder(pointsNum > 0 ? { ...form, pointsToRedeem: pointsNum } : form)
       .then(() => setStep('pay'))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Checkout failed'))
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Checkout failed'
+        setError(message)
+        showToast(message)
+      })
       .finally(() => setPlacing(false))
   }
 
@@ -154,6 +165,12 @@ export default function CheckoutView() {
               <span>Paid ({lastOrder.payment?.provider ?? 'demo'})</span>
               <span>{inr(lastOrder.grandTotal)}</span>
             </div>
+            {lastOrder.loyalty && lastOrder.loyalty.earned > 0 && (
+              <p className="text-xs text-brand-charcoal/70 mt-2" data-testid="loyalty-earned">You earned {lastOrder.loyalty.earned} points</p>
+            )}
+            {lastOrder.loyalty && lastOrder.loyalty.redeemed > 0 && (
+              <p className="text-xs text-brand-charcoal/70" data-testid="loyalty-redeemed">Redeemed {lastOrder.loyalty.redeemed} points</p>
+            )}
           </div>
           <div className="flex gap-3 mt-6">
             <button className="btn btn-ghost flex-1" onClick={() => setView('track')}>Track order</button>
@@ -190,6 +207,22 @@ export default function CheckoutView() {
                   )}
                 </label>
               ))}
+              {emailValid && (
+                <div className="bg-brand-cream rounded-xl p-4 flex flex-col gap-1" data-testid="rewards-block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-brand-charcoal/60">Feldnstein Rewards</span>
+                  <input
+                    className="input"
+                    data-testid="field-points"
+                    placeholder="Redeem points (₹1 per point)"
+                    inputMode="numeric"
+                    value={points}
+                    onChange={e => setPoints(e.target.value)}
+                  />
+                  {pointsError && (
+                    <p className="text-xs text-red-700" data-testid="field-points-error">Enter a whole number of points (0 or more).</p>
+                  )}
+                </div>
+              )}
               {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
               <button className="btn btn-primary w-full" data-testid="place-order-btn" disabled={!valid || placing || cart.lines.length === 0}>
                 {placing ? 'Placing order…' : cart.lines.length === 0 ? 'Your cart is empty' : `Place order · ${inr(cart.grandTotal)}`}

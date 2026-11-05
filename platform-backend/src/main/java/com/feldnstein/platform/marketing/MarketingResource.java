@@ -49,4 +49,29 @@ public class MarketingResource {
                 "subscribers", newsletter.subscriberRows(),
                 "provider", newsletter.provider())).build();
     }
+
+    public record CampaignRequest(String name, String subject, String body) {}
+
+    @POST
+    @Path("/campaigns")
+    @RolesAllowed("ADMIN")
+    public Response sendCampaign(CampaignRequest body) {
+        if (body == null || body.name() == null || body.name().isBlank()
+                || body.subject() == null || body.subject().isBlank()
+                || body.body() == null || body.body().isBlank())
+            throw new DomainException("name, subject and body are required");
+        Campaign campaign = newsletter.sendCampaign(body.name().trim(), body.subject().trim(), body.body());
+        return Response.ok(Map.of(
+                "id", campaign.id,
+                "status", campaign.status.name(),
+                "recipientCount", campaign.recipientCount,
+                "provider", campaign.provider)).build();
+    }
+
+    @GET
+    @Path("/campaigns")
+    @RolesAllowed("ADMIN")
+    public Response campaigns() {
+        return Response.ok(newsletter.campaignRows()).build();
+    }
 }

@@ -11,6 +11,8 @@ Drives the running dev server over HTTP through the complete business loops:
   Flow 6  reports, schedules, and the RBAC matrix
   Flow 9  media pipeline, content blocks, site endpoints, RBAC
   Flow 11 marketing layer (ADR-0016): subscribe (public, idempotent), generate (admin RBAC), subscriber list
+  Flow 12 loyalty (ADR-0018): earn on delivery, redeem at checkout, admin adjust
+  Flow 13 B2B wholesale (ADR-0018): seller, order lifecycle, FEFO dispatch, cancel guard
 
 Usage:  python3 scripts/e2e-business-flows.py [base_url]
         default base_url http://localhost:8080  (pass http://localhost:5173 to test the Vite proxy)
@@ -23,6 +25,7 @@ import io
 import json
 import sys
 import time
+import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import date
@@ -758,6 +761,206 @@ def flow11_marketing():
           s == 200 and any(row.get("email") == email for row in rows), str(s))
 
 
+def flow12_loyalty():
+    """Loyalty (ADR-0018): earn on delivery, redeem at checkout, admin adjust, balance auth."""
+    print("\n=== Flow 12: loyalty — earn on delivery, redeem at checkout ===")
+    email = f"e2e-loyalty-{TAG.lower()}@example.com".replace("_", "-")
+
+    def shop(method, path, body=None, token=None):
+        url = BASE + path
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Content-Type", "application/json")
+        if token:
+            req.add_header("X-Cart-Token", token)
+        try:
+            with urllib.request.urlopen(req) as res:
+                raw = res.read().decode()
+                return res.status, (json.loads(raw) if raw else None)
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode()
+            try:
+                return e.code, json.loads(raw)
+            except json.JSONDecodeError:
+                return e.code, {"raw": raw[:200]}
+
+    # a sellable priced variant with stock
+    _, levels = call("GET", "/g/stock-levels?size=500", "admin")
+    _, site = shop("GET", "/site/products")
+    priced_ids = {v["id"] for p in site for v in p.get("variants", []) if v.get("price")}
+    best = max((l for l in levels if l["variant"]["id"] in priced_ids),
+               key=lambda l: l["onHand"] - l["reserved"] - (l.get("onHold") or 0), default=None)
+    check("12.0 a sellable priced variant exists", best is not None)
+    if not best:
+        return
+    vid = best["variant"]["id"]
+
+    def buy(qty, points=None):
+        s, cart = shop("POST", "/shop/cart/add", {"variantId": vid, "qty": qty})
+        if s not in (200, 201):
+            return s, cart
+        body = {"customerName": "E2E Loyalty", "email": email, "phone": "9876543210",
+                "address": "12 Temple Street", "city": "Vijayawada", "state": "AP", "pincode": "520001"}
+        if points is not None:
+            body["pointsToRedeem"] = points
+        return shop("POST", "/shop/checkout", body, token=cart["token"])
+
+    # order A: full loop to DELIVERED → earns points
+    s, order_a = buy(1)
+    check("12.1 checkout creates order", s == 201 and order_a["status"] == "PENDING", str(s))
+    code_a = order_a["orderCode"]
+    shop("POST", f"/shop/payments/{code_a}/demo-pay")
+    call("POST", f"/g/orders/{code_a}/confirm", "admin")
+    call("POST", f"/g/orders/{code_a}/ship", "admin")
+    s, o = call("POST", f"/g/orders/{code_a}/deliver", "admin")
+    earned = (o or {}).get("pointsEarned", 0)
+    check("12.2 deliver earns points (pointsEarned > 0)", s == 200 and o["status"] == "DELIVERED" and earned > 0,
+          f"pointsEarned={earned}")
+
+    # balance endpoint — authorised by an existing order matching code + email
+    q = urllib.parse.quote(email)
+    s, bal = shop("GET", f"/shop/loyalty/balance?email={q}&orderCode={code_a}")
+    check("12.3 balance shows earned points", s == 200 and bal["balance"] == earned
+          and bal["lifetimeEarned"] == earned, str(s))
+    s, _ = shop("GET", f"/shop/loyalty/balance?email=other@x.com&orderCode={code_a}")
+    check("12.4 balance rejects a wrong email (no leak)", s == 404, str(s))
+
+    # order B: redeem points at checkout
+    redeem = min(5, earned)
+    s, order_b = buy(1, points=redeem)
+    check("12.5 redeem reduces grandTotal on the receipt", s == 201
+          and abs(order_b["grandTotal"] - (order_a["grandTotal"] - redeem)) < 0.01
+          and order_b.get("loyalty", {}).get("redeemed") == redeem,
+          f"grandTotal={order_b.get('grandTotal')} vs {order_a.get('grandTotal')} - {redeem}")
+    code_b = order_b["orderCode"]
+
+    s, bal2 = shop("GET", f"/shop/loyalty/balance?email={q}&orderCode={code_b}")
+    check("12.6 balance drops by the redeemed points", s == 200 and bal2["balance"] == earned - redeem, str(bal2))
+
+    # overspend rejected
+    s, err = buy(1, points=earned + 100000)
+    check("12.7 redeeming above balance rejected 400", s == 400 and "points" in str(err).lower(), str(s))
+
+    # admin adjust (reason mandatory, ADMIN only)
+    s, accounts = call("GET", f"/g/loyalty/accounts?q={q}", "admin")
+    account_id = accounts[0]["id"] if s == 200 and accounts else None
+    check("12.8 admin account search finds the buyer", s == 200 and account_id is not None, str(s))
+    s, adj = call("POST", f"/g/loyalty/accounts/{account_id}/adjust", "admin",
+                  {"points": 50, "reason": "e2e goodwill"})
+    check("12.9 admin adjust credits points", s == 200 and adj["balance"] == earned - redeem + 50, str(s))
+    s, _ = call("POST", f"/g/loyalty/accounts/{account_id}/adjust", "ops", {"points": 5, "reason": "nope"})
+    check("12.10 adjust forbidden for OPERATOR", s == 403, str(s))
+    s, _ = call("POST", f"/g/loyalty/accounts/{account_id}/adjust", "admin", {"points": 5})
+    check("12.11 adjust without a reason rejected", s == 400, str(s))
+
+    s, bal3 = shop("GET", f"/shop/loyalty/balance?email={q}&orderCode={code_b}")
+    check("12.12 balance reflects the adjustment", s == 200 and bal3["balance"] == earned - redeem + 50, str(bal3))
+
+
+def flow13_b2b():
+    """B2B wholesale (ADR-0018): seller directory, order lifecycle, FEFO dispatch, cancel guard."""
+    print("\n=== Flow 13: B2B wholesale — sellers, orders, FEFO dispatch ===")
+
+    s, seller = call("POST", "/g/b2b/sellers", "admin",
+                     {"name": f"E2E Seller {TAG}", "contactName": "E2E Contact"})
+    check("13.1 seller created", s == 201 and bool(seller.get("id")), str(s))
+    seller_id = (seller or {}).get("id")
+
+    s, sellers = call("GET", "/g/b2b/sellers?q=e2e", "ops")
+    check("13.2 seller list searchable for OPERATOR", s == 200
+          and any(x["id"] == seller_id for x in (sellers or [])), str(s))
+
+    # two DIFFERENT variants with stock at the same warehouse
+    _, levels = call("GET", "/g/stock-levels?size=500", "admin")
+    by_wh = {}
+    for l in levels:
+        wh = (l.get("warehouse") or {}).get("id")
+        avail = l["onHand"] - l["reserved"] - (l.get("onHold") or 0)
+        if wh and avail >= 3:
+            by_wh.setdefault(wh, []).append(l)
+    def two_variants(ls):
+        seen, out = set(), []
+        for x in ls:
+            vid = x["variant"]["id"]
+            if vid not in seen:
+                seen.add(vid)
+                out.append(x)
+            if len(out) == 2:
+                break
+        return out if len(out) == 2 else []
+    wh_id, picks = next(((wh, two_variants(ls)) for wh, ls in by_wh.items() if len(two_variants(ls)) == 2),
+                        (None, []))
+    check("13.3 a warehouse with 2 stocked variants exists", wh_id is not None)
+    if not wh_id:
+        return
+    l1, l2 = picks[0], picks[1]
+    v1, v2 = l1["variant"]["id"], l2["variant"]["id"]
+    onhand1 = sum(x["onHand"] for x in by_wh[wh_id] if x["variant"]["id"] == v1)
+    onhand2 = sum(x["onHand"] for x in by_wh[wh_id] if x["variant"]["id"] == v2)
+
+    lines = [
+        {"variantId": l1["variant"]["id"], "qty": 2, "unitPricePaise": 10000, "gstPct": 5},
+        {"variantId": l2["variant"]["id"], "qty": 1, "unitPricePaise": 5000, "gstPct": 18},
+    ]
+    s, order = call("POST", "/g/b2b/orders", "admin",
+                    {"sellerId": seller_id, "lines": lines, "notes": "e2e wholesale"})
+    check("13.4 order created DRAFT with server-computed totals", s == 201 and order["status"] == "DRAFT"
+          and order["subTotalPaise"] == 25000 and order["gstTotalPaise"] == 1900
+          and order["grandTotalPaise"] == 26900, json.dumps(order)[:150])
+    oid = order["id"]
+
+    s, o = call("POST", f"/g/b2b/orders/{oid}/status", "admin", {"status": "CONFIRMED"})
+    check("13.5 confirm → CONFIRMED", s == 200 and o["status"] == "CONFIRMED", str(s))
+
+    s, _ = call("POST", f"/g/b2b/orders/{oid}/status", "admin", {"status": "DISPATCHED"})
+    check("13.6 dispatch without warehouseId rejected", s == 400, str(s))
+
+    s, o = call("POST", f"/g/b2b/orders/{oid}/status", "admin",
+                {"status": "DISPATCHED", "warehouseId": wh_id})
+    check("13.7 dispatch with warehouse → DISPATCHED", s == 200 and o["status"] == "DISPATCHED"
+          and o["warehouseId"] == wh_id, str(s))
+
+    _, levels_after = call("GET", "/g/stock-levels?size=500", "admin")
+    a1 = sum(x["onHand"] for x in levels_after
+             if x["variant"]["id"] == v1 and (x.get("warehouse") or {}).get("id") == wh_id)
+    a2 = sum(x["onHand"] for x in levels_after
+             if x["variant"]["id"] == v2 and (x.get("warehouse") or {}).get("id") == wh_id)
+    check("13.8 dispatch deducts on-hand by line qty",
+          a1 == onhand1 - 2 and a2 == onhand2 - 1,
+          f"onHand {a1}/{a2} (was {onhand1}/{onhand2})")
+
+    _, moves = call("GET", "/g/stock-movements?size=500", "admin")
+    check("13.9 WHOLESALE_OUT ledger entries written", any(
+        m.get("referenceId") == order["orderNo"] and m["type"] == "WHOLESALE_OUT" for m in (moves or [])))
+
+    s, o = call("POST", f"/g/b2b/orders/{oid}/status", "admin", {"status": "DELIVERED"})
+    check("13.10 deliver → DELIVERED", s == 200 and o["status"] == "DELIVERED", str(s))
+
+    s, _ = call("POST", f"/g/b2b/orders/{oid}/status", "admin", {"status": "CANCELLED"})
+    check("13.11 cancel of DELIVERED rejected 400", s == 400, str(s))
+
+    # insufficient stock fails closed
+    s, big = call("POST", "/g/b2b/orders", "admin", {"sellerId": seller_id, "lines": [
+        {"variantId": l1["variant"]["id"], "qty": 100000, "unitPricePaise": 1000, "gstPct": 0}]})
+    if s == 201:
+        call("POST", f"/g/b2b/orders/{big['id']}/status", "admin", {"status": "CONFIRMED"})
+        s, _ = call("POST", f"/g/b2b/orders/{big['id']}/status", "admin",
+                    {"status": "DISPATCHED", "warehouseId": wh_id})
+        check("13.12 insufficient-stock dispatch rejected 400", s == 400, str(s))
+    else:
+        check("13.12 insufficient-stock dispatch rejected 400", False, f"setup order failed: {s}")
+
+    s, _ = call("GET", f"/g/b2b/orders/{oid}", "ops")
+    check("13.13 order detail readable for OPERATOR", s == 200, str(s))
+    req = urllib.request.Request(f"{BASE}/g/b2b/orders")
+    req.add_header("Authorization", "Basic " + base64.b64encode(b"cust:cust123").decode())
+    try:
+        urllib.request.urlopen(req)
+        check("13.14 wholesale blocked for CUSTOMER", False, "got 200")
+    except urllib.error.HTTPError as e:
+        check("13.14 wholesale blocked for CUSTOMER", e.code == 403, str(e.code))
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -772,6 +975,8 @@ def main():
         flow9_media_content()
         flow10_commerce()
         flow11_marketing()
+        flow12_loyalty()
+        flow13_b2b()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

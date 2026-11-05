@@ -2,6 +2,7 @@ package com.feldnstein.platform.commerce.order;
 
 import com.feldnstein.platform.commerce.payment.Payment;
 import com.feldnstein.platform.commerce.payment.PaymentService;
+import com.feldnstein.platform.loyalty.LoyaltyTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Instant;
@@ -52,6 +53,11 @@ public class OrderViews {
         if (o.cancelledAt() != null) timeline.put("CANCELLED", o.cancelledAt().toString());
         m.put("timeline", timeline);
         if (o.cancelReason() != null) m.put("cancelReason", o.cancelReason());
+        m.put("pointsRedeemed", o.pointsRedeemed());
+        if (o.status() == CustomerOrder.Status.DELIVERED) {
+            LoyaltyTransaction earned = LoyaltyTransaction.findByOrderAndType(o.id, LoyaltyTransaction.Type.EARN);
+            if (earned != null) m.put("pointsEarned", earned.points());
+        }
         return m;
     }
 

@@ -19,7 +19,7 @@ import java.time.Instant;
 public class StockMovement extends PanacheEntity {
 
     public enum MovementType {
-        PRODUCTION_IN, PROCUREMENT_IN, TRANSFER_OUT, TRANSFER_IN, ORDER_OUT, ADJUSTMENT_OUT, ADJUSTMENT_IN
+        PRODUCTION_IN, PROCUREMENT_IN, TRANSFER_OUT, TRANSFER_IN, ORDER_OUT, WHOLESALE_OUT, ADJUSTMENT_OUT, ADJUSTMENT_IN
     }
 
     @Column(name = "movement_no", unique = true, nullable = false, length = 32)

@@ -47,6 +47,35 @@ public class NewsletterService {
         gateway().subscribe(email, name);
     }
 
+    /** Sends a bulk campaign through the selected gateway; returns the persisted record. */
+    @jakarta.transaction.Transactional
+    public Campaign sendCampaign(String name, String subject, String body) {
+        gateway().sendCampaign(name, subject, body, (int) Subscriber.count());
+        return Campaign.<Campaign>streamAll()
+                .max(Comparator.comparing(c -> c.createdAt))
+                .orElseThrow(() -> new DomainException("campaign was not recorded"));
+    }
+
+    /** Campaign records, newest first. */
+    public List<Map<String, Object>> campaignRows() {
+        return Campaign.<Campaign>streamAll()
+                .sorted(Comparator.comparing((Campaign c) -> c.createdAt).reversed()
+                        .thenComparing(Comparator.comparing((Campaign c) -> c.id).reversed()))
+                .map(c -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("id", c.id);
+                    row.put("name", c.name);
+                    row.put("subject", c.subject);
+                    row.put("status", c.status.name());
+                    row.put("recipientCount", c.recipientCount);
+                    row.put("provider", c.provider);
+                    row.put("createdAt", c.createdAt.toString());
+                    row.put("sentAt", c.sentAt == null ? "" : c.sentAt.toString());
+                    return row;
+                })
+                .toList();
+    }
+
     /** Local mirror of every subscription captured through this platform. */
     public List<Map<String, Object>> subscriberRows() {
         return Subscriber.<Subscriber>streamAll()

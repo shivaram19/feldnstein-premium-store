@@ -2,6 +2,11 @@ export function formatINR(v: number): string {
   return '₹' + Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })
 }
 
+/** ADR-0018 growth APIs (B2B, CRM) carry money in paise; formatINR takes rupees. */
+export function formatPaise(paise: number): string {
+  return formatINR(paise / 100)
+}
+
 export function formatDate(iso: string): string {
   if (!iso) return '—'
   const d = new Date(iso)

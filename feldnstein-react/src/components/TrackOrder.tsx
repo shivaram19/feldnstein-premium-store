@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useCart } from '../context/CartContext'
-import { shopApi, type Order } from '../api/shopApi'
+import { shopApi, type LoyaltyBalance, type Order } from '../api/shopApi'
 
 const STEPS = ['PENDING', 'PAID', 'CONFIRMED', 'SHIPPED', 'DELIVERED'] as const
 const LABELS: Record<string, string> = {
@@ -14,6 +14,7 @@ export default function TrackOrder() {
   const [orderCode, setOrderCode] = useState('')
   const [email, setEmail] = useState('')
   const [order, setOrder] = useState<Order | null>(null)
+  const [loyalty, setLoyalty] = useState<LoyaltyBalance | null>(null)
   const [error, setError] = useState('')
   const [searching, setSearching] = useState(false)
 
@@ -22,9 +23,18 @@ export default function TrackOrder() {
     if (searching) return
     setSearching(true)
     setError('')
+    setLoyalty(null)
     shopApi
       .track(orderCode.trim(), email.trim())
-      .then(setOrder)
+      .then(found => {
+        setOrder(found)
+        if (found.status === 'DELIVERED') {
+          shopApi
+            .loyaltyBalance(found.email, found.orderCode)
+            .then(setLoyalty)
+            .catch(() => setLoyalty(null))
+        }
+      })
       .catch((err: unknown) => {
         setOrder(null)
         setError(err instanceof Error ? err.message : 'Lookup failed')
@@ -62,6 +72,11 @@ export default function TrackOrder() {
             </p>
             {cancelled && order.cancelReason && (
               <p className="text-sm text-red-700 mt-3">Reason: {order.cancelReason}</p>
+            )}
+            {loyalty && (
+              <p className="text-xs text-brand-charcoal/70 mt-3" data-testid="loyalty-balance">
+                Rewards balance: {loyalty.balance} points (lifetime earned {loyalty.lifetimeEarned})
+              </p>
             )}
             <ol className="mt-6 flex flex-col gap-0">
               {(cancelled ? ['CANCELLED'] : [...STEPS]).map((s, i) => {

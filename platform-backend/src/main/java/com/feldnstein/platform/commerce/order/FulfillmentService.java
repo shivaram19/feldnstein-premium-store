@@ -4,6 +4,7 @@ import com.feldnstein.platform.commerce.fulfillment.StockAllocator;
 import com.feldnstein.platform.commerce.payment.Payment;
 import com.feldnstein.platform.commerce.payment.PaymentService;
 import com.feldnstein.platform.commerce.shared.DomainException;
+import com.feldnstein.platform.loyalty.LoyaltyService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -19,6 +20,7 @@ public class FulfillmentService {
 
     @Inject StockAllocator stock;
     @Inject PaymentService payments;
+    @Inject LoyaltyService loyalty;
 
     public record ActionResult(boolean ok, String message) {}
 
@@ -47,10 +49,12 @@ public class FulfillmentService {
     public ActionResult deliver(CustomerOrder order) {
         try {
             order.deliver(Instant.now());
-            return ok("delivered");
         } catch (DomainException e) {
             return new ActionResult(false, e.getMessage());
         }
+        // outside the try: a loyalty failure must roll the delivery back, not report a false failure
+        loyalty.earnForDeliveredOrder(order);
+        return ok("delivered");
     }
 
     @Transactional

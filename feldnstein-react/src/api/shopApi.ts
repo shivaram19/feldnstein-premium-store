@@ -69,6 +69,18 @@ export interface Order {
   cancelReason?: string
   demoPayment?: boolean
   checkout?: CheckoutParams
+  loyalty?: LoyaltySummary
+}
+
+export interface LoyaltySummary {
+  earned: number
+  redeemed: number
+}
+
+export interface LoyaltyBalance {
+  email: string
+  balance: number
+  lifetimeEarned: number
 }
 
 export interface CheckoutDetails {
@@ -79,6 +91,7 @@ export interface CheckoutDetails {
   city: string
   state: string
   pincode: string
+  pointsToRedeem?: number
 }
 
 export interface SubscribeResult {
@@ -156,6 +169,10 @@ export const shopApi = {
       method: 'POST',
       body: JSON.stringify({ orderCode, email }),
     }),
+  loyaltyBalance: (email: string, orderCode: string) =>
+    req<LoyaltyBalance>(
+      `/shop/loyalty/balance?email=${encodeURIComponent(email)}&orderCode=${encodeURIComponent(orderCode)}`,
+    ),
   subscribe: (email: string, name?: string) =>
     req<SubscribeResult>('/shop/subscribe', {
       method: 'POST',

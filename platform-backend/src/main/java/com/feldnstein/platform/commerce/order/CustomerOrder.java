@@ -81,6 +81,10 @@ public class CustomerOrder extends PanacheEntity {
     @Column(name = "grand_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal grandTotal = BigDecimal.ZERO;
 
+    /** Loyalty points redeemed against this order (post-GST discount, 1 point = ₹1). */
+    @Column(name = "points_redeemed")
+    private Integer pointsRedeemed;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -177,6 +181,18 @@ public class CustomerOrder extends PanacheEntity {
             throw new DomainException("only " + expected + " orders can be " + action + " (status is " + status + ")");
     }
 
+    /** Applies a loyalty redemption: 1 point = ₹1 off the grand total (post-GST, GST
+     *  untouched), capped at the whole rupees the total affords. Returns the points used. */
+    public int applyRedemption(int pointsRequested) {
+        if (pointsRequested <= 0) throw new DomainException("points to redeem must be positive");
+        int affordable = grandTotal.setScale(0, java.math.RoundingMode.FLOOR).intValue();
+        int used = Math.min(pointsRequested, affordable);
+        if (used <= 0) throw new DomainException("order total is too low to redeem points");
+        grandTotal = grandTotal.subtract(Money.of(used).amount());
+        pointsRedeemed = pointsRedeemed() + used;
+        return used;
+    }
+
     /* ---- accessors ---- */
 
     public String orderCode() { return orderCode; }
@@ -190,6 +206,7 @@ public class CustomerOrder extends PanacheEntity {
     public Money subTotal() { return Money.of(subTotal); }
     public Money gstTotal() { return Money.of(gstTotal); }
     public Money grandTotal() { return Money.of(grandTotal); }
+    public int pointsRedeemed() { return pointsRedeemed == null ? 0 : pointsRedeemed; }
     public CartTotals totals() {
         return new CartTotals(subTotal(), gstTotal(), grandTotal(), lines.stream().mapToInt(OrderLine::qty).sum());
     }

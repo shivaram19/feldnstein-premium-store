@@ -365,8 +365,16 @@ async function flowCommerce(browser) {
   await ap.close()
 }
 
-const LAUNCH = { executablePath: '/usr/bin/chromium', protocolTimeout: 180000,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--mute-audio', '--single-process', '--force-prefers-reduced-motion'] }
+// userDataDir must NOT be the default (os.tmpdir()): on this machine /tmp is a small
+// tmpfs and two dev-mode page loads exhaust it → ERR_INSUFFICIENT_RESOURCES /
+// detached frames / empty #root. A persistent profile on the real disk also makes
+// vite serve 304s, cutting module re-transfer on every run.
+const os = require('os'), path = require('path'), fs = require('fs')
+const PROFILE = process.env.UI_TEST_PROFILE
+  ?? path.join(os.homedir(), '.cache', 'feldnstein-ui-flow-tests')
+fs.mkdirSync(PROFILE, { recursive: true })
+const LAUNCH = { executablePath: '/usr/bin/chromium', protocolTimeout: 180000, userDataDir: PROFILE,
+  args: ['--no-sandbox', '--mute-audio', '--force-prefers-reduced-motion'] }
 
 // Each flow gets a fresh browser: long-lived headless renderers destabilise under
 // memory pressure (observed: 2nd page in a shared browser mounts an empty #root).

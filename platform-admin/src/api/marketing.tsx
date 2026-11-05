@@ -17,10 +17,20 @@ export interface GenerateResponse { text: string; provider: string }
 export interface Subscriber { id: number; email: string; name?: string; source?: string; createdAt: string }
 export interface SubscribersResponse { subscribers: Subscriber[]; provider: string }
 
+/* ---- bulk campaigns (ADR-0018): create-and-send via the ADR-0016 newsletter gateway ---- */
+export interface Campaign {
+  id: number; name: string; subject: string; status: string
+  recipientCount: number; provider: string; createdAt: string; sentAt?: string
+}
+export interface CreateCampaignRequest { name: string; subject: string; body: string }
+
 export const marketing = {
   generate: (task: MarketingTask, context: Record<string, unknown>) =>
     api.post<GenerateResponse>('/g/marketing/generate', { task, context }),
   subscribers: () => api.get<SubscribersResponse>('/g/marketing/subscribers'),
+  campaigns: () => api.get<Campaign[]>('/g/marketing/campaigns'),
+  createCampaign: (body: CreateCampaignRequest) =>
+    api.post<Campaign>('/g/marketing/campaigns', body),
 }
 
 /** Lenient JSON parse for AI output — tolerates ```json fences, null when not JSON. */

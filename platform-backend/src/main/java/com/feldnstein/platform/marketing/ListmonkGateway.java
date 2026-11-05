@@ -47,16 +47,59 @@ public class ListmonkGateway implements NewsletterGateway {
         if (!configured())
             throw new DomainException("listmonk is not configured (listmonk.api-token is missing)");
         ObjectNode body = buildPayload(mapper, email, name, listIds());
+        HttpResponse<String> res = post("/api/subscribers", body);
+        if (res.statusCode() == 409) return; // already subscribed — idempotent success
+        if (res.statusCode() >= 400)
+            throw new DomainException("listmonk: " + providerMessage(res.body(), res.statusCode()));
+    }
+
+    /**
+     * Listmonk campaign — create-and-send against the configured list, best-effort:
+     * create the campaign, flip it to scheduled. API failures surface as a
+     * {@link DomainException} with the provider's message; the send is recorded
+     * locally only on success.
+     */
+    @Override
+    @jakarta.transaction.Transactional
+    public void sendCampaign(String name, String subject, String body, int recipientCount) {
+        if (!configured())
+            throw new DomainException("listmonk is not configured (listmonk.api-token is missing)");
+        if (listIds().isEmpty())
+            throw new DomainException("listmonk.list-ids is required to send a campaign");
+        ObjectNode payload = mapper.createObjectNode()
+                .put("name", name)
+                .put("subject", subject)
+                .put("body", body)
+                .put("content_type", "html")
+                .put("type", "regular");
+        ArrayNode lists = payload.putArray("lists");
+        listIds().forEach(lists::add);
+        HttpResponse<String> created = post("/api/campaigns", payload);
+        if (created.statusCode() >= 400)
+            throw new DomainException("listmonk: " + providerMessage(created.body(), created.statusCode()));
         try {
-            HttpRequest req = HttpRequest.newBuilder(URI.create(baseUrl + "/api/subscribers"))
+            long id = mapper.readTree(created.body()).path("data").path("id").asLong(-1);
+            if (id >= 0) {
+                HttpResponse<String> scheduled = post("/api/campaigns/" + id + "/status",
+                        mapper.createObjectNode().put("status", "scheduled"));
+                if (scheduled.statusCode() >= 400)
+                    throw new DomainException("listmonk: " + providerMessage(scheduled.body(), scheduled.statusCode()));
+            }
+        } catch (IOException e) {
+            throw new DomainException("could not read listmonk campaign response");
+        }
+        Campaign.record(name, subject, body, Campaign.Status.SENT,
+                recipientCount, "listmonk", java.time.Instant.now()).persist();
+    }
+
+    private HttpResponse<String> post(String path, ObjectNode body) {
+        try {
+            HttpRequest req = HttpRequest.newBuilder(URI.create(baseUrl + path))
                     .header("Authorization", "token " + apiToken.get().trim())
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
                     .build();
-            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
-            if (res.statusCode() == 409) return; // already subscribed — idempotent success
-            if (res.statusCode() >= 400)
-                throw new DomainException("listmonk: " + providerMessage(res.body(), res.statusCode()));
+            return http.send(req, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
             throw new DomainException("could not reach listmonk at " + baseUrl
                     + " — check LISTMONK_BASE_URL, or set NEWSLETTER_PROVIDER=demo");

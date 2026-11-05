@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 
 export function PanelTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
@@ -6,5 +7,18 @@ export function PanelTitle({ children, action }: { children: ReactNode; action?:
       <span>{children}</span>
       {action}
     </div>
+  )
+}
+
+/** Debounced search input — fires `onSearch` 300 ms after the last keystroke. */
+export function SearchBox({ placeholder, onSearch }: { placeholder: string; onSearch: (q: string) => void }) {
+  const [value, setValue] = useState('')
+  useEffect(() => {
+    const t = setTimeout(() => onSearch(value.trim()), 300)
+    return () => clearTimeout(t)
+  }, [value, onSearch])
+  return (
+    <input className="input" type="search" placeholder={placeholder} value={value}
+      aria-label="Search" onChange={(e) => setValue(e.target.value)} />
   )
 }

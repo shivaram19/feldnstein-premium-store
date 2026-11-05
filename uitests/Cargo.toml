@@ -8,6 +8,7 @@ repository = "https://github.com/shivaram19/feldnstein-premium-store"
 
 [dependencies]
 chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
+dirs = "5"
 tokio = { version = "1", features = ["full"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 futures = "0.3"
