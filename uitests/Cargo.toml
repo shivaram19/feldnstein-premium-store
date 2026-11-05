@@ -3,6 +3,8 @@ name = "ui-flow-tests"
 version = "0.1.0"
 edition = "2021"
 description = "UI flow tests for the feldnstein admin SPA + storefront (chromiumoxide)"
+license = "MIT"
+repository = "https://github.com/shivaram19/feldnstein-premium-store"
 
 [dependencies]
 chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"] }
