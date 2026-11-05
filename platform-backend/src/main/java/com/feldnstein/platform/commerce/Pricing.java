@@ -1,5 +1,6 @@
 package com.feldnstein.platform.commerce;
 
+import com.feldnstein.platform.commerce.shared.DomainException;
 import com.feldnstein.platform.commerce.shared.GstRate;
 import com.feldnstein.platform.commerce.shared.Money;
 import com.feldnstein.platform.gaanugu.catalog.ProductVariant;
@@ -23,7 +24,8 @@ public class Pricing {
     public Money unitPrice(ProductVariant variant) {
         PriceConfig cfg = sellingConfig(variant);
         if (cfg != null) return Money.of(cfg.amount);
-        return variant.mrp != null ? Money.of(variant.mrp) : Money.ZERO;
+        if (variant.mrp != null) return Money.of(variant.mrp);
+        throw new DomainException("no selling price configured for " + variant.sku);
     }
 
     public GstRate gstRate(ProductVariant variant) {

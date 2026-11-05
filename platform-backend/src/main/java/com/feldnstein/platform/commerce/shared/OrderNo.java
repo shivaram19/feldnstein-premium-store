@@ -3,7 +3,7 @@ package com.feldnstein.platform.commerce.shared;
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Customer-facing order code, e.g. ORD-1793793391320-42. Unique and unguessable-ish. */
+/** Customer-facing order code, e.g. ORD-1793793391320421507. Unique and unguessable-ish. */
 public record OrderNo(String value) {
 
     public static final String PREFIX = "ORD-";
@@ -14,6 +14,7 @@ public record OrderNo(String value) {
     }
 
     public static OrderNo fresh() {
-        return new OrderNo(PREFIX + Instant.now().toEpochMilli() + ThreadLocalRandom.current().nextInt(100));
+        return new OrderNo(PREFIX + Instant.now().toEpochMilli()
+                + String.format("%06d", ThreadLocalRandom.current().nextInt(1_000_000)));
     }
 }

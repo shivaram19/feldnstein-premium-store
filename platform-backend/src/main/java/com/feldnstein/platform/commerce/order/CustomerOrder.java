@@ -18,6 +18,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -89,6 +90,9 @@ public class CustomerOrder extends PanacheEntity {
     @Column(name = "delivered_at") private Instant deliveredAt;
     @Column(name = "cancelled_at") private Instant cancelledAt;
     @Column(name = "cancel_reason", length = 500) private String cancelReason;
+
+    @Version
+    private Long version;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderLine> lines = new ArrayList<>();
@@ -196,6 +200,7 @@ public class CustomerOrder extends PanacheEntity {
     public Instant deliveredAt() { return deliveredAt; }
     public Instant cancelledAt() { return cancelledAt; }
     public String cancelReason() { return cancelReason; }
+    public Long version() { return version; }
     public List<OrderLine> lines() { return Collections.unmodifiableList(lines); }
 
     /** Where this order's stock is reserved — recorded at checkout, replayed on release/deduct. */

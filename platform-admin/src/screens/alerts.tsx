@@ -243,6 +243,7 @@ const ROLE_MATRIX: { capability: string; admin: boolean; operator: boolean; cust
   { capability: 'Create/edit batches, QC checks, procurement, counts', admin: true, operator: true, customer: false },
   { capability: 'Post stock transfers, adjustments, hold/release', admin: true, operator: true, customer: false },
   { capability: 'Dismiss alerts, manage alert rules', admin: true, operator: true, customer: false },
+  { capability: 'Manage orders — cancel & refund (ADR-0014)', admin: true, operator: true, customer: false },
   { capability: 'View analytics & reports, run/download CSV', admin: true, operator: false, customer: false },
   { capability: 'Edit settings (general, reorder, expiry, bull & press)', admin: true, operator: false, customer: false },
   { capability: 'View audit log', admin: true, operator: false, customer: false },

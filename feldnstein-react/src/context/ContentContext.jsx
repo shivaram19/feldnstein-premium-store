@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { products as defaultProducts, categories as defaultCategories } from '../data/products'
+import { inr } from '../api/shopApi'
 
 const API_BASE = import.meta.env.VITE_SITE_API ?? ''
 const ContentCtx = createContext(null)
@@ -41,7 +42,7 @@ function normalizeProducts(rows) {
       id: fallback?.id ?? String(p.code ?? p.id).toLowerCase(),
       name: p.name ?? fallback?.name ?? 'Oil',
       price: minPrice,
-      priceRange: priced.length > 1 ? `₹${Math.round(minPrice)} – ₹${Math.round(maxPrice)}` : null,
+      priceRange: priced.length > 1 ? `${inr(minPrice)} – ${inr(maxPrice)}` : null,
       category: fallback?.category ?? 'staples',
       img: abs(p.imageUrl) ?? fallback?.img ?? '/assets/img/img-02.jpg',
       badge: p.badge ?? fallback?.badge ?? '',

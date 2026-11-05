@@ -26,7 +26,7 @@ const NEXT_ACTION: Record<string, { action: string; label: string }> = {
 
 export function OrdersScreen() {
   const [status, setStatus] = useState<string>('')
-  const orders = useList<OrderListItem>(`/orders?size=200${status ? `&status=${status}` : ''}`)
+  const orders = useList<OrderListItem>(`/orders${status ? `?status=${status}` : ''}`)
   const toast = useToast()
   const [detailCode, setDetailCode] = useState<string | null>(null)
   const [detail, setDetail] = useState<OrderDetail | null>(null)
@@ -38,7 +38,10 @@ export function OrdersScreen() {
   const openDetail = (code: string) => {
     setDetailCode(code)
     setDetail(null)
-    gaanugu.get<OrderDetail>(`/orders/${code}`).then(setDetail).catch(() => setDetailCode(null))
+    gaanugu.get<OrderDetail>(`/orders/${code}`).then(setDetail).catch((e: unknown) => {
+      setDetailCode(null)
+      toast('error', e instanceof Error ? e.message : 'Couldn’t load this order')
+    })
   }
 
   const runAction = (action: string, reason?: string) => {
@@ -85,7 +88,7 @@ export function OrdersScreen() {
       <div className="card" data-testid="orders-table">
         <PanelTitle>Customer orders</PanelTitle>
         <View loading={orders.loading} error={orders.error} rows={orders.data as never[] | null}
-          cols={cols} empty="No orders yet — share the storefront link." onRetry={orders.reload} />
+          cols={cols} empty={status ? `No ${status.toLowerCase()} orders right now.` : 'No orders yet — share the storefront link.'} onRetry={orders.reload} />
       </div>
 
       <Modal open={!!detailCode} onClose={() => setDetailCode(null)}
@@ -107,11 +110,24 @@ export function OrdersScreen() {
             </p>
 
             <DataTable columns={[
-              { key: 'product', label: 'Item', render: (l: OrderLineView) => <span>{l.product}<br /><small style={{ color: 'var(--muted)' }}>{l.sku} · {l.sizeMl} ml</small></span> },
+              { key: 'product', label: 'Item', render: (l: OrderLineView) => <span>{l.product}<br /><small style={{ color: 'var(--muted)' }}>{l.sku} · {l.sizeMl} ml · GST {l.gstPct}%</small></span> },
               { key: 'qty', label: 'Qty', numeric: true },
               { key: 'unitPrice', label: 'Price', numeric: true, render: (l: OrderLineView) => formatINR(l.unitPrice) },
               { key: 'lineTotal', label: 'Total', numeric: true, render: (l: OrderLineView) => formatINR(l.lineTotal) },
             ] as never} rows={detail.lines as never[]} />
+
+            <div style={{ marginLeft: 'auto', width: 240, fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal</span><span>{formatINR(detail.subTotal)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>GST</span><span>{formatINR(detail.gstTotal)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800 }}>
+                <span>Grand total</span><span>{formatINR(detail.grandTotal)}</span>
+              </div>
+              {detail.payment?.status === 'REFUNDED' && (
+                <div style={{ color: 'var(--rust)' }}>
+                  Refunded {formatINR(detail.payment.amount)} on {formatDate(detail.payment.refundedAt ?? '')}
+                </div>
+              )}
+            </div>
 
             <div style={{ fontSize: 12, color: 'var(--muted)' }}>
               {Object.entries(detail.timeline).map(([k, v]) => (
@@ -122,7 +138,7 @@ export function OrdersScreen() {
 
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               {cancellable && (
-                <Button variant="ghost" onClick={() => setCancelOpen(true)}>Cancel & refund</Button>
+                <Button variant="ghost" disabled={busy} onClick={() => setCancelOpen(true)}>Cancel & refund</Button>
               )}
               {action && (
                 <Button variant="gold" disabled={busy} onClick={() => setPendingAction({ action: action.action, label: action.label })}>
@@ -143,10 +159,18 @@ export function OrdersScreen() {
 
       <ConfirmModal open={cancelOpen} busy={busy}
         title="Cancel this order?"
-        sub="Reserved stock is released back to inventory. A paid payment is refunded."
+        sub={detail?.payment
+          ? 'Reserved stock is released back to inventory. The paid payment is refunded.'
+          : 'Reserved stock is released back to inventory. No payment has been taken, so there is nothing to refund.'}
         confirmLabel="Cancel order"
         onClose={() => setCancelOpen(false)}
-        onConfirm={() => runAction('cancel', cancelReason)} />
+        onConfirm={() => runAction('cancel', cancelReason)}>
+        <div className="field">
+          <label htmlFor="cancel-reason">Reason (optional)</label>
+          <textarea id="cancel-reason" className="input" rows={2} style={{ width: '100%' }} value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)} />
+        </div>
+      </ConfirmModal>
     </div>
   )
 }

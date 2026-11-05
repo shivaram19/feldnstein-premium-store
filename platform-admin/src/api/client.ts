@@ -41,7 +41,8 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     let serverMsg = ''
     try {
       const body = await res.json()
-      serverMsg = typeof body?.message === 'string' ? body.message : ''
+      const msg = body?.message ?? body?.error
+      serverMsg = typeof msg === 'string' ? msg : ''
     } catch {
       // non-JSON error body — fall through to the friendly default
     }

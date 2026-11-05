@@ -67,7 +67,7 @@ public class SiteResource {
                 vm.put("sku", v.sku);
                 vm.put("sizeMl", v.sizeMl);
                 PriceConfig price = PriceConfig.<PriceConfig>find(
-                        "variant = ?1 and priceType = ?2 and active", v,
+                        "variant = ?1 and priceType = ?2 and active order by effectiveFrom desc", v,
                         PriceConfig.PriceType.SELLING).firstResult();
                 if (price != null) {
                     vm.put("price", price.amount);

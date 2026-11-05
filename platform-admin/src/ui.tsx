@@ -30,12 +30,13 @@ export function Pill({ tone = 'plain', children, onClick, selected }: { tone?: P
 }
 
 /* ---------- confirm dialog ---------- */
-export function ConfirmModal({ open, title, sub, confirmLabel = 'Confirm', busy, onClose, onConfirm }: {
+export function ConfirmModal({ open, title, sub, confirmLabel = 'Confirm', busy, onClose, onConfirm, children }: {
   open: boolean; title: string; sub?: string; confirmLabel?: string; busy?: boolean
-  onClose: () => void; onConfirm: () => void
+  onClose: () => void; onConfirm: () => void; children?: ReactNode
 }) {
   return (
     <Modal title={title} sub={sub} open={open} onClose={onClose}>
+      {children}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
         <Button variant="gold" disabled={busy} onClick={onConfirm}>{busy ? 'Working…' : confirmLabel}</Button>

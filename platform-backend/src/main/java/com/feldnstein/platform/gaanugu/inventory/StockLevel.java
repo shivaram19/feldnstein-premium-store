@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -46,6 +47,11 @@ public class StockLevel extends PanacheEntity {
 
     @Column(name = "expiry_date")
     public LocalDate expiryDate;
+
+    @Version
+    private Long version;
+
+    public Long version() { return version; }
 
     /** available = on_hand − reserved − on_hold; derived, never stored. */
     @Transient

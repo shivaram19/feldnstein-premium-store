@@ -1,5 +1,6 @@
 import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
+import { useCart } from '../context/CartContext'
 
 const INFO_CARDS = [
   {
@@ -57,6 +58,7 @@ const LINK_GROUPS = [
 ]
 
 export default function Footer() {
+  const { setView } = useCart()
   return (
     <footer id="siteFooter" className="bg-brand-forestDark text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-24 lg:pt-32 pb-12">
@@ -156,6 +158,7 @@ export default function Footer() {
               <li className="flex items-start gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre mt-0.5">factory</span><span><strong>Mill:</strong> Mothadaka, Guntur, Andhra Pradesh, India</span></li>
               <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">mail</span><a className="hover:text-brand-ochre transition-colors" href="mailto:contact@feldnstein.com">contact@feldnstein.com</a></li>
               <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">chat</span><span>WhatsApp: +91 91600 98989</span></li>
+              <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">local_shipping</span><button className="hover:text-brand-ochre transition-colors" onClick={() => setView('track')}>Track your order</button></li>
             </ul>
           </div>
           <div className="flex flex-col gap-3">

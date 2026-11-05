@@ -4,7 +4,7 @@ const inr = (v: number) => `₹${Number(v).toLocaleString('en-IN', { maximumFrac
 
 /** Slide-over cart: line items with quantity steppers, GST math, checkout CTA. */
 export default function CartDrawer() {
-  const { cart, drawerOpen, setDrawerOpen, setQty, removeItem, setView } = useCart()
+  const { cart, loading, drawerOpen, setDrawerOpen, setQty, removeItem, setView } = useCart()
 
   const startCheckout = () => {
     setDrawerOpen(false)
@@ -29,7 +29,21 @@ export default function CartDrawer() {
         </header>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
-          {cart.lines.length === 0 && (
+          {loading && cart.lines.length === 0 && (
+            <div className="flex flex-col gap-4 py-2" data-testid="cart-loading">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="flex gap-3 bg-white rounded-xl border border-brand-border p-3 animate-pulse">
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="h-4 w-2/3 bg-brand-border rounded" />
+                    <div className="h-3 w-1/3 bg-brand-border rounded" />
+                    <div className="h-3 w-1/4 bg-brand-border rounded" />
+                  </div>
+                  <div className="h-8 w-20 bg-brand-border rounded" />
+                </div>
+              ))}
+            </div>
+          )}
+          {!loading && cart.lines.length === 0 && (
             <p className="text-sm text-brand-charcoal/60 text-center py-10" data-testid="cart-empty">
               Your cart is empty — the press is waiting.
             </p>
@@ -39,7 +53,7 @@ export default function CartDrawer() {
               <div className="flex-1 min-w-0">
                 <p className="font-serif font-semibold text-brand-forest text-sm truncate">{line.product}</p>
                 <p className="text-[11px] text-brand-charcoal/60">{line.sku} · {line.sizeMl} ml</p>
-                <p className="text-xs font-bold text-brand-forest mt-1">{inr(line.unitPrice)}</p>
+                <p className="text-xs font-bold text-brand-forest mt-1">{inr(line.unitPrice)} <span className="font-normal text-brand-charcoal/60">+ GST</span></p>
                 {line.available < line.qty && (
                   <p className="text-[11px] text-red-700 mt-1">Only {line.available} left in stock</p>
                 )}

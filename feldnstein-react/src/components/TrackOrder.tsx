@@ -65,7 +65,7 @@ export default function TrackOrder() {
             )}
             <ol className="mt-6 flex flex-col gap-0">
               {(cancelled ? ['CANCELLED'] : [...STEPS]).map((s, i) => {
-                const reached = cancelled || i <= done.length
+                const reached = cancelled || i < done.length
                 const when = order.timeline[s]
                 return (
                   <li key={s} className="flex gap-3">

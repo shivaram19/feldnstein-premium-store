@@ -73,9 +73,17 @@ public class PaymentService {
         Payment p = Payment.findByOrder(order);
         if (p == null) throw new DomainException("no payment found for this order");
         if (p.status() == Payment.Status.PAID) return order; // idempotent
-        gateway().verifyAndCapture(p, paymentId, signature);
+        try {
+            gateway().verifyAndCapture(p, paymentId, signature);
+        } catch (DomainException e) {
+            // a concurrent verify already captured this payment — report success, not an error
+            if (p.status() == Payment.Status.PAID) return order;
+            throw e;
+        }
         if (order.status() == CustomerOrder.Status.PENDING)
             order.markPaid(p.paidAt());
+        else if (order.status() == CustomerOrder.Status.CANCELLED)
+            refund(order); // money captured after cancellation goes straight back
         return order;
     }
 

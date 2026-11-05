@@ -3,6 +3,7 @@ import Reveal from './Reveal'
 import QuickViewModal from './QuickViewModal'
 import AddToCart from './AddToCart'
 import { useContent } from '../context/ContentContext'
+import { inr } from '../api/shopApi'
 
 const DOT_COUNT = 4
 const CARD_WIDTH = 360
@@ -116,7 +117,7 @@ export default function CollectionSection() {
                     <h3 className="font-serif text-lg font-semibold text-brand-forest">{product.name}</h3>
                     <p className="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">{product.desc}</p>
                     <div className="mt-4 flex items-baseline justify-center gap-2">
-                      <span className="font-serif text-xl font-bold text-brand-forest">₹{product.price}</span>
+                      <span className="font-serif text-xl font-bold text-brand-forest">{inr(product.price)}</span>
                       {product.priceRange && <span className="text-xs text-brand-charcoal/50">Range: {product.priceRange}</span>}
                     </div>
                     <div className="mt-4">

@@ -44,10 +44,14 @@ export default function CheckoutView() {
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
 
+  const phoneDigits = form.phone.replace(/\D/g, '')
+  const phoneValid = /^[6-9]\d{9}$/.test(phoneDigits)
+  const phoneError = phoneDigits.length > 0 && !phoneValid
+
   const valid =
     form.customerName.trim().length >= 2 &&
     /.+@.+\..+/.test(form.email) &&
-    form.phone.replace(/\D/g, '').length >= 10 &&
+    phoneValid &&
     form.address.trim().length >= 5 &&
     form.city.trim().length >= 2 &&
     form.state.trim().length >= 2 &&
@@ -80,6 +84,7 @@ export default function CheckoutView() {
     if (!checkout || !lastOrder) return
     setPaying(true)
     setError('')
+    const pendingNotice = `We received your payment but confirmation is taking longer than usual. If this doesn't resolve shortly, contact support quoting order ${checkout.orderCode}.`
     loadRazorpayCheckout().then(loaded => {
       if (!loaded || !window.Razorpay) {
         setPaying(false)
@@ -102,11 +107,27 @@ export default function CheckoutView() {
               setLastOrder(paid)
               setStep('done')
             })
-            .catch((err: unknown) =>
-              setError(err instanceof Error ? err.message : 'Payment verification failed'))
+            .catch(() => {
+              shopApi
+                .track(checkout.orderCode, form.email)
+                .then(order => {
+                  if (order.status === 'PAID') {
+                    setLastOrder(order)
+                    setStep('done')
+                  } else {
+                    setError(pendingNotice)
+                  }
+                })
+                .catch(() => setError(pendingNotice))
+            })
             .finally(() => setPaying(false))
         },
-        modal: { ondismiss: () => setPaying(false) },
+        modal: {
+          ondismiss: () => {
+            setPaying(false)
+            setError(`Payment cancelled — order ${checkout.orderCode} is still pending. You can retry payment below.`)
+          },
+        },
       })
       rzp.open()
     })
@@ -164,11 +185,14 @@ export default function CheckoutView() {
                     value={form[f.key]}
                     onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                   />
+                  {f.key === 'phone' && phoneError && (
+                    <p className="text-xs text-red-700" data-testid="field-phone-error">Enter a valid 10-digit Indian mobile number.</p>
+                  )}
                 </label>
               ))}
               {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-              <button className="btn btn-primary w-full" data-testid="place-order-btn" disabled={!valid || placing}>
-                {placing ? 'Placing order…' : `Place order · ${inr(cart.grandTotal)}`}
+              <button className="btn btn-primary w-full" data-testid="place-order-btn" disabled={!valid || placing || cart.lines.length === 0}>
+                {placing ? 'Placing order…' : cart.lines.length === 0 ? 'Your cart is empty' : `Place order · ${inr(cart.grandTotal)}`}
               </button>
             </form>
           )}
@@ -204,7 +228,7 @@ export default function CheckoutView() {
                 <span>{inr(l.lineTotal)}</span>
               </div>
             ))}
-            {cart.lines.length === 0 && step === 'details' && (
+            {cart.lines.length === 0 && (
               <p className="text-sm text-brand-charcoal/50">Your cart is empty.</p>
             )}
           </div>

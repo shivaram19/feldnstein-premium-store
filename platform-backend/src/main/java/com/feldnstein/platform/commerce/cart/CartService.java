@@ -26,11 +26,12 @@ public class CartService {
     @Inject StockAllocator stock;
     @Inject Pricing pricing;
 
+    @Transactional
     public Cart resolve(String token) {
         if (token == null || token.isBlank()) return null;
         Cart cart = Cart.findByToken(token.trim());
         if (cart != null && cart.expired(Instant.now())) {
-            cart.delete();
+            delete(cart);
             return null;
         }
         return cart;

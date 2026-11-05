@@ -1,5 +1,6 @@
 package com.feldnstein.platform.gaanugu.inventory;
 
+import com.feldnstein.platform.commerce.shared.DomainException;
 import com.feldnstein.platform.gaanugu.settings.Audited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -83,6 +84,9 @@ public class StockService {
         StockLevel sl = StockLevel.findById(req.stockLevelId());
         if (sl == null) return Response.status(404).entity(Map.of("error", "stock level not found")).build();
         if (req.adjustedQty() < 0) return Response.status(400).entity(Map.of("error", "adjustedQty must be >= 0")).build();
+        if (req.adjustedQty() < sl.reserved)
+            throw new DomainException("adjusted qty " + req.adjustedQty() + " is below reserved " + sl.reserved
+                    + " for stock level " + sl.id);
         int delta = req.adjustedQty() - sl.onHand;
         if (delta == 0) return Response.ok(Map.of("delta", 0)).build();
         sl.onHand = req.adjustedQty();

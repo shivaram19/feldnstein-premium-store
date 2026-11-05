@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { inr } from '../api/shopApi'
 import AddToCart from './AddToCart'
 
 export default function QuickViewModal({ product, onClose }) {
@@ -57,7 +58,7 @@ export default function QuickViewModal({ product, onClose }) {
             <h3 id="modalTitle" className="font-serif text-2xl font-bold text-brand-forest">{product?.name || 'Product Name'}</h3>
             <p id="modalDesc" className="text-xs text-brand-subtle mt-2 leading-relaxed">{product?.desc || 'Artisanal single-origin stone churned oil.'}</p>
             <div className="mt-4 flex items-baseline gap-2">
-              <span id="modalPrice" className="font-serif text-3xl font-bold text-brand-forest">₹{product?.price ?? 625}</span>
+              <span id="modalPrice" className="font-serif text-3xl font-bold text-brand-forest">{product?.price != null ? inr(product.price) : '₹625'}</span>
               {product?.mrp && <span id="modalMrp" className="text-xs text-brand-subtle line-through">₹{product.mrp}</span>}
             </div>
             <div className="mt-6 flex flex-col gap-3">

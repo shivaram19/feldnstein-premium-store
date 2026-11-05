@@ -89,6 +89,16 @@ function rememberToken(token: string | undefined): void {
   if (token) localStorage.setItem(TOKEN_KEY, token)
 }
 
+function forgetToken(): void {
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+/** Format a shelf price the way the server charges it: 2dp, half-up, ₹ prefix. */
+export function inr(value: number): string {
+  const rounded = Math.round((Number(value) + Number.EPSILON) * 100) / 100
+  return `₹${rounded.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -108,7 +118,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(message)
   }
   const data = (await res.json()) as Cart & Order & { token?: string }
-  rememberToken(data.token)
+  if (data.token) {
+    rememberToken(data.token)
+  } else if (Array.isArray(data.lines) && data.lines.length === 0) {
+    forgetToken()
+  }
   return data as T
 }
 

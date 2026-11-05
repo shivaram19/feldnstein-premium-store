@@ -3,6 +3,7 @@ package com.feldnstein.platform.commerce.fulfillment;
 import com.feldnstein.platform.commerce.order.CustomerOrder;
 import com.feldnstein.platform.commerce.order.OrderAllocation;
 import com.feldnstein.platform.commerce.order.OrderLine;
+import com.feldnstein.platform.commerce.shared.DomainException;
 import com.feldnstein.platform.gaanugu.catalog.ProductVariant;
 import com.feldnstein.platform.gaanugu.inventory.StockLevel;
 import com.feldnstein.platform.gaanugu.inventory.StockMovement;
@@ -44,6 +45,9 @@ public class StockAllocator {
                     slices.add(OrderAllocation.of(order, sl, take));
                 }
             }
+            if (remaining > 0)
+                throw new DomainException("insufficient stock for " + line.variant().sku
+                        + " (variant " + line.variant().id + "): " + remaining + " units short");
         }
         return slices;
     }

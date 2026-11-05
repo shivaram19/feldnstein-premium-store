@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCart } from '../context/CartContext'
+import { inr } from '../api/shopApi'
 
 interface SizeOption {
   variantId: number
@@ -32,7 +33,7 @@ export default function AddToCart({ product, ghost }: { product: { name: string;
           >
             {priced.map(s => (
               <option key={s.variantId} value={s.variantId}>
-                {s.sizeMl} ml — ₹{Math.round(s.priceInclGst ?? s.price ?? 0)}
+                {s.sizeMl} ml — {inr(s.priceInclGst ?? s.price ?? 0)}
               </option>
             ))}
           </select>
@@ -42,7 +43,7 @@ export default function AddToCart({ product, ghost }: { product: { name: string;
         className={`btn ${ghost ? 'btn-ghost' : 'btn-primary'} w-full quick-add`}
         onClick={() => addToCart(current.variantId, product.name, price, current.sizeMl)}
       >
-        Add to Cart · ₹{Math.round(price)}
+        Add to Cart · {inr(price)}
       </button>
     </div>
   )
