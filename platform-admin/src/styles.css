@@ -183,6 +183,7 @@ table.data tbody tr:hover { background: var(--cream); }
   box-shadow: 0 24px 64px -12px rgba(13, 56, 34, 0.4);
   animation: rise 0.18s ease;
 }
+.modal-wide { width: min(880px, calc(100vw - 40px)); }
 .modal h2 { font-family: var(--serif); font-size: 24px; font-weight: 500; margin: 0 0 4px; }
 .modal .modal-sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }

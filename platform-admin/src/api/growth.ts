@@ -35,12 +35,68 @@ export interface B2BOrderDetail {
 }
 export interface B2BOrderStatusRequest { status: B2BOrderStatus; warehouseId?: number }
 
-/* ---- CRM (ADR-0018): customer-360 read model aggregated by email ---- */
-export interface CrmCustomer {
-  email: string; name?: string
+/* ---- CRM contacts (ADR-0019): contact management + social messaging + follow-up tasks ---- */
+export type CrmStatus = 'LEAD' | 'CONTACTED' | 'QUALIFIED' | 'ACTIVE' | 'INACTIVE' | 'LOST'
+export const CRM_STATUSES: CrmStatus[] = ['LEAD', 'CONTACTED', 'QUALIFIED', 'ACTIVE', 'INACTIVE', 'LOST']
+
+export interface CrmContact {
+  email: string; name?: string; status: CrmStatus
+  tags?: string[]
+  whatsappPhone?: string; whatsappOptIn?: boolean
+  instagramHandle?: string; source?: string
   ordersCount: number; totalSpendPaise: number; points: number
   subscribed: boolean; lastOrderAt?: string
+  openTasks: number; overdueTasks: number
 }
+
+/** Upsert body for POST /g/crm/contacts. */
+export interface CrmContactUpsertRequest {
+  email: string
+  name?: string; phone?: string
+  whatsappPhone?: string; whatsappOptIn?: boolean; whatsappOptInSource?: string
+  instagramHandle?: string; source?: string; tags?: string[]; status?: CrmStatus
+}
+/** Partial update for PATCH /g/crm/contacts/{email} — same fields, email comes from the path. */
+export type CrmContactPatchRequest = Omit<CrmContactUpsertRequest, 'email'> & { email?: string }
+
+export type CrmChannel = 'NOTE' | 'CALL' | 'EMAIL' | 'VISIT' | 'WHATSAPP' | 'INSTAGRAM'
+export type CrmDirection = 'INBOUND' | 'OUTBOUND'
+
+export interface CrmInteraction {
+  id: number
+  channel: CrmChannel; direction: CrmDirection
+  body: string; author?: string; handle?: string
+  createdAt: string
+}
+export interface CrmInteractionRequest {
+  channel: CrmChannel
+  direction?: CrmDirection
+  body: string
+  handle?: string
+}
+
+export interface CrmTask {
+  id: number
+  contactEmail?: string
+  subject: string; dueAt?: string
+  done: boolean; overdue: boolean
+  createdBy?: string
+}
+
+export interface CrmMessageRequest {
+  channel: 'WHATSAPP' | 'INSTAGRAM'
+  email: string
+  text: string
+  templateName?: string
+  templateParams?: Record<string, string>
+}
+export interface CrmMessageResponse {
+  provider: string
+  sessionOpen: boolean
+  interactionId: number
+  providerRef?: string
+}
+
 export interface LoyaltyTransaction {
   type: string; points: number; balanceAfter: number
   reason?: string; createdAt: string
@@ -50,11 +106,42 @@ export interface CrmOrderBrief {
   grandTotalPaise?: number; grandTotal?: number; createdAt?: string
 }
 export interface CrmSubscription { subscribed: boolean; source?: string; createdAt?: string }
-export interface CrmCustomerDetail {
-  profile: { email: string; name?: string; phone?: string; joinedAt?: string }
-  orders: CrmOrderBrief[]
-  loyaltyTransactions: LoyaltyTransaction[]
-  subscription: CrmSubscription
+
+/**
+ * GET /g/crm/contacts/{email} — contact detail. The backend may nest commerce
+ * stats under `stats` or flatten them onto the contact — read both via the
+ * crmStats helper below.
+ */
+export interface CrmContactDetail {
+  email: string; name?: string; phone?: string
+  whatsappPhone?: string; whatsappOptIn?: boolean; whatsappOptInSource?: string
+  instagramHandle?: string; source?: string
+  status: CrmStatus; tags?: string[]
+  ordersCount?: number; totalSpendPaise?: number; points?: number
+  subscribed?: boolean; lastOrderAt?: string
+  stats?: {
+    ordersCount: number; totalSpendPaise: number; points: number
+    subscribed: boolean; lastOrderAt?: string
+  }
+  interactions?: CrmInteraction[]
+  tasks?: CrmTask[]
+  orders?: CrmOrderBrief[]
+  loyaltyTransactions?: LoyaltyTransaction[]
+  subscription?: CrmSubscription
+}
+
+/** Flattened commerce stats for a contact detail, tolerant of nested `stats`. */
+export function crmStats(d: CrmContactDetail): {
+  ordersCount: number; totalSpendPaise: number; points: number
+  subscribed: boolean; lastOrderAt?: string
+} {
+  return {
+    ordersCount: d.ordersCount ?? d.stats?.ordersCount ?? 0,
+    totalSpendPaise: d.totalSpendPaise ?? d.stats?.totalSpendPaise ?? 0,
+    points: d.points ?? d.stats?.points ?? 0,
+    subscribed: d.subscribed ?? d.stats?.subscribed ?? false,
+    lastOrderAt: d.lastOrderAt ?? d.stats?.lastOrderAt,
+  }
 }
 
 /** Growth domain endpoints (ADR-0018) — money fields are paise throughout. */
@@ -73,8 +160,26 @@ export const growth = {
   b2bOrderStatus: (id: number, body: B2BOrderStatusRequest) =>
     api.post<B2BOrderDetail>(`/g/b2b/orders/${id}/status`, body),
 
-  crmCustomers: (q = '') =>
-    api.get<CrmCustomer[]>(`/g/crm/customers${q ? `?q=${encodeURIComponent(q)}` : ''}`),
-  crmCustomer: (email: string) =>
-    api.get<CrmCustomerDetail>(`/g/crm/customers/${encodeURIComponent(email)}`),
+  /* ---- CRM contacts, interactions, tasks, messages (ADR-0019) ---- */
+  crmContacts: (q = '', status = '') => {
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (status) params.set('status', status)
+    const qs = params.toString()
+    return api.get<CrmContact[]>(`/g/crm/contacts${qs ? `?${qs}` : ''}`)
+  },
+  upsertCrmContact: (body: CrmContactUpsertRequest) =>
+    api.post<CrmContact>('/g/crm/contacts', body),
+  patchCrmContact: (email: string, body: CrmContactPatchRequest) =>
+    api.patch<CrmContact>(`/g/crm/contacts/${encodeURIComponent(email)}`, body),
+  crmContactDetail: (email: string) =>
+    api.get<CrmContactDetail>(`/g/crm/contacts/${encodeURIComponent(email)}`),
+  addCrmInteraction: (email: string, body: CrmInteractionRequest) =>
+    api.post<CrmInteraction>(`/g/crm/contacts/${encodeURIComponent(email)}/interactions`, body),
+  crmTasks: () => api.get<CrmTask[]>('/g/crm/tasks?open=true'),
+  createCrmTask: (body: { email: string; subject: string; dueAt?: string }) =>
+    api.post<CrmTask>('/g/crm/tasks', body),
+  completeCrmTask: (id: number) => api.post<CrmTask>(`/g/crm/tasks/${id}/done`),
+  sendCrmMessage: (body: CrmMessageRequest) =>
+    api.post<CrmMessageResponse>('/g/crm/messages', body),
 }

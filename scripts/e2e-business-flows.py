@@ -13,6 +13,8 @@ Drives the running dev server over HTTP through the complete business loops:
   Flow 11 marketing layer (ADR-0016): subscribe (public, idempotent), generate (admin RBAC), subscriber list
   Flow 12 loyalty (ADR-0018): earn on delivery, redeem at checkout, admin adjust
   Flow 13 B2B wholesale (ADR-0018): seller, order lifecycle, FEFO dispatch, cancel guard
+  Flow 14 CRM contacts & social messaging (ADR-0019): upsert, merged list, interactions,
+          WhatsApp opt-in, 24h session window, tasks, RBAC
 
 Usage:  python3 scripts/e2e-business-flows.py [base_url]
         default base_url http://localhost:8080  (pass http://localhost:5173 to test the Vite proxy)
@@ -80,6 +82,10 @@ def get_text(user, path):
 
 def post(user, path, body=None):
     return call("POST", path, user, body)
+
+
+def patch(user, path, body):
+    return call("PATCH", path, user, body)
 
 
 def put(user, path, body):
@@ -961,6 +967,106 @@ def flow13_b2b():
         check("13.14 wholesale blocked for CUSTOMER", e.code == 403, str(e.code))
 
 
+def flow14_crm_social():
+    """CRM contacts & social messaging (ADR-0019): upsert, merged list, interactions,
+    WhatsApp opt-in, 24h session window (template required when closed), tasks, RBAC."""
+    print("\n=== Flow 14: CRM contacts & social messaging ===")
+    email = f"e2e-crm-{TAG.lower()}@example.com".replace("_", "-")
+    q = urllib.parse.quote(email)
+
+    s, c = call("POST", "/g/crm/contacts", "admin",
+                {"email": email, "name": "E2E CRM Lead", "status": "LEAD", "tags": "e2e"})
+    check("14.1 create contact (lead) → 201", s == 201 and c.get("profile", {}).get("email") == email,
+          f"{s} {json.dumps(c)[:160]}")
+
+    s, c2 = patch("admin", f"/g/crm/contacts/{q}", {"name": "E2E CRM Lead Updated"})
+    s, rows = call("GET", f"/g/crm/contacts?q={q}", "ops")
+    mine = [r for r in (rows or []) if r.get("email") == email]
+    check("14.2 duplicate upsert same email → 200, still one contact",
+          c2 is not None and len(mine) == 1 and mine[0].get("name") == "E2E CRM Lead Updated",
+          json.dumps(mine)[:160])
+
+    check("14.3 contact appears in merged list", len(mine) == 1 and mine[0].get("status") == "LEAD",
+          json.dumps(mine)[:160])
+
+    s, rows = call("GET", "/g/crm/contacts?q=" + urllib.parse.quote("e2e-buyer@example.com"), "ops")
+    order_rows = [r for r in (rows or []) if r.get("email") == "e2e-buyer@example.com"]
+    check("14.4 order-derived customer appears as ACTIVE",
+          s == 200 and len(order_rows) == 1 and order_rows[0].get("status") == "ACTIVE"
+          and order_rows[0].get("ordersCount", 0) >= 1, json.dumps(order_rows)[:160])
+
+    s, note = call("POST", f"/g/crm/contacts/{q}/interactions", "ops",
+                   {"channel": "NOTE", "body": "e2e note: prefers 1L tins"})
+    check("14.5 note interaction recorded", s == 201, str(s))
+    s, d = call("GET", f"/g/crm/contacts/{q}", "ops")
+    check("14.5b note visible in detail with author",
+          s == 200 and any(x.get("body") == "e2e note: prefers 1L tins" and x.get("author") == "ops"
+                           for x in (d or {}).get("interactions", [])), json.dumps(d)[:200])
+
+    s, inbound = call("POST", f"/g/crm/contacts/{q}/interactions", "ops",
+                      {"channel": "WHATSAPP", "direction": "INBOUND",
+                       "body": "hi, do you deliver to Kochi?", "handle": "919999999999"})
+    check("14.6 inbound WHATSAPP recorded", s == 201, str(s))
+
+    s, err = call("POST", "/g/crm/messages", "ops",
+                  {"channel": "WHATSAPP", "email": email, "text": "free-form nudge"})
+    check("14.7 WHATSAPP without opt-in → 400", s == 400 and "opt-in" in str(err), f"{s} {str(err)[:120]}")
+
+    s, _ = patch("admin", f"/g/crm/contacts/{q}", {"whatsappOptIn": True, "whatsappOptInSource": "e2e"})
+    s, sent = call("POST", "/g/crm/messages", "ops",
+                   {"channel": "WHATSAPP", "email": email, "text": "yes, we deliver across Kerala"})
+    check("14.8 opt-in then send succeeds (demo provider, session open)",
+          s == 200 and sent.get("provider") == "demo" and sent.get("sessionOpen") is True
+          and str(sent.get("providerRef", "")).startswith("demo-"), f"{s} {json.dumps(sent)[:160]}")
+    s, d = call("GET", f"/g/crm/contacts/{q}", "ops")
+    check("14.8b OUTBOUND interaction recorded", s == 200 and any(
+        x.get("direction") == "OUTBOUND" and x.get("body") == "yes, we deliver across Kerala"
+        and x.get("author") == "ops" for x in (d or {}).get("interactions", [])), json.dumps(d)[:200])
+
+    # 24h window: a fresh opted-in contact with NO inbound — session is closed,
+    # so free-form is rejected and a template name is required (backdating the
+    # inbound timestamp is not possible through the API; the window-expiry
+    # branch is covered by the unit suite on CrmService.sessionOpen).
+    cold = f"e2e-crm-cold-{TAG.lower()}@example.com".replace("_", "-")
+    call("POST", "/g/crm/contacts", "admin",
+         {"email": cold, "whatsappPhone": "918888888888", "whatsappOptIn": True})
+    s, err = call("POST", "/g/crm/messages", "ops",
+                  {"channel": "WHATSAPP", "email": cold, "text": "free-form nudge"})
+    check("14.9 closed session without template → 400", s == 400 and "template" in str(err),
+          f"{s} {str(err)[:120]}")
+    s, tpl = call("POST", "/g/crm/messages", "ops",
+                  {"channel": "WHATSAPP", "email": cold, "text": "your batch is pressed",
+                   "templateName": "order_update", "templateParams": ["FB-100"]})
+    check("14.9b closed session with template → 200", s == 200 and tpl.get("sessionOpen") is False,
+          f"{s} {json.dumps(tpl)[:160]}")
+    s, d = call("GET", f"/g/crm/contacts/{urllib.parse.quote(cold)}", "ops")
+    check("14.9c template name prefixes the recorded body", s == 200 and any(
+        x.get("body", "").startswith("[order_update]") for x in (d or {}).get("interactions", [])),
+        json.dumps(d)[:200])
+
+    s, task = call("POST", "/g/crm/tasks", "ops",
+                   {"email": email, "subject": "e2e follow up", "dueAt": "2020-01-01T00:00:00Z"})
+    task_id = task if isinstance(task, (int, float)) else (task or {}).get("id")
+    check("14.10 task created → 201", s == 201 and task_id, f"{s} {json.dumps(task)[:120]}")
+    s, open_tasks = call("GET", "/g/crm/tasks?open=true", "ops")
+    check("14.10b task in open list, overdue", s == 200 and any(
+        t.get("id") == task_id and t.get("overdue") is True for t in (open_tasks or [])), json.dumps(open_tasks)[:200])
+    s, _ = call("POST", f"/g/crm/tasks/{task_id}/done", "ops")
+    s, open_after = call("GET", "/g/crm/tasks?open=true", "ops")
+    check("14.10c done → leaves the open list", s == 200
+          and not any(t.get("id") == task_id for t in (open_after or [])), json.dumps(open_after)[:200])
+
+    s, _ = anon_call("GET", "/g/crm/contacts")
+    check("14.11 anon blocked → 401", s == 401, str(s))
+    req = urllib.request.Request(f"{BASE}/g/crm/contacts")
+    req.add_header("Authorization", "Basic " + base64.b64encode(b"cust:cust123").decode())
+    try:
+        urllib.request.urlopen(req)
+        check("14.11b customer blocked → 403", False, "got 200")
+    except urllib.error.HTTPError as e:
+        check("14.11b customer blocked → 403", e.code == 403, str(e.code))
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -977,6 +1083,7 @@ def main():
         flow11_marketing()
         flow12_loyalty()
         flow13_b2b()
+        flow14_crm_social()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

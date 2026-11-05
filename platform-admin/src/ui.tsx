@@ -61,12 +61,14 @@ export function Modal({
   sub,
   open,
   onClose,
+  wide,
   children,
 }: {
   title: string
   sub?: string
   open: boolean
   onClose: () => void
+  wide?: boolean
   children: ReactNode
 }) {
   useEffect(() => {
@@ -78,7 +80,7 @@ export function Modal({
   if (!open) return null
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true">
+      <div className={`modal${wide ? ' modal-wide' : ''}`} role="dialog" aria-modal="true">
         <h2>{title}</h2>
         {sub && <p className="modal-sub">{sub}</p>}
         {children}

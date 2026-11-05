@@ -94,6 +94,8 @@ export const api = {
     req<T>(path, { method: 'POST', body: JSON.stringify(body) }),
   update: <T>(path: string, body: unknown) =>
     req<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+  patch: <T>(path: string, body: unknown) =>
+    req<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   post: <T>(path: string, body?: unknown) =>
     req<T>(path, { method: 'POST', body: body !== undefined ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => req<T>(path, { method: 'DELETE' }),

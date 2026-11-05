@@ -247,6 +247,7 @@ const ROLE_MATRIX: { capability: string; admin: boolean; operator: boolean; cust
   { capability: 'Adjust loyalty points (ADR-0018)', admin: true, operator: false, customer: false },
   { capability: 'Manage B2B sellers & wholesale orders (ADR-0018)', admin: true, operator: true, customer: false },
   { capability: 'Send bulk campaigns (ADR-0018)', admin: true, operator: false, customer: false },
+  { capability: 'Manage CRM contacts & social messaging (ADR-0019)', admin: true, operator: true, customer: false },
   { capability: 'View analytics & reports, run/download CSV', admin: true, operator: false, customer: false },
   { capability: 'Edit settings (general, reorder, expiry, bull & press)', admin: true, operator: false, customer: false },
   { capability: 'View audit log', admin: true, operator: false, customer: false },
