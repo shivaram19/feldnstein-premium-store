@@ -29,6 +29,9 @@ public class OilProduct extends PanacheEntity {
     @Column(name = "nutritional_info", length = 2000)
     public String nutritionalInfo;
 
+    @Column(length = 4000)
+    public String description;
+
     @Column(nullable = false)
     public boolean active = true;
 }

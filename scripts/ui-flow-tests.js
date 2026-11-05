@@ -24,6 +24,7 @@ async function newPage(browser) {
 async function login(page, user, pass) {
   await page.goto(ADMIN, { waitUntil: 'networkidle0' })
   await page.evaluate(() => sessionStorage.clear())
+  await page.waitForSelector('input[aria-label="Username"]')
   await page.type('input[aria-label="Username"]', user)
   await page.type('input[aria-label="Password"]', pass)
   await page.click('button.btn-primary')
@@ -367,27 +368,21 @@ async function flowCommerce(browser) {
 const LAUNCH = { executablePath: '/usr/bin/chromium', protocolTimeout: 180000,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--mute-audio', '--single-process', '--force-prefers-reduced-motion'] }
 
-async function main() {
-  let browser = await puppeteer.launch(LAUNCH)
+// Each flow gets a fresh browser: long-lived headless renderers destabilise under
+// memory pressure (observed: 2nd page in a shared browser mounts an empty #root).
+async function runFresh(fn) {
+  const browser = await puppeteer.launch(LAUNCH)
   try {
-    await flowAuth(browser)
-    await flowRbac(browser)
-    await flowBatch(browser)
-    await flowLedger(browser)
-    await flowMedia(browser)
-    await flowContent(browser)
-    await flowStorefront(browser)
-    await flowAnalytics(browser)
+    await fn(browser)
   } finally {
     await browser.close()
   }
-  // commerce flow gets a fresh browser — long-lived headless renderers destabilise on
-  // media-heavy pages under memory pressure
-  browser = await puppeteer.launch(LAUNCH)
-  try {
-    await flowCommerce(browser)
-  } finally {
-    await browser.close()
+}
+
+async function main() {
+  for (const flow of [flowAuth, flowRbac, flowBatch, flowLedger, flowMedia, flowContent,
+                      flowStorefront, flowAnalytics, flowCommerce]) {
+    await runFresh(flow)
   }
   console.log(`\n============================================`)
   console.log(`${passed} passed, ${failures.length} failed`)

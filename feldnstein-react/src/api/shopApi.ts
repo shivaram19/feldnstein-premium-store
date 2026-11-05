@@ -81,6 +81,11 @@ export interface CheckoutDetails {
   pincode: string
 }
 
+export interface SubscribeResult {
+  status: string
+  provider: string
+}
+
 function cartToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -150,5 +155,10 @@ export const shopApi = {
     req<Order>('/shop/orders/lookup', {
       method: 'POST',
       body: JSON.stringify({ orderCode, email }),
+    }),
+  subscribe: (email: string, name?: string) =>
+    req<SubscribeResult>('/shop/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ email, ...(name ? { name } : {}) }),
     }),
 }

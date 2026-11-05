@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Button, Field, Modal, Pill, useToast } from '../ui'
+import { Button, ConfirmModal, Field, Modal, Pill, useToast } from '../ui'
 import { type OilProductRef, gaanugu } from '../api/types'
 import { useList, View } from '../api/list'
+import { providerTone, useAiGenerate } from '../api/marketing'
 
 export function ProductsScreen() {
   const { data, error, loading, reload } = useList<OilProductRef>('/oil-products?size=500')
@@ -31,17 +32,30 @@ export function ProductsScreen() {
 }
 
 function NewOilModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ code: '', name: '', oilSource: 'GROUNDNUT', shelfLifeDays: '365' })
+  const [form, setForm] = useState({ code: '', name: '', oilSource: 'GROUNDNUT', shelfLifeDays: '365', description: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pendingDesc, setPendingDesc] = useState<string | null>(null)
+  const [provider, setProvider] = useState<string | null>(null)
+  const ai = useAiGenerate()
   const valid = form.code.trim() && form.name.trim() && Number(form.shelfLifeDays) > 0
   const submit = async () => {
     setBusy(true); setError(null)
     try {
-      await gaanugu.create('/oil-products?size=500', { code: form.code.trim(), name: form.name.trim(), oilSource: form.oilSource, shelfLifeDays: Number(form.shelfLifeDays), active: true })
-      setForm({ code: '', name: '', oilSource: 'GROUNDNUT', shelfLifeDays: '365' })
+      await gaanugu.create('/oil-products?size=500', { code: form.code.trim(), name: form.name.trim(), oilSource: form.oilSource, shelfLifeDays: Number(form.shelfLifeDays), description: form.description.trim() || null, active: true })
+      setForm({ code: '', name: '', oilSource: 'GROUNDNUT', shelfLifeDays: '365', description: '' })
       onCreated()
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+  const generateDesc = async () => {
+    const res = await ai.run('product-description', {
+      productName: form.name.trim() || undefined,
+      oilType: form.oilSource,
+    })
+    if (!res) return
+    setProvider(res.provider)
+    if (form.description.trim()) setPendingDesc(res.text)
+    else setForm((f) => ({ ...f, description: res.text }))
   }
   return (
     <Modal title="New oil" sub="Master record — variants (SKUs) are added under it." open={open} onClose={onClose}>
@@ -55,11 +69,24 @@ function NewOilModal({ open, onClose, onCreated }: { open: boolean; onClose: () 
         </Field>
         <Field label="Shelf life (days)"><input className="input" type="number" min="1" style={{ width: '100%' }} value={form.shelfLifeDays} onChange={(e) => setForm((f) => ({ ...f, shelfLifeDays: e.target.value }))} /></Field>
       </div>
+      <Field label="Description">
+        <textarea className="input" style={{ width: '100%', minHeight: 90 }} value={form.description} placeholder="Marketing copy for the storefront"
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+      </Field>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+        <Button variant="ghost" small disabled={ai.busy} onClick={generateDesc}>{ai.busy ? 'Generating…' : '✨ Generate with AI'}</Button>
+        {provider && <Pill tone={providerTone(provider)}>{provider}</Pill>}
+      </div>
       {error && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>{error}</p>}
       <div className="modal-actions">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
         <Button variant="gold" disabled={!valid || busy} onClick={submit}>{busy ? 'Saving…' : 'Create oil'}</Button>
       </div>
+      <ConfirmModal open={pendingDesc !== null} title="Replace existing description?"
+        sub="The AI-generated copy will overwrite the description you already typed."
+        confirmLabel="Replace"
+        onClose={() => setPendingDesc(null)}
+        onConfirm={() => { if (pendingDesc !== null) setForm((f) => ({ ...f, description: pendingDesc })); setPendingDesc(null) }} />
     </Modal>
   )
 }

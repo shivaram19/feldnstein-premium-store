@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { Button, Field, LoadingRows, Pill, useToast } from '../ui'
 import { api } from '../api/client'
 import { type OilProduct, gaanugu } from '../api/types'
+import { providerTone, tryParseJson, useAiGenerate } from '../api/marketing'
 
 /* ================= SITE CONTENT ================= */
 const TABS = ['Hero', 'Banner', 'Testimonials', 'Ticker', 'Products'] as const
@@ -94,9 +95,24 @@ function AssetPicker({ label, value, onChange, variant }: {
 function HeroEditor() {
   const { payload, loading, save } = useBlock('hero:main')
   const [form, setForm] = useState({ headline: '', subcopy: '', imageUrl: '' })
+  const [provider, setProvider] = useState<string | null>(null)
+  const ai = useAiGenerate()
+  const toast = useToast()
   useEffect(() => { if (payload) setForm({
     headline: String(payload.headline ?? ''), subcopy: String(payload.subcopy ?? ''), imageUrl: String(payload.imageUrl ?? ''),
   }) }, [payload])
+  const generate = async () => {
+    const res = await ai.run('hero-copy', {})
+    if (!res) return
+    const parsed = tryParseJson(res.text)
+    const o = (Array.isArray(parsed) ? parsed[0] : parsed) as Record<string, unknown> | null
+    if (typeof o?.headline !== 'string') {
+      toast('error', 'The AI response didn’t match the hero-copy shape — try again.')
+      return
+    }
+    setForm((f) => ({ ...f, headline: o.headline as string, subcopy: typeof o.subcopy === 'string' ? o.subcopy : f.subcopy }))
+    setProvider(res.provider)
+  }
   if (loading || !payload) return <LoadingRows cols={3} />
   return (
     <BlockCard title="Homepage hero">
@@ -105,7 +121,11 @@ function HeroEditor() {
       {form.imageUrl && <img src={form.imageUrl} alt="hero preview" style={{ width: '100%', maxWidth: 480, borderRadius: 6, marginBottom: 12 }} />}
       <Field label="Headline"><input className="input" style={{ width: '100%' }} value={form.headline} onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))} /></Field>
       <Field label="Subcopy"><input className="input" style={{ width: '100%' }} value={form.subcopy} onChange={(e) => setForm((f) => ({ ...f, subcopy: e.target.value }))} /></Field>
-      <Button variant="gold" disabled={!form.headline} onClick={() => save({ ...form })}>Save hero</Button>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Button variant="gold" disabled={!form.headline} onClick={() => save({ ...form })}>Save hero</Button>
+        <Button variant="ghost" small disabled={ai.busy} onClick={generate}>{ai.busy ? 'Generating…' : '✨ Generate'}</Button>
+        {provider && <Pill tone={providerTone(provider)}>{provider}</Pill>}
+      </div>
     </BlockCard>
   )
 }
@@ -135,10 +155,29 @@ interface TestimonialItem { quote: string; author: string; location: string }
 function TestimonialsEditor() {
   const { payload, loading, save } = useBlock('testimonials')
   const [items, setItems] = useState<TestimonialItem[]>([])
+  const [provider, setProvider] = useState<string | null>(null)
+  const ai = useAiGenerate()
+  const toast = useToast()
   useEffect(() => { if (payload) setItems((payload.items as TestimonialItem[]) ?? []) }, [payload])
   if (loading || !payload) return <LoadingRows cols={3} />
   const set = (i: number, patch: Partial<TestimonialItem>) =>
     setItems((arr) => arr.map((it, j) => (j === i ? { ...it, ...patch } : it)))
+  const generate = async () => {
+    const res = await ai.run('testimonial', {})
+    if (!res) return
+    const parsed = tryParseJson(res.text)
+    const o = (Array.isArray(parsed) ? parsed[0] : parsed) as Record<string, unknown> | null
+    if (typeof o?.quote !== 'string') {
+      toast('error', 'The AI response didn’t match the testimonial shape — try again.')
+      return
+    }
+    setItems((arr) => [...arr, {
+      quote: o.quote as string,
+      author: typeof o.author === 'string' ? o.author : '',
+      location: typeof o.location === 'string' ? o.location : '',
+    }])
+    setProvider(res.provider)
+  }
   return (
     <BlockCard title="Testimonials">
       {items.map((it, i) => (
@@ -151,9 +190,11 @@ function TestimonialsEditor() {
           <Button variant="ghost" small onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}>Remove</Button>
         </div>
       ))}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Button variant="ghost" small onClick={() => setItems((arr) => [...arr, { quote: '', author: '', location: '' }])}>+ Add testimonial</Button>
         <Button variant="gold" disabled={items.some((i) => !i.quote || !i.author)} onClick={() => save({ items })}>Save testimonials</Button>
+        <Button variant="ghost" small disabled={ai.busy} onClick={generate}>{ai.busy ? 'Generating…' : '✨ Generate'}</Button>
+        {provider && <Pill tone={providerTone(provider)}>{provider}</Pill>}
       </div>
     </BlockCard>
   )
@@ -163,8 +204,28 @@ function TestimonialsEditor() {
 function TickerEditor() {
   const { payload, loading, save } = useBlock('ticker:items')
   const [items, setItems] = useState<string[]>([])
+  const [provider, setProvider] = useState<string | null>(null)
+  const ai = useAiGenerate()
+  const toast = useToast()
   useEffect(() => { if (payload) setItems((payload.items as string[]) ?? []) }, [payload])
   if (loading || !payload) return <LoadingRows cols={2} />
+  const generate = async () => {
+    const res = await ai.run('ticker-lines', {})
+    if (!res) return
+    const parsed = tryParseJson(res.text)
+    const arr = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === 'object'
+        ? (Object.values(parsed as Record<string, unknown>).find(Array.isArray) ?? null)
+        : null
+    const lines = (arr ?? []).filter((x): x is string => typeof x === 'string' && !!x.trim())
+    if (!lines.length) {
+      toast('error', 'The AI response didn’t include any ticker lines — try again.')
+      return
+    }
+    setItems((cur) => [...cur.filter((x) => x.trim()), ...lines])
+    setProvider(res.provider)
+  }
   return (
     <BlockCard title="Ticker headlines">
       {items.map((it, i) => (
@@ -173,9 +234,11 @@ function TickerEditor() {
           <Button variant="ghost" small onClick={() => setItems((arr) => arr.filter((_, j) => j !== i))}>✕</Button>
         </div>
       ))}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Button variant="ghost" small onClick={() => setItems((arr) => [...arr, ''])}>+ Add line</Button>
         <Button variant="gold" disabled={items.some((i) => !i.trim())} onClick={() => save({ items })}>Save ticker</Button>
+        <Button variant="ghost" small disabled={ai.busy} onClick={generate}>{ai.busy ? 'Generating…' : '✨ Generate'}</Button>
+        {provider && <Pill tone={providerTone(provider)}>{provider}</Pill>}
       </div>
     </BlockCard>
   )

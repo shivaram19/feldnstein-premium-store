@@ -10,6 +10,7 @@ Drives the running dev server over HTTP through the complete business loops:
   Flow 5  packaging PO → goods receipt
   Flow 6  reports, schedules, and the RBAC matrix
   Flow 9  media pipeline, content blocks, site endpoints, RBAC
+  Flow 11 marketing layer (ADR-0016): subscribe (public, idempotent), generate (admin RBAC), subscriber list
 
 Usage:  python3 scripts/e2e-business-flows.py [base_url]
         default base_url http://localhost:8080  (pass http://localhost:5173 to test the Vite proxy)
@@ -722,6 +723,41 @@ def flow10_commerce():
           f"reserved {after2['reserved']} (baseline {reserved_before}, level {best['id']}, variant {vid})")
 
 
+def flow11_marketing():
+    """AI marketing layer (ADR-0016): public subscribe, admin generate + subscriber list."""
+    print("\n=== Flow 11: marketing — subscribe, idempotency, RBAC, copy generation ===")
+    email = f"e2e-marketing-{TAG.lower()}@example.com".replace("_", "-")
+
+    s, r = call("POST", "/shop/subscribe", "admin", {"email": email, "name": "E2E Subscriber"})
+    check("11.1 subscribe valid email → 200", s == 200 and r.get("status") == "subscribed", str(s))
+
+    s, r = call("POST", "/shop/subscribe", "admin", {"email": email, "name": "Again"})
+    check("11.2 subscribe same email again → 200 (idempotent)", s == 200, str(s))
+
+    s, r = call("POST", "/shop/subscribe", "admin", {"email": "not-an-email"})
+    check("11.3 subscribe invalid email → 400", s == 400, str(s))
+
+    req = urllib.request.Request(BASE + "/g/marketing/generate", method="POST",
+                                 data=json.dumps({"task": "hero-copy", "context": {}}).encode())
+    req.add_header("Content-Type", "application/json")
+    try:
+        urllib.request.urlopen(req)
+        check("11.4 generate blocked for anonymous", False, "got 200")
+    except urllib.error.HTTPError as e:
+        check("11.4 generate blocked for anonymous", e.code == 401, str(e.code))
+
+    s, r = call("POST", "/g/marketing/generate", "admin",
+                {"task": "hero-copy", "context": {"productName": "Mothadaka Groundnut Oil"}})
+    text = (r or {}).get("text", "")
+    check("11.5 generate hero-copy as admin → 200 with non-empty text",
+          s == 200 and bool(text.strip()), str(s))
+
+    s, r = call("GET", "/g/marketing/subscribers", "admin")
+    rows = (r or {}).get("subscribers", [])
+    check("11.6 subscribers list as admin contains subscribed email",
+          s == 200 and any(row.get("email") == email for row in rows), str(s))
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -735,6 +771,7 @@ def main():
         flow8_rbac_sweep()
         flow9_media_content()
         flow10_commerce()
+        flow11_marketing()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

@@ -20,6 +20,7 @@ import { CountsScreen } from './screens/counts'
 import { MediaScreen } from './screens/media'
 import { SiteContentScreen } from './screens/content'
 import { ReportsScreen } from './screens/reports'
+import { MarketingScreen } from './screens/marketing'
 
 type NavItem = { id: string; label: string; Component: () => ReactElement | null; title: ReactElement; sub: string }
 type NavGroup = { section: string; icon: string; items: NavItem[] }
@@ -143,6 +144,14 @@ const NAV: NavGroup[] = [
     ],
   },
   {
+    section: 'Marketing', icon: '✨',
+    items: [
+      N('g-marketing', 'Marketing', MarketingScreen,
+        <>AI <em>marketing</em></>,
+        'Copy assistant powered by the provider-fallback AI engine, plus newsletter subscribers.'),
+    ],
+  },
+  {
     section: 'Settings', icon: '⚙️',
     items: [
       N('g-settings', 'Settings', SettingsScreen,
@@ -232,7 +241,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 // Role-based nav: the demo realm maps username → role (ADR-0005). OPERATOR gets daily
 // ops but not reports, settings, or audit (matches the settings permissions matrix);
 // the server enforces the same boundaries — this keeps the UI honest about them.
-const ADMIN_ONLY_SECTIONS = new Set(['Reports', 'Settings', 'Audit'])
+const ADMIN_ONLY_SECTIONS = new Set(['Reports', 'Marketing', 'Settings', 'Audit'])
 
 function Shell({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = useState<NavId>('g-dashboard')

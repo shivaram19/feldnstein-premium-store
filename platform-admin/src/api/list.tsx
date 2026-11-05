@@ -6,19 +6,20 @@ import { DataTable, EmptyState, ErrorState, LoadingRows, type Column } from '../
 export const availableUnits = (s: StockLevel, includeOnHold = false): number =>
   s.onHand - s.reserved - (includeOnHold ? (s.onHold ?? 0) : 0)
 
-export function useList<T>(path: string) {
+/** `adapt` unwraps envelope-shaped list responses (e.g. {subscribers, provider}) into rows. */
+export function useList<T, R = T[]>(path: string, adapt?: (raw: R) => T[]) {
   const [data, setData] = useState<T[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const reload = useCallback(() => {
     let cancelled = false
     setLoading(true); setError(null)
-    gaanugu.list<T>(path)
-      .then((rows) => !cancelled && setData(rows))
+    const p: Promise<R | T[]> = adapt ? gaanugu.get<R>(path) : gaanugu.list<T>(path)
+    p.then((raw) => !cancelled && setData(adapt ? adapt(raw as R) : (raw as T[])))
       .catch((e: unknown) => !cancelled && setError(e instanceof Error ? e.message : String(e)))
       .finally(() => !cancelled && setLoading(false))
     return () => { cancelled = true }
-  }, [path])
+  }, [path, adapt])
   useEffect(() => reload(), [reload])
   return { data, error, loading, reload }
 }
