@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Button, Field, Modal, OptionsError, Pill, useToast } from '../ui'
-import { formatINR, formatDay } from '../api/formats'
-import { type ProductVariant, type PriceConfig, gaanugu } from '../api/types'
+import { Button, ConfirmModal, EmptyState, ErrorState, Field, Kpi, LoadingRows, Modal, OptionsError, Pill, useToast } from '../ui'
+import { formatINR, formatDay, formatPaise } from '../api/formats'
+import { type OilProductRef, type ProductVariant, type PriceConfig, gaanugu } from '../api/types'
 import { useList, View } from '../api/list'
+import {
+  economics, type ByproductSale, type EconomicsParams, type EconomicsVariant,
+  type ProductEconomics, type SensitivityRow,
+} from '../api/economics'
+import { PanelTitle } from './shared'
 
 const PRICE_TYPES = ['MRP', 'SELLING', 'COST'] as const
 const priceTone = (t: string) => (t === 'MRP' ? 'forest' : t === 'SELLING' ? 'green' : 'slate') as never
@@ -25,7 +30,7 @@ export function PricesScreen() {
     return cost ? Math.round(((p.amount - cost.amount) / p.amount) * 100) : null
   }
   return (
-    <section>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div className="toolbar">
         <div className="filter-row">
           <Pill tone={typeFilter === 'ALL' ? 'forest' : 'plain'} selected={typeFilter === 'ALL'} onClick={() => setTypeFilter('ALL')}>All</Pill>
@@ -57,6 +62,7 @@ export function PricesScreen() {
             { key: 'notes', label: 'Notes' },
           ] as never} />
       </div>
+      <UnitEconomics priceConfigs={data ?? []} onPricesChanged={reload} />
       <PriceModal open={open} onClose={() => setOpen(false)} onCreated={() => { setOpen(false); toast('success', 'Price set'); reload() }} />
     </section>
   )
@@ -111,5 +117,359 @@ function PriceModal({ open, onClose, onCreated }: { open: boolean; onClose: () =
         <Button variant="gold" disabled={!valid || busy} onClick={submit}>{busy ? 'Saving…' : 'Set price'}</Button>
       </div>
     </Modal>
+  )
+}
+
+/* ================= UNIT ECONOMICS (ADR-0020) ================= */
+
+/** API percentages are fractions (0.46 = 46%) — render ×100 with 1 dp. */
+const pct1 = (v: number | null | undefined): string =>
+  v === null || v === undefined ? '—' : `${(v * 100).toFixed(1)}%`
+
+type ParamKey = keyof EconomicsParams
+type ParamDraft = Record<ParamKey, string>
+
+const PARAM_FIELDS: { key: ParamKey; label: string; step: number; width: number }[] = [
+  { key: 'tripsPerDay', label: 'Pressing trips / day', step: 0.5, width: 130 },
+  { key: 'outputPct', label: 'Oil output % of seed', step: 1, width: 130 },
+  { key: 'rawMaterialKgPerTrip', label: 'Raw material kg / trip', step: 1, width: 140 },
+  { key: 'dailyWages', label: 'Daily wages (₹)', step: 10, width: 130 },
+  { key: 'wageDaysPerYear', label: 'Wage days / yr', step: 1, width: 110 },
+  { key: 'yearlyFodder', label: 'Yearly fodder (₹)', step: 500, width: 140 },
+  { key: 'bottlesPerLitre', label: 'Bottles / litre', step: 0.1, width: 110 },
+  { key: 'bottleCostPaise', label: 'Bottle cost (paise)', step: 10, width: 130 },
+  { key: 'shopAllocationPerYear', label: 'Shop allocation / yr (₹)', step: 500, width: 160 },
+  { key: 'setupCost', label: 'Setup cost (₹)', step: 1000, width: 140 },
+  { key: 'depreciationYears', label: 'Depreciation years', step: 1, width: 120 },
+]
+
+const toDraft = (p: EconomicsParams): ParamDraft => ({
+  tripsPerDay: String(p.tripsPerDay),
+  outputPct: String(p.outputPct),
+  rawMaterialKgPerTrip: String(p.rawMaterialKgPerTrip),
+  materialCostPerKgOverride: p.materialCostPerKgOverride === null ? '' : String(p.materialCostPerKgOverride),
+  dailyWages: String(p.dailyWages),
+  wageDaysPerYear: String(p.wageDaysPerYear),
+  yearlyFodder: String(p.yearlyFodder),
+  bottlesPerLitre: String(p.bottlesPerLitre),
+  bottleCostPaise: String(p.bottleCostPaise),
+  shopAllocationPerYear: String(p.shopAllocationPerYear),
+  setupCost: String(p.setupCost),
+  depreciationYears: String(p.depreciationYears),
+})
+
+const draftValid = (d: ParamDraft): boolean =>
+  (Object.keys(d) as ParamKey[]).every((k) =>
+    k === 'materialCostPerKgOverride' || (d[k] !== '' && !isNaN(Number(d[k]))))
+
+function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceConfig[]; onPricesChanged: () => void }) {
+  const products = useList<OilProductRef>('/oil-products?size=500')
+  const snaps = useList<ProductEconomics>('/economics/products')
+  const toast = useToast()
+  const [productId, setProductId] = useState<number | null>(null)
+  const [draft, setDraft] = useState<ParamDraft | null>(null)
+  const [rule, setRule] = useState<{ target: string; min: string } | null>(null)
+  const [sens, setSens] = useState<SensitivityRow[] | null>(null)
+  const [sensError, setSensError] = useState(false)
+  const [applyFor, setApplyFor] = useState<EconomicsVariant | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (productId === null && snaps.data && snaps.data.length > 0) setProductId(snaps.data[0].productId)
+  }, [productId, snaps.data])
+
+  const snap = snaps.data?.find((s) => s.productId === productId) ?? null
+  const productName = (id: number) => products.data?.find((p) => p.id === id)?.name ?? `Product #${id}`
+
+  useEffect(() => {
+    if (!snap) { setDraft(null); setRule(null); setSens(null); return }
+    setDraft(toDraft(snap.params))
+    setRule(snap.priceRule
+      ? { target: String(snap.priceRule.targetMarginPct * 100), min: String(snap.priceRule.minMarginPct * 100) }
+      : { target: '20', min: '10' })
+  }, [snap])
+
+  useEffect(() => {
+    if (!snap) return
+    setSens(null); setSensError(false)
+    economics.sensitivity(snap.productId).then(setSens).catch(() => setSensError(true))
+  }, [snap])
+
+  const saveParams = async () => {
+    if (!snap || !draft) return
+    setBusy(true)
+    try {
+      await economics.saveParams(snap.productId, {
+        tripsPerDay: Number(draft.tripsPerDay),
+        outputPct: Number(draft.outputPct),
+        rawMaterialKgPerTrip: Number(draft.rawMaterialKgPerTrip),
+        materialCostPerKgOverride: draft.materialCostPerKgOverride === '' ? null : Number(draft.materialCostPerKgOverride),
+        dailyWages: Number(draft.dailyWages),
+        wageDaysPerYear: Number(draft.wageDaysPerYear),
+        yearlyFodder: Number(draft.yearlyFodder),
+        bottlesPerLitre: Number(draft.bottlesPerLitre),
+        bottleCostPaise: Number(draft.bottleCostPaise),
+        shopAllocationPerYear: Number(draft.shopAllocationPerYear),
+        setupCost: Number(draft.setupCost),
+        depreciationYears: Number(draft.depreciationYears),
+      })
+      toast('success', `Economics saved for ${productName(snap.productId)}`)
+      snaps.reload()
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const saveRule = async () => {
+    if (!snap || !rule) return
+    setBusy(true)
+    try {
+      await economics.savePriceRule(snap.productId, {
+        targetMarginPct: Number(rule.target) / 100,
+        minMarginPct: Number(rule.min) / 100,
+      })
+      toast('success', 'Pricing rule saved')
+      snaps.reload()
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const applySuggested = async () => {
+    if (!applyFor || !snap) return
+    setBusy(true)
+    try {
+      const active = priceConfigs.find((c) => c.variant?.id === applyFor.variantId && c.priceType === 'SELLING' && c.active)
+      const amount = Math.round((snap.suggestedPricePaise * applyFor.sizeMl / 100000) * 100) / 100
+      await gaanugu.create('/price-configs?size=500', {
+        variant: { id: applyFor.variantId }, priceType: 'SELLING', amount,
+        gstPct: active?.gstPct ?? 5,
+        effectiveFrom: new Date().toISOString().slice(0, 10), active: true,
+        notes: 'Applied from economics engine suggestion (ADR-0020)',
+      })
+      toast('success', `New selling price set for ${applyFor.sku}`)
+      setApplyFor(null)
+      onPricesChanged()
+      snaps.reload()
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const marginTone = (m: number): 'green' | 'gold' | 'rust' => {
+    const target = snap?.priceRule?.targetMarginPct ?? 0.2
+    const min = snap?.priceRule?.minMarginPct ?? 0.1
+    return m >= target ? 'green' : m >= min ? 'gold' : 'rust'
+  }
+
+  const ruleValid = !!rule && rule.target !== '' && rule.min !== '' && !isNaN(Number(rule.target)) && !isNaN(Number(rule.min))
+
+  return (
+    <div className="card" data-testid="unit-economics">
+      <PanelTitle action={<Button variant="ghost" small onClick={snaps.reload}>Refresh</Button>}>
+        Unit economics &amp; margin rules (ADR-0020)
+      </PanelTitle>
+      <div style={{ padding: '12px 16px 0' }}>
+        <Field label="Oil">
+          <select className="input" style={{ width: 280 }} value={productId ?? ''}
+            onChange={(e) => setProductId(e.target.value === '' ? null : Number(e.target.value))}>
+            <option value="">Select oil…</option>
+            {(products.data ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </Field>
+      </div>
+      {snaps.loading && <LoadingRows cols={4} />}
+      {!snaps.loading && snaps.error && <ErrorState message={snaps.error} onRetry={snaps.reload} />}
+      {!snaps.loading && !snaps.error && productId !== null && !snap && (
+        <EmptyState title={`No economics data for ${productName(productId)} yet.`}
+          hint="The economics engine has not produced a snapshot for this oil — check the backend." />
+      )}
+      {!snaps.loading && !snaps.error && productId === null && (
+        <EmptyState title="No economics snapshots yet." />
+      )}
+      {snap && draft && rule && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px 16px' }}>
+          {/* parameters */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>PARAMETERS</div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <Field label="Material cost ₹/kg (override)">
+                <input className="input" type="number" min="0" step="0.5" style={{ width: 140 }}
+                  value={draft.materialCostPerKgOverride}
+                  onChange={(e) => setDraft((d) => d && { ...d, materialCostPerKgOverride: e.target.value })} />
+              </Field>
+              {PARAM_FIELDS.map((f) => (
+                <Field key={f.key} label={f.label}>
+                  <input className="input" type="number" step={f.step} style={{ width: f.width }}
+                    value={draft[f.key]}
+                    onChange={(e) => setDraft((d) => d && { ...d, [f.key]: e.target.value })} />
+                </Field>
+              ))}
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>
+              {snap.materialSource === 'OVERRIDE'
+                ? 'Manual material-cost override in effect.'
+                : snap.materialCostPerKg !== null
+                  ? `Using procurement avg ${formatINR(snap.materialCostPerKg)}/kg (PROCUREMENT) — clear the override to keep following the feed.`
+                  : 'No material cost available yet — set the override or record procurement.'}
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <Button variant="gold" small disabled={!draftValid(draft) || busy} onClick={saveParams}>
+                {busy ? 'Saving…' : 'Save parameters'}
+              </Button>
+            </div>
+          </div>
+
+          {/* computed panel */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>
+              COMPUTED — {productName(snap.productId)} · {snap.yearlyProductionLitres.toLocaleString('en-IN')} L/yr · computed {formatDay(snap.computedAt)}
+            </div>
+            <div className="kpi-grid">
+              <Kpi label="Absorption /L (incl. setup)" value={formatPaise(snap.absorptionInclSetupPaise)} />
+              <Kpi label="Absorption /L (excl. setup)" value={formatPaise(snap.absorptionExclSetupPaise)} />
+              <Kpi label="Oil-cake credit /L" value={<span style={{ color: 'var(--muted)' }}>{formatPaise(snap.cakeCreditPerLitrePaise)}</span>} />
+              <Kpi dark label="Net cost /L" value={<strong>{formatPaise(snap.netCostPaise)}</strong>} />
+              <Kpi label="Suggested price /L" value={formatPaise(snap.suggestedPricePaise)} />
+              <Kpi label="Floor price /L" value={formatPaise(snap.floorPricePaise)} />
+            </div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 12 }}>
+              <Field label="Target margin %"><input className="input" type="number" min="0" max="95" step="0.5" style={{ width: 110 }}
+                value={rule.target} onChange={(e) => setRule((r) => r && { ...r, target: e.target.value })} /></Field>
+              <Field label="Min margin %"><input className="input" type="number" min="0" max="95" step="0.5" style={{ width: 110 }}
+                value={rule.min} onChange={(e) => setRule((r) => r && { ...r, min: e.target.value })} /></Field>
+              <Button variant="gold" small disabled={!ruleValid || busy} onClick={saveRule}>
+                {busy ? 'Saving…' : 'Save rule'}
+              </Button>
+              {!snap.priceRule && <span style={{ fontSize: 12, color: 'var(--muted)' }}>No rule yet — suggested and floor prices use the defaults above until saved.</span>}
+            </div>
+          </div>
+
+          {/* variants */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>
+              VARIANTS — margin at current prices
+            </div>
+            <View loading={false} error={null} rows={snap.variants as never[] | null}
+              empty="No sellable variants for this oil."
+              onRetry={() => snaps.reload()}
+              rowClass={(v: never) => (v as EconomicsVariant).belowFloor ? 'row-low-stock' : undefined}
+              cols={[
+                { key: 'sku', label: 'SKU', render: (v: EconomicsVariant) => (
+                  <span>{v.sku}{v.belowFloor && <> <Pill tone="rust">Below floor</Pill></>}</span>
+                ) },
+                { key: 'sizeMl', label: 'Size', numeric: true, render: (v: EconomicsVariant) => `${v.sizeMl} ml` },
+                { key: 'activePricePaise', label: 'Current price/L', numeric: true, render: (v: EconomicsVariant) => formatPaise(v.pricePerLitrePaise) },
+                { key: 'marginAtCurrentPct', label: 'Margin', numeric: true, render: (v: EconomicsVariant) => (
+                  <Pill tone={marginTone(v.marginAtCurrentPct)}>{pct1(v.marginAtCurrentPct)}</Pill>
+                ) },
+                { key: 'apply', label: '', render: (v: EconomicsVariant) => (
+                  <Button variant="ghost" small disabled={busy} onClick={() => setApplyFor(v)}>
+                    Apply {formatPaise(snap.suggestedPricePaise)}/L
+                  </Button>
+                ) },
+              ] as never} />
+          </div>
+
+          {/* sensitivity */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>
+              MATERIAL COST SENSITIVITY — margin at current prices
+            </div>
+            {!sens && !sensError && <LoadingRows cols={5} />}
+            {sensError && <p style={{ color: 'var(--rust)', fontSize: 13, fontWeight: 600 }}>Couldn’t load sensitivity — try Refresh.</p>}
+            {sens && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {sens.map((r) => (
+                  <div key={r.materialDeltaPct} style={{
+                    flex: '1 1 120px', minWidth: 120, padding: '10px 12px', borderRadius: 8,
+                    border: `1px solid ${r.materialDeltaPct === 0 ? 'var(--primary)' : 'var(--hairline)'}`,
+                    background: r.materialDeltaPct === 0 ? 'rgba(24, 78, 50, 0.06)' : undefined,
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--muted)', letterSpacing: '0.06em' }}>
+                      {r.materialDeltaPct > 0 ? '+' : ''}{r.materialDeltaPct}% MATERIAL
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: r.marginAtCurrentPricePct < 0 ? 'var(--rust)' : undefined }}>
+                      {pct1(r.marginAtCurrentPricePct)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <ByproductPanel productId={snap.productId} onRecorded={() => snaps.reload()} />
+        </div>
+      )}
+
+      <ConfirmModal open={!!applyFor} busy={busy}
+        title={applyFor ? `Apply ${formatPaise(snap?.suggestedPricePaise ?? 0)}/L to ${applyFor.sku}?` : ''}
+        sub="This creates a new effective-dated SELLING price config at the suggested per-litre price converted to the variant size (GST unchanged). The old config is preserved as history."
+        confirmLabel="Apply suggested price"
+        onClose={() => setApplyFor(null)}
+        onConfirm={applySuggested} />
+    </div>
+  )
+}
+
+/* ================= byproduct (oil cake) sales ================= */
+
+function ByproductPanel({ productId, onRecorded }: { productId: number; onRecorded: () => void }) {
+  const sales = useList<ByproductSale>(`/economics/byproduct-sales?productId=${productId}`)
+  const toast = useToast()
+  const [form, setForm] = useState({ qtyKg: '', pricePerKg: '', buyer: '', soldAt: '' })
+  const [busy, setBusy] = useState(false)
+  const valid = (Number(form.qtyKg) || 0) > 0 && form.pricePerKg !== '' && Number(form.pricePerKg) >= 0
+
+  const submit = async () => {
+    setBusy(true)
+    try {
+      await economics.recordByproductSale({
+        productId,
+        qtyKg: Number(form.qtyKg),
+        pricePerKgPaise: Math.round(Number(form.pricePerKg) * 100),
+        buyer: form.buyer.trim() || undefined,
+        soldAt: form.soldAt || undefined,
+      })
+      toast('success', 'Oil-cake sale recorded')
+      setForm({ qtyKg: '', pricePerKg: '', buyer: '', soldAt: '' })
+      sales.reload()
+      onRecorded()
+    } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
+  }
+
+  const totalPaise = sales.data?.reduce((n, s) => n + s.qtyKg * s.pricePerKgPaise, 0) ?? 0
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>
+        OIL-CAKE (BYPRODUCT) SALES
+      </div>
+      <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--muted)' }}>
+        Oil-cake sale revenue credits against production cost — it lowers the net cost per litre shown above.
+      </p>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
+        <Field label="Qty (kg)"><input className="input" type="number" min="0" step="0.5" style={{ width: 100 }}
+          value={form.qtyKg} onChange={(e) => setForm((f) => ({ ...f, qtyKg: e.target.value }))} /></Field>
+        <Field label="Price ₹/kg"><input className="input" type="number" min="0" step="0.5" style={{ width: 110 }}
+          value={form.pricePerKg} onChange={(e) => setForm((f) => ({ ...f, pricePerKg: e.target.value }))} /></Field>
+        <Field label="Buyer (optional)"><input className="input" style={{ width: 180 }}
+          value={form.buyer} onChange={(e) => setForm((f) => ({ ...f, buyer: e.target.value }))} /></Field>
+        <Field label="Sold on (optional)"><input className="input" type="date" style={{ width: 150 }}
+          value={form.soldAt} onChange={(e) => setForm((f) => ({ ...f, soldAt: e.target.value }))} /></Field>
+        <Button variant="gold" small disabled={!valid || busy} onClick={submit}>
+          {busy ? 'Saving…' : 'Record sale'}
+        </Button>
+      </div>
+      <View loading={sales.loading} error={sales.error} rows={sales.data as never[] | null}
+        empty="No oil-cake sales recorded for this oil."
+        onRetry={sales.reload}
+        cols={[
+          { key: 'qtyKg', label: 'Qty (kg)', numeric: true },
+          { key: 'pricePerKgPaise', label: 'Price/kg', numeric: true, render: (s: ByproductSale) => formatPaise(s.pricePerKgPaise) },
+          { key: 'total', label: 'Total', numeric: true, render: (s: ByproductSale) => formatPaise(s.qtyKg * s.pricePerKgPaise) },
+          { key: 'buyer', label: 'Buyer', render: (s: ByproductSale) => s.buyer || '—' },
+          { key: 'soldAt', label: 'Sold on', render: (s: ByproductSale) => formatDay(s.soldAt) },
+        ] as never} />
+      {sales.data && sales.data.length > 0 && (
+        <p style={{ margin: '8px 0 0', fontSize: 13, fontWeight: 700 }}>
+          Total revenue {formatPaise(totalPaise)}
+        </p>
+      )}
+    </div>
   )
 }
