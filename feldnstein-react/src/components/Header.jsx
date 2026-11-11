@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
+import { assetUrl } from '../api/shopApi'
 import { useScrollSpy } from '../hooks/useScrollSpy'
 
 const NAV_LINKS = [
@@ -87,7 +88,7 @@ export default function Header() {
         >
           <a href="#hero" className="flex items-center gap-2.5 group" aria-label="FELD·N·STEIN home">
             <span className="w-9 h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden border border-brand-forest/15 shadow-sm flex-none transition-transform duration-300 group-hover:scale-105">
-              <img src="/assets/img/logo-green.jpg" alt="" width="40" height="40" className="w-full h-full object-cover" />
+              <img src={assetUrl('/assets/img/logo-green.jpg')} alt="" width="40" height="40" className="w-full h-full object-cover" />
             </span>
             <span className="font-serif text-xl lg:text-2xl font-medium text-brand-forest tracking-[0.12em]">FELD·N·STEIN</span>
           </a>

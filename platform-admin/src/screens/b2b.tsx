@@ -22,17 +22,17 @@ function statusTone(s: string): 'green' | 'rust' | 'gold' | 'forest' | 'slate' {
 }
 
 export function B2BScreen() {
+  const sellers = useList<B2BSeller>('/b2b/sellers')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      <SellersPanel />
-      <OrdersPanel />
+      <SellersPanel sellers={sellers} />
+      <OrdersPanel sellers={sellers.data ?? []} />
     </div>
   )
 }
 
 /* ================= sellers ================= */
-function SellersPanel() {
-  const sellers = useList<B2BSeller>('/b2b/sellers')
+function SellersPanel({ sellers }: { sellers: ReturnType<typeof useList<B2BSeller>> }) {
   const toast = useToast()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ code: '', name: '', contactName: '', phone: '', email: '', gst: '', address: '' })
@@ -106,10 +106,9 @@ function SellersPanel() {
 /* ================= orders ================= */
 interface DraftLine { variantId: string; qty: string; unitPrice: string; gstPct: string }
 
-function OrdersPanel() {
+function OrdersPanel({ sellers }: { sellers: B2BSeller[] }) {
   const [status, setStatus] = useState('')
   const orders = useList<B2BOrderListItem>(`/b2b/orders${status ? `?status=${status}` : ''}`)
-  const sellers = useList<B2BSeller>('/b2b/sellers')
   const warehouses = useList<Warehouse>('/warehouses?size=500')
   const toast = useToast()
   const [newOpen, setNewOpen] = useState(false)
@@ -151,9 +150,11 @@ function OrdersPanel() {
       <button className="linklike" onClick={() => openDetail(o.id)}>{o.orderNo}</button>
     ) },
     { key: 'seller', label: 'Seller', render: (o: B2BOrderListItem) => (
-      <span>{o.sellerName}<br /><small style={{ color: 'var(--muted)' }}>{o.sellerCode}</small></span>
+      <span>{o.seller?.name ?? o.sellerName ?? '—'}<br />
+        <small style={{ color: 'var(--muted)' }}>{o.seller?.code ?? o.sellerCode ?? ''}</small></span>
     ) },
-    { key: 'lineCount', label: 'Lines', numeric: true },
+    { key: 'lineCount', label: 'Lines', numeric: true, render: (o: B2BOrderListItem) =>
+      o.lineCount ?? o.lines?.length ?? '—' },
     { key: 'grandTotalPaise', label: 'Total', numeric: true, render: (o: B2BOrderListItem) => formatPaise(o.grandTotalPaise) },
     { key: 'orderDate', label: 'Ordered', render: (o: B2BOrderListItem) => formatDay(o.orderDate) },
     { key: 'dispatchDate', label: 'Dispatched', render: (o: B2BOrderListItem) => o.dispatchDate ? formatDay(o.dispatchDate) : '—' },
@@ -190,7 +191,7 @@ function OrdersPanel() {
         onRetry={orders.reload} />
 
       <NewOrderModal open={newOpen} onClose={() => setNewOpen(false)}
-        sellers={sellers.data ?? []}
+        sellers={sellers}
         onCreated={() => { setNewOpen(false); orders.reload() }} />
 
       <Modal open={detailId !== null} onClose={() => setDetailId(null)}

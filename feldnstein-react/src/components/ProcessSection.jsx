@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { assetUrl } from '../api/shopApi'
 
 // Steps 01 + 02 both land on the first card (sourcing covers seed prep);
 // 03 -> second, 04 -> third, 05 -> fourth.
@@ -209,7 +210,7 @@ const STEP_CARDS = [
   {
     id: 1,
     num: '01',
-    media: { type: 'img', src: '/assets/img/img-06.jpg', alt: 'Heirloom Seeds Sun-Drying on Guntur Terraces' },
+    media: { type: 'img', src: assetUrl('/assets/img/img-06.jpg'), alt: 'Heirloom Seeds Sun-Drying on Guntur Terraces' },
     phase: 'Phase 01',
     icon: 'solar_power',
     tag: 'Guntur Terraces',
@@ -225,8 +226,8 @@ const STEP_CARDS = [
     num: '02',
     media: {
       type: 'video',
-      src: '/assets/video/process-press.mp4',
-      poster: '/assets/img/img-07.png',
+      src: assetUrl('/assets/video/process-press.mp4'),
+      poster: assetUrl('/assets/img/img-07.png'),
       alt: 'Traditional Monolithic Stone Gaanuga Mill Press',
       aria: 'Bulls circling the traditional stone gaanuga mill press',
     },
@@ -244,7 +245,7 @@ const STEP_CARDS = [
   {
     id: 3,
     num: '03',
-    media: { type: 'img', src: '/assets/img/img-08.jpg', alt: '48-Hour Gravity Sedimentation Settling' },
+    media: { type: 'img', src: assetUrl('/assets/img/img-08.jpg'), alt: '48-Hour Gravity Sedimentation Settling' },
     phase: 'Phase 03',
     icon: 'hourglass_empty',
     tag: '48-Hr Settling',
@@ -260,8 +261,8 @@ const STEP_CARDS = [
     num: '04',
     media: {
       type: 'video',
-      src: '/assets/video/process-pour.mp4',
-      poster: '/assets/img/img-09.jpg',
+      src: assetUrl('/assets/video/process-pour.mp4'),
+      poster: assetUrl('/assets/img/img-09.jpg'),
       alt: 'Amber Glass Apothecary Bottling',
       aria: 'Fresh-pressed golden oil pouring into a steel settling bowl',
     },

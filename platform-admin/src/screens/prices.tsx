@@ -162,6 +162,13 @@ const draftValid = (d: ParamDraft): boolean =>
   (Object.keys(d) as ParamKey[]).every((k) =>
     k === 'materialCostPerKgOverride' || (d[k] !== '' && !isNaN(Number(d[k]))))
 
+/** Blank parameters draft — shown when no economics config exists for the selected oil yet. */
+const EMPTY_DRAFT: ParamDraft = {
+  tripsPerDay: '', outputPct: '', rawMaterialKgPerTrip: '', materialCostPerKgOverride: '',
+  dailyWages: '', wageDaysPerYear: '', yearlyFodder: '', bottlesPerLitre: '',
+  bottleCostPaise: '', shopAllocationPerYear: '', setupCost: '', depreciationYears: '',
+}
+
 function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceConfig[]; onPricesChanged: () => void }) {
   const products = useList<OilProductRef>('/oil-products?size=500')
   const snaps = useList<ProductEconomics>('/economics/products')
@@ -182,12 +189,21 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
   const productName = (id: number) => products.data?.find((p) => p.id === id)?.name ?? `Product #${id}`
 
   useEffect(() => {
-    if (!snap) { setDraft(null); setRule(null); setSens(null); return }
+    if (!snap) {
+      setSens(null)
+      if (productId !== null) {
+        setDraft(EMPTY_DRAFT)
+        setRule({ target: '20', min: '10' })
+      } else {
+        setDraft(null); setRule(null)
+      }
+      return
+    }
     setDraft(toDraft(snap.params))
     setRule(snap.priceRule
       ? { target: String(snap.priceRule.targetMarginPct * 100), min: String(snap.priceRule.minMarginPct * 100) }
       : { target: '20', min: '10' })
-  }, [snap])
+  }, [snap, productId])
 
   useEffect(() => {
     if (!snap) return
@@ -196,10 +212,11 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
   }, [snap])
 
   const saveParams = async () => {
-    if (!snap || !draft) return
+    const pid = snap?.productId ?? productId
+    if (pid === null || !draft) return
     setBusy(true)
     try {
-      await economics.saveParams(snap.productId, {
+      await economics.saveParams(pid, {
         tripsPerDay: Number(draft.tripsPerDay),
         outputPct: Number(draft.outputPct),
         rawMaterialKgPerTrip: Number(draft.rawMaterialKgPerTrip),
@@ -213,7 +230,7 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
         setupCost: Number(draft.setupCost),
         depreciationYears: Number(draft.depreciationYears),
       })
-      toast('success', `Economics saved for ${productName(snap.productId)}`)
+      toast('success', `Economics saved for ${productName(pid)}`)
       snaps.reload()
     } catch (e) { toast('error', e instanceof Error ? e.message : String(e)) } finally { setBusy(false) }
   }
@@ -258,6 +275,40 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
 
   const ruleValid = !!rule && rule.target !== '' && rule.min !== '' && !isNaN(Number(rule.target)) && !isNaN(Number(rule.min))
 
+  const paramsPanel = draft && (
+    <div>
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>PARAMETERS</div>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <Field label="Material cost ₹/kg (override)">
+          <input className="input" type="number" min="0" step="0.5" style={{ width: 140 }}
+            value={draft.materialCostPerKgOverride}
+            onChange={(e) => setDraft((d) => d && { ...d, materialCostPerKgOverride: e.target.value })} />
+        </Field>
+        {PARAM_FIELDS.map((f) => (
+          <Field key={f.key} label={f.label}>
+            <input className="input" type="number" step={f.step} style={{ width: f.width }}
+              value={draft[f.key]}
+              onChange={(e) => setDraft((d) => d && { ...d, [f.key]: e.target.value })} />
+          </Field>
+        ))}
+      </div>
+      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>
+        {snap
+          ? snap.materialSource === 'OVERRIDE'
+            ? 'Manual material-cost override in effect.'
+            : snap.materialCostPerKg !== null
+              ? `Using procurement avg ${formatINR(snap.materialCostPerKg)}/kg (PROCUREMENT) — clear the override to keep following the feed.`
+              : 'No material cost available yet — set the override or record procurement.'
+          : 'No economics configured for this oil — set the parameters and save. The engine computes absorption, suggested and floor prices from them.'}
+      </p>
+      <div style={{ marginTop: 10 }}>
+        <Button variant="gold" small disabled={!draftValid(draft) || busy} onClick={saveParams}>
+          {busy ? 'Saving…' : 'Save parameters'}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="card" data-testid="unit-economics">
       <PanelTitle action={<Button variant="ghost" small onClick={snaps.reload}>Refresh</Button>}>
@@ -275,8 +326,11 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
       {snaps.loading && <LoadingRows cols={4} />}
       {!snaps.loading && snaps.error && <ErrorState message={snaps.error} onRetry={snaps.reload} />}
       {!snaps.loading && !snaps.error && productId !== null && !snap && (
-        <EmptyState title={`No economics data for ${productName(productId)} yet.`}
-          hint="The economics engine has not produced a snapshot for this oil — check the backend." />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px 16px' }}>
+          <EmptyState title={`No economics configured for ${productName(productId)} yet.`}
+            hint="Set the parameters below and save — the engine computes costs, suggested and floor prices from them. Nothing is fabricated until you save." />
+          {paramsPanel}
+        </div>
       )}
       {!snaps.loading && !snaps.error && productId === null && (
         <EmptyState title="No economics snapshots yet." />
@@ -284,35 +338,7 @@ function UnitEconomics({ priceConfigs, onPricesChanged }: { priceConfigs: PriceC
       {snap && draft && rule && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '12px 16px 16px' }}>
           {/* parameters */}
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 8 }}>PARAMETERS</div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <Field label="Material cost ₹/kg (override)">
-                <input className="input" type="number" min="0" step="0.5" style={{ width: 140 }}
-                  value={draft.materialCostPerKgOverride}
-                  onChange={(e) => setDraft((d) => d && { ...d, materialCostPerKgOverride: e.target.value })} />
-              </Field>
-              {PARAM_FIELDS.map((f) => (
-                <Field key={f.key} label={f.label}>
-                  <input className="input" type="number" step={f.step} style={{ width: f.width }}
-                    value={draft[f.key]}
-                    onChange={(e) => setDraft((d) => d && { ...d, [f.key]: e.target.value })} />
-                </Field>
-              ))}
-            </div>
-            <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>
-              {snap.materialSource === 'OVERRIDE'
-                ? 'Manual material-cost override in effect.'
-                : snap.materialCostPerKg !== null
-                  ? `Using procurement avg ${formatINR(snap.materialCostPerKg)}/kg (PROCUREMENT) — clear the override to keep following the feed.`
-                  : 'No material cost available yet — set the override or record procurement.'}
-            </p>
-            <div style={{ marginTop: 10 }}>
-              <Button variant="gold" small disabled={!draftValid(draft) || busy} onClick={saveParams}>
-                {busy ? 'Saving…' : 'Save parameters'}
-              </Button>
-            </div>
-          </div>
+          {paramsPanel}
 
           {/* computed panel */}
           <div>

@@ -18,7 +18,7 @@ export function StockScreen() {
           cols={[
             { key: 'sku', label: 'SKU', render: (s: StockLevel) => s.variant?.sku },
             { key: 'product', label: 'Oil', render: (s: StockLevel) => s.variant?.product?.name },
-            { key: 'batch', label: 'Batch', render: (s: StockLevel) => s.batch?.code ?? '—' },
+            { key: 'batch', label: 'Batch', render: (s: StockLevel) => s.batch?.batchCode ?? s.batch?.code ?? '—' },
             { key: 'warehouse', label: 'Warehouse', render: (s: StockLevel) => s.warehouse?.name },
             { key: 'onHand', label: 'On hand', numeric: true },
             { key: 'reserved', label: 'Reserved', numeric: true },

@@ -3,6 +3,15 @@
 const API_BASE: string = (import.meta.env.VITE_SITE_API as string | undefined) ?? ''
 const TOKEN_KEY = 'feldnstein.cartToken'
 
+/**
+ * Public-folder asset path that survives a non-root Vite base
+ * (GitHub Pages project site, e.g. /feldnstein-premium-store/).
+ * Absolute "/assets/..." strings in JSX are never rewritten by the build.
+ */
+export function assetUrl(path: string): string {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+}
+
 export interface CartLine {
   variantId: number
   sku: string

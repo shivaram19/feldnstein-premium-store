@@ -3,7 +3,7 @@ import { api } from './client'
 /* ---- loyalty (ADR-0018): accounts + admin adjustment ---- */
 export interface LoyaltyAccount {
   id: number; email: string
-  pointsBalance: number; lifetimeEarned: number; lifetimeRedeemed: number
+  balance: number; lifetimeEarned: number; lifetimeRedeemed: number
 }
 export interface LoyaltyAdjustRequest { points: number; reason: string }
 
@@ -17,9 +17,11 @@ export type B2BOrderStatus = 'DRAFT' | 'CONFIRMED' | 'DISPATCHED' | 'DELIVERED' 
 export interface B2BOrderLineInput { variantId: number; qty: number; unitPricePaise: number; gstPct: number }
 export interface CreateB2BOrderRequest { sellerId: number; lines: B2BOrderLineInput[]; notes?: string }
 export interface B2BOrderListItem {
-  id: number; orderNo: string; sellerCode: string; sellerName: string; status: string
+  id: number; orderNo: string; status: string
+  seller?: { id: number; code?: string; name?: string }
+  sellerCode?: string; sellerName?: string
   orderDate: string; dispatchDate?: string; deliveredDate?: string
-  grandTotalPaise: number; lineCount: number
+  grandTotalPaise: number; lineCount?: number; lines?: unknown[]
 }
 export interface B2BOrderLine {
   variantId: number; sku?: string; name?: string
@@ -41,7 +43,7 @@ export const CRM_STATUSES: CrmStatus[] = ['LEAD', 'CONTACTED', 'QUALIFIED', 'ACT
 
 export interface CrmContact {
   email: string; name?: string; status: CrmStatus
-  tags?: string[]
+  tags?: string[] | string
   whatsappPhone?: string; whatsappOptIn?: boolean
   instagramHandle?: string; source?: string
   ordersCount: number; totalSpendPaise: number; points: number
@@ -108,10 +110,17 @@ export interface CrmOrderBrief {
 export interface CrmSubscription { subscribed: boolean; source?: string; createdAt?: string }
 
 /**
- * GET /g/crm/contacts/{email} — contact detail. The backend may nest commerce
- * stats under `stats` or flatten them onto the contact — read both via the
- * crmStats helper below.
+ * GET /g/crm/contacts/{email} — contact detail. The backend nests the profile
+ * fields under `profile` (orders/stats/timelines stay at the top level); older
+ * shapes flatten them or use a `stats` object — read all via the helpers below.
  */
+export interface CrmContactProfile {
+  email?: string; name?: string; phone?: string
+  whatsappPhone?: string; whatsappOptIn?: boolean; whatsappOptInSource?: string
+  instagramHandle?: string; source?: string
+  status?: CrmStatus; tags?: string[] | string
+  ordersCount?: number; totalSpendPaise?: number; points?: number
+}
 export interface CrmContactDetail {
   email: string; name?: string; phone?: string
   whatsappPhone?: string; whatsappOptIn?: boolean; whatsappOptInSource?: string
@@ -119,6 +128,7 @@ export interface CrmContactDetail {
   status: CrmStatus; tags?: string[]
   ordersCount?: number; totalSpendPaise?: number; points?: number
   subscribed?: boolean; lastOrderAt?: string
+  profile?: CrmContactProfile
   stats?: {
     ordersCount: number; totalSpendPaise: number; points: number
     subscribed: boolean; lastOrderAt?: string
@@ -130,17 +140,49 @@ export interface CrmContactDetail {
   subscription?: CrmSubscription
 }
 
-/** Flattened commerce stats for a contact detail, tolerant of nested `stats`. */
+/** Tags arrive as either an array or a comma-separated string — normalize to an array. */
+export function tagsList(tags: string[] | string | undefined | null): string[] {
+  if (Array.isArray(tags)) return tags
+  if (typeof tags === 'string') return tags.split(',').map((t) => t.trim()).filter(Boolean)
+  return []
+}
+
+/** Flattened commerce stats for a contact detail, tolerant of `profile` / `stats` nesting. */
 export function crmStats(d: CrmContactDetail): {
   ordersCount: number; totalSpendPaise: number; points: number
   subscribed: boolean; lastOrderAt?: string
 } {
   return {
-    ordersCount: d.ordersCount ?? d.stats?.ordersCount ?? 0,
-    totalSpendPaise: d.totalSpendPaise ?? d.stats?.totalSpendPaise ?? 0,
-    points: d.points ?? d.stats?.points ?? 0,
-    subscribed: d.subscribed ?? d.stats?.subscribed ?? false,
+    ordersCount: d.ordersCount ?? d.profile?.ordersCount ?? d.stats?.ordersCount ?? 0,
+    totalSpendPaise: d.totalSpendPaise ?? d.profile?.totalSpendPaise ?? d.stats?.totalSpendPaise ?? 0,
+    points: d.points ?? d.profile?.points ?? d.stats?.points ?? 0,
+    subscribed: d.subscribed ?? d.stats?.subscribed ?? d.subscription?.subscribed ?? false,
     lastOrderAt: d.lastOrderAt ?? d.stats?.lastOrderAt,
+  }
+}
+
+/**
+ * Flatten the nested `profile` payload onto the detail so screens can read
+ * fields top-level; tolerant of both shapes. Coerces string tags to an array.
+ */
+export function flattenCrmContactDetail(d: CrmContactDetail): CrmContactDetail {
+  const p = d.profile
+  if (!p) return { ...d, tags: tagsList(d.tags) }
+  return {
+    ...d,
+    email: d.email ?? p.email ?? '',
+    name: d.name ?? p.name,
+    phone: d.phone ?? p.phone,
+    whatsappPhone: d.whatsappPhone ?? p.whatsappPhone,
+    whatsappOptIn: d.whatsappOptIn ?? p.whatsappOptIn,
+    whatsappOptInSource: d.whatsappOptInSource ?? p.whatsappOptInSource,
+    instagramHandle: d.instagramHandle ?? p.instagramHandle,
+    source: d.source ?? p.source,
+    status: d.status ?? p.status ?? 'LEAD',
+    tags: tagsList(d.tags ?? p.tags),
+    ordersCount: d.ordersCount ?? p.ordersCount,
+    totalSpendPaise: d.totalSpendPaise ?? p.totalSpendPaise,
+    points: d.points ?? p.points,
   }
 }
 

@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Button, ConfirmModal, Field, Modal, Pill, useToast } from '../ui'
-import { type OilProductRef, gaanugu } from '../api/types'
+import { type OilProductRef, type ProductVariant, gaanugu } from '../api/types'
 import { useList, View } from '../api/list'
 import { providerTone, useAiGenerate } from '../api/marketing'
 
 export function ProductsScreen() {
   const { data, error, loading, reload } = useList<OilProductRef>('/oil-products?size=500')
+  const variants = useList<ProductVariant>('/product-variants?size=500')
   const [open, setOpen] = useState(false)
   const toast = useToast()
+  const skuCount = (p: OilProductRef) =>
+    variants.data?.filter((v) => v.product?.id === p.id).length ?? p.variants?.length ?? 0
   return (
     <section>
       <div className="toolbar">
@@ -23,7 +26,7 @@ export function ProductsScreen() {
             { key: 'name', label: 'Oil' },
             { key: 'source', label: 'Source', render: (p: OilProductRef) => <Pill tone="plain">{p.oilSource}</Pill> },
             { key: 'shelf', label: 'Shelf life', render: (p: OilProductRef) => `${p.shelfLifeDays} days` },
-            { key: 'variants', label: 'SKUs', render: (p: OilProductRef) => p.variants?.length ?? 0 },
+            { key: 'variants', label: 'SKUs', numeric: true, render: (p: OilProductRef) => variants.loading ? '…' : skuCount(p) },
           ] as never} />
       </div>
       <NewOilModal open={open} onClose={() => setOpen(false)} onCreated={() => { setOpen(false); toast('success', 'Oil created'); reload() }} />

@@ -1,5 +1,6 @@
 package com.feldnstein.platform.gaanugu.settings;
 
+import jakarta.enterprise.util.Nonbinding;
 import jakarta.interceptor.InterceptorBinding;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,5 +12,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Audited {
+    /** Action name recorded in audit_event. Nonbinding: any value must match the interceptor. */
+    @Nonbinding
     String value();
 }

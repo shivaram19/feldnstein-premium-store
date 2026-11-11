@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { products as defaultProducts, categories as defaultCategories } from '../data/products'
-import { inr } from '../api/shopApi'
+import { inr, assetUrl } from '../api/shopApi'
 
 const API_BASE = import.meta.env.VITE_SITE_API ?? ''
 const ContentCtx = createContext(null)
@@ -18,7 +18,13 @@ async function fetchJson(path, timeoutMs = 5000) {
 }
 
 /** Normalize the platform /site/products payload into the storefront product shape. */
-const abs = (u) => (u && !u.startsWith('http') ? API_BASE + u : u)
+/** Backend media refs come as absolute URLs, "/site/media/..." paths, or bare asset keys. */
+const abs = (u) => {
+  if (!u) return undefined
+  if (/^https?:\/\//i.test(u)) return u
+  if (u.startsWith('/')) return API_BASE + u
+  return `${API_BASE}/site/media/file/${u}`
+}
 
 function normalizeProducts(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return defaultProducts
@@ -44,7 +50,7 @@ function normalizeProducts(rows) {
       price: minPrice,
       priceRange: priced.length > 1 ? `${inr(minPrice)} – ${inr(maxPrice)}` : null,
       category: fallback?.category ?? 'staples',
-      img: abs(p.imageUrl) ?? fallback?.img ?? '/assets/img/img-02.jpg',
+      img: abs(p.imageUrl) ?? fallback?.img ?? assetUrl('/assets/img/img-02.jpg'),
       badge: p.badge ?? fallback?.badge ?? '',
       desc: p.shortDesc ?? fallback?.desc ?? '',
       longDesc: p.longDesc ?? fallback?.longDesc ?? undefined,

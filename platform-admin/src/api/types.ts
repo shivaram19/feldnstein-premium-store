@@ -1,7 +1,7 @@
 import { api } from './client'
 
 /* ---- gaanugu domain types (nested entities as returned by rest-data-panache) ---- */
-export interface NamedRef { id: number; name?: string; code?: string }
+export interface NamedRef { id: number; name?: string; code?: string; batchCode?: string }
 
 export interface OilProduct {
   id: number; code: string; name: string; oilSource: string
@@ -75,6 +75,15 @@ export interface PurchaseOrder {
 export interface GoodsReceipt {
   id: number; grnNumber: string; receiptDate: string; deliveryNoteNo?: string
   conditionNote?: string; receivedBy?: string; po?: NamedRef
+  purchaseOrder?: { id: number; poNumber?: string; supplier?: NamedRef }
+}
+export interface PurchaseOrderLine {
+  id: number; itemType: string; spec?: string; quantity: number
+  unitPrice?: number; taxPct?: number; purchaseOrder?: { id: number; poNumber?: string }
+}
+export interface GoodsReceiptLine {
+  id: number; qtyReceived: number; qtyDamaged: number; qtyShort: number
+  goodsReceipt?: { id: number }; poLine?: { id: number }
 }
 export interface AlertRule { id: number; ruleType: string; scopeRef?: string; thresholdValue: number; active: boolean }
 export interface Alert {

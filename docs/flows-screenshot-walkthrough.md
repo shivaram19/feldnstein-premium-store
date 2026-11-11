@@ -49,10 +49,14 @@ step, and verify the expected result. One run = a complete client-demo evidence 
 1. Open Track Order; enter the order code (or registered phone/email). 📸
 2. Verify: timeline shows placed → paid → confirmed status. 📸
 
-### A5. Loyalty (customer)
-1. Log in as `cust/cust123` (or check the loyalty section post-checkout). 📸
-2. Verify: points balance visible; history shows EARN entries for delivered orders
-   (5% of order value) and REDEEM entries when points were used at checkout.
+### A5. Loyalty (customer — via order lookup, there is no standalone customer login)
+1. Complete an order (A3–A4) and have it delivered (admin B12); loyalty earns 5% of
+   order value on DELIVERED.
+2. In Track Order, open the order with the same email + order code — the loyalty
+   balance appears via the order-linked lookup (`GET /loyalty/balance?email&orderCode`).
+   📸 balance + lifetime earned figures.
+3. Alternatively in **admin** (B16) the same account shows balance, lifetime earned and
+   the full transaction ledger.
 
 ---
 

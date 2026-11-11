@@ -34,8 +34,15 @@ function useBlock(key: string) {
   const toast = useToast()
   const load = useCallback(() => {
     setLoading(true)
-    api.get<{ payload: Record<string, unknown> }>(`/g/site-content/${encodeURIComponent(key)}`)
-      .then((b) => setPayload(b.payload ?? {}))
+    api.get<{ payload: unknown }>(`/g/site-content/${encodeURIComponent(key)}`)
+      .then((b) => {
+        // payload may arrive parsed (object) or as a raw JSON string — accept both
+        const raw = b?.payload
+        const parsed = typeof raw === 'string' ? tryParseJson(raw) : raw
+        setPayload(parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+          ? parsed as Record<string, unknown>
+          : {})
+      })
       .catch(() => setPayload({}))
       .finally(() => setLoading(false))
   }, [key])
@@ -122,7 +129,7 @@ function HeroEditor() {
       <Field label="Headline"><input className="input" style={{ width: '100%' }} value={form.headline} onChange={(e) => setForm((f) => ({ ...f, headline: e.target.value }))} /></Field>
       <Field label="Subcopy"><input className="input" style={{ width: '100%' }} value={form.subcopy} onChange={(e) => setForm((f) => ({ ...f, subcopy: e.target.value }))} /></Field>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <Button variant="gold" disabled={!form.headline} onClick={() => save({ ...form })}>Save hero</Button>
+        <Button variant="gold" disabled={!form.headline} onClick={() => save({ ...payload, ...form })}>Save hero</Button>
         <Button variant="ghost" small disabled={ai.busy} onClick={generate}>{ai.busy ? 'Generating…' : '✨ Generate'}</Button>
         {provider && <Pill tone={providerTone(provider)}>{provider}</Pill>}
       </div>
@@ -144,7 +151,7 @@ function BannerEditor() {
         onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))} />
       <Field label="Heading"><input className="input" style={{ width: '100%' }} value={form.heading} onChange={(e) => setForm((f) => ({ ...f, heading: e.target.value }))} /></Field>
       <Field label="Link (optional)"><input className="input" style={{ width: '100%' }} value={form.link} onChange={(e) => setForm((f) => ({ ...f, link: e.target.value }))} placeholder="/#collection" /></Field>
-      <Button variant="gold" disabled={!form.heading} onClick={() => save({ ...form })}>Save banner</Button>
+      <Button variant="gold" disabled={!form.heading} onClick={() => save({ ...payload, ...form })}>Save banner</Button>
     </BlockCard>
   )
 }

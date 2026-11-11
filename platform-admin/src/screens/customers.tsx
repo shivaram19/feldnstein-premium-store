@@ -3,7 +3,7 @@ import { Button, DataTable, Field, Modal, Pill, useToast, type Column, type Pill
 import { formatDate, formatDay, formatINR, formatPaise } from '../api/formats'
 import { useList, View } from '../api/list'
 import {
-  CRM_STATUSES, crmStats, growth,
+  CRM_STATUSES, crmStats, flattenCrmContactDetail, growth, tagsList,
   type CrmChannel, type CrmContact, type CrmContactDetail, type CrmContactPatchRequest,
   type CrmContactUpsertRequest, type CrmInteraction, type CrmOrderBrief,
   type CrmStatus, type CrmTask, type LoyaltyTransaction,
@@ -42,16 +42,20 @@ export function CustomersScreen() {
 
   const reloadDetail = () => {
     if (!email) return
-    growth.crmContactDetail(email).then(setDetail).catch((e: unknown) =>
-      toast('error', e instanceof Error ? e.message : 'Couldn’t load this contact'))
+    growth.crmContactDetail(email)
+      .then((d) => setDetail(flattenCrmContactDetail(d)))
+      .catch((e: unknown) =>
+        toast('error', e instanceof Error ? e.message : 'Couldn’t load this contact'))
   }
 
   const openDetail = (c: CrmContact) => {
     setEmail(c.email); setDetail(null); setEditOpen(false)
-    growth.crmContactDetail(c.email).then(setDetail).catch((e: unknown) => {
-      setEmail(null)
-      toast('error', e instanceof Error ? e.message : 'Couldn’t load this contact')
-    })
+    growth.crmContactDetail(c.email)
+      .then((d) => setDetail(flattenCrmContactDetail(d)))
+      .catch((e: unknown) => {
+        setEmail(null)
+        toast('error', e instanceof Error ? e.message : 'Couldn’t load this contact')
+      })
   }
 
   const closeDetail = () => { setEmail(null); setDetail(null); setEditOpen(false) }
@@ -67,7 +71,9 @@ export function CustomersScreen() {
     { key: 'name', label: 'Name', render: (c: CrmContact) => c.name || '—' },
     { key: 'status', label: 'Status', render: (c: CrmContact) => <Pill tone={statusTone(c.status)}>{c.status}</Pill> },
     { key: 'tags', label: 'Tags', render: (c: CrmContact) =>
-      c.tags?.length ? c.tags.map((t) => <Pill key={t} tone="plain">{t}</Pill>) : '—' },
+      tagsList(c.tags).length
+        ? tagsList(c.tags).map((t) => <Pill key={t} tone="plain">{t}</Pill>)
+        : '—' },
     { key: 'channels', label: 'Channels', render: (c: CrmContact) => (
       <span style={{ display: 'inline-flex', gap: 10, alignItems: 'center' }}>
         <span title={c.whatsappOptIn ? `WhatsApp opted in${c.whatsappPhone ? ` — ${c.whatsappPhone}` : ''}`

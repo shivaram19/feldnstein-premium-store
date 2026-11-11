@@ -21,8 +21,10 @@ export function QualityScreen() {
       <div className="card">
         <View loading={loading} error={error} rows={data as never[] | null} empty="No quality checks recorded." onRetry={reload}
           cols={[
-            { key: 'batch', label: 'Batch', render: (c: QualityCheck) => c.batch?.code },
+            { key: 'batch', label: 'Batch', render: (c: QualityCheck) => c.batch?.batchCode ?? c.batch?.code ?? '—' },
             { key: 'stage', label: 'Stage', render: (c: QualityCheck) => <Pill tone="plain">{c.stage.replace('_', ' ')}</Pill> },
+            { key: 'moisture', label: 'Moisture %', numeric: true, render: (c: QualityCheck) =>
+              c.moisturePct == null ? '—' : `${c.moisturePct}%` },
             { key: 'aflatoxin', label: 'Aflatoxin (ppb)', numeric: true, render: (c: QualityCheck) => c.aflatoxinPpb ?? '—' },
             { key: 'temp', label: 'Oil temp (°C)', numeric: true, render: (c: QualityCheck) =>
               c.oilTempCelsius == null ? '—' :

@@ -3,6 +3,7 @@ import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { useContent } from '../context/ContentContext'
+import { assetUrl } from '../api/shopApi'
 
 // Kinetic typography: split the hero headline into staggered words.
 const HEADLINE = [
@@ -90,8 +91,8 @@ export default function Hero() {
       ) : (
         <AmbientVideo
           className="ambient-video absolute inset-0 w-full h-full object-cover"
-          src="/assets/video/hero-cinematic.mp4"
-          poster="/assets/video/hero-cinematic-poster.jpg"
+          src={assetUrl('/assets/video/hero-cinematic.mp4')}
+          poster={assetUrl('/assets/video/hero-cinematic-poster.jpg')}
           ariaLabel="Bulls circling the traditional gaanuga oil press at the Mothadaka farm"
         />
       )}

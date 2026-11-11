@@ -30,7 +30,7 @@ export function MovementsScreen() {
                 {m.type.endsWith('_IN') ? '+' : '−'}{m.quantity}
               </span> },
             { key: 'referenceId', label: 'Reference' },
-            { key: 'performedBy', label: 'By' },
+            { key: 'performedBy', label: 'By', render: (m: StockMovement) => m.performedBy ?? 'system' },
           ] as never} />
       </div>
     </section>

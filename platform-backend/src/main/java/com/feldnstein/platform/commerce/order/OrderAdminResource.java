@@ -1,5 +1,6 @@
 package com.feldnstein.platform.commerce.order;
 
+import com.feldnstein.platform.gaanugu.settings.Audited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -50,24 +51,28 @@ public class OrderAdminResource {
 
     @POST
     @Path("/{code}/confirm")
+    @Audited("ORDER_CONFIRM")
     public Response confirm(@PathParam("code") String code) {
         return act(code, fulfillment::confirm);
     }
 
     @POST
     @Path("/{code}/ship")
+    @Audited("ORDER_SHIP")
     public Response ship(@PathParam("code") String code) {
         return act(code, fulfillment::ship);
     }
 
     @POST
     @Path("/{code}/deliver")
+    @Audited("ORDER_DELIVER")
     public Response deliver(@PathParam("code") String code) {
         return act(code, fulfillment::deliver);
     }
 
     @POST
     @Path("/{code}/cancel")
+    @Audited("ORDER_CANCEL")
     public Response cancel(@PathParam("code") String code, CancelRequest body) {
         CustomerOrder order = CustomerOrder.findByCode(code);
         if (order == null) return Response.status(404).entity(Map.of("error", "order not found")).build();

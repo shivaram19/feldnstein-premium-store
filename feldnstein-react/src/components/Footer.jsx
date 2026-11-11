@@ -1,6 +1,7 @@
 import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
 import { useCart } from '../context/CartContext'
+import { assetUrl } from '../api/shopApi'
 
 const INFO_CARDS = [
   {
@@ -65,7 +66,7 @@ export default function Footer() {
         <Reveal className="bg-brand-forest rounded-[2.5rem] p-8 sm:p-14 lg:p-16 relative overflow-hidden shadow-xl border border-white/10">
           <AmbientVideo
             className="ambient-video absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none"
-            src="/assets/video/footer-heritage.mp4"
+            src={assetUrl('/assets/video/footer-heritage.mp4')}
             lazy
             aria-hidden="true"
             tabIndex={-1}
@@ -117,7 +118,7 @@ export default function Footer() {
           <div className="lg:col-span-2 flex flex-col items-start pr-4 col-span-2 md:col-span-3 lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-full overflow-hidden border border-white/20 shadow-sm flex-none">
-                <img alt="FELD·N·STEIN bull emblem" className="w-full h-full object-cover" src="/assets/img/logo-green.jpg" width="44" height="44" />
+                <img alt="FELD·N·STEIN bull emblem" className="w-full h-full object-cover" src={assetUrl('/assets/img/logo-green.jpg')} width="44" height="44" />
               </div>
               <span className="font-serif text-2xl font-medium text-white tracking-[0.12em]">FELD·N·STEIN</span>
             </div>

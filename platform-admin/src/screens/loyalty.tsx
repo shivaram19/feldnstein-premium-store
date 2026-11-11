@@ -26,7 +26,7 @@ export function LoyaltyScreen() {
       const updated = await growth.adjustLoyalty(adjust.id, {
         points: Number(points), reason: reason.trim(),
       })
-      toast('success', `${updated.email} — new balance ${updated.pointsBalance} pts`)
+      toast('success', `${updated.email} — new balance ${updated.balance} pts`)
       setAdjust(null)
       accounts.reload()
     } catch (e) {
@@ -38,8 +38,8 @@ export function LoyaltyScreen() {
 
   const cols: Column<never>[] = [
     { key: 'email', label: 'Customer' },
-    { key: 'pointsBalance', label: 'Balance', numeric: true, render: (a: LoyaltyAccount) => (
-      <Pill tone={a.pointsBalance > 0 ? 'forest' : 'plain'}>{a.pointsBalance} pts</Pill>
+    { key: 'balance', label: 'Balance', numeric: true, render: (a: LoyaltyAccount) => (
+      <Pill tone={a.balance > 0 ? 'forest' : 'plain'}>{a.balance} pts</Pill>
     ) },
     { key: 'lifetimeEarned', label: 'Lifetime earned', numeric: true, render: (a: LoyaltyAccount) => a.lifetimeEarned },
     { key: 'lifetimeRedeemed', label: 'Lifetime redeemed', numeric: true, render: (a: LoyaltyAccount) => a.lifetimeRedeemed },
@@ -66,7 +66,7 @@ export function LoyaltyScreen() {
       <Modal open={!!adjust} onClose={() => setAdjust(null)}
         title={adjust ? `Adjust points — ${adjust.email}` : 'Adjust points'}>
         <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)' }}>
-          Current balance {adjust?.pointsBalance ?? 0} pts. Positive points credit the account, negative deduct.
+          Current balance {adjust?.balance ?? 0} pts. Positive points credit the account, negative deduct.
           The adjustment is written to the append-only loyalty ledger.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

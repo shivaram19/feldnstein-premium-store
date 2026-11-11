@@ -24,7 +24,16 @@ public class ReportScheduler {
         LocalDate today = LocalDate.now();
         for (ReportSchedule s : ReportSchedule.<ReportSchedule>list("active", true)) {
             if (s.nextRun != null && !s.nextRun.isAfter(today)) {
-                QuarkusTransaction.requiringNew().run(() -> runSchedule(s));
+                // Re-load inside the new transaction: the list above ran without one, so `s`
+                // is detached and mutating it would never be flushed (nextRun stuck in the
+                // past while report runs pile up every minute).
+                QuarkusTransaction.requiringNew().run(() -> {
+                    ReportSchedule managed = ReportSchedule.findById(s.id);
+                    if (managed != null && managed.active
+                            && managed.nextRun != null && !managed.nextRun.isAfter(today)) {
+                        runSchedule(managed);
+                    }
+                });
             }
         }
     }

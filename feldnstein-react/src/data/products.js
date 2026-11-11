@@ -1,3 +1,5 @@
+import { assetUrl } from '../api/shopApi'
+
 export const products = [
   {
     id: 'groundnut',
@@ -5,7 +7,7 @@ export const products = [
     price: 625,
     priceRange: '₹625 – ₹3,000',
     category: 'staples',
-    img: '/assets/img/img-02.jpg',
+    img: assetUrl('/assets/img/img-02.jpg'),
     badge: 'Single-Origin Harvest',
     desc: 'Cold-pressed from heirloom Saurashtra groundnuts in slow-turning stone Gaanuga.',
   },
@@ -15,7 +17,7 @@ export const products = [
     price: 600,
     priceRange: null,
     category: 'staples therapeutic',
-    img: '/assets/img/img-03.jpg',
+    img: assetUrl('/assets/img/img-03.jpg'),
     badge: 'Sun-Dried Copra',
     desc: 'Extracted from natural sun-dried coastal copra. Solidifies naturally in cold weather.',
   },
@@ -25,7 +27,7 @@ export const products = [
     price: 800,
     priceRange: '₹800 – ₹3,875',
     category: 'therapeutic',
-    img: '/assets/img/img-04.jpg',
+    img: assetUrl('/assets/img/img-04.jpg'),
     badge: 'Ayurvedic Grade',
     desc: 'Crushed slowly from native black sesame seeds with natural palm jaggery binding.',
   },
@@ -35,7 +37,7 @@ export const products = [
     price: 800,
     priceRange: '₹800 – ₹3,875',
     category: 'staples',
-    img: '/assets/img/img-05.jpg',
+    img: assetUrl('/assets/img/img-05.jpg'),
     badge: 'Open Pollinated Seeds',
     desc: 'Light golden cold-pressed oil with high natural Vitamin E and zero synthetic dewaxing.',
   },

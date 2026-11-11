@@ -13,7 +13,7 @@ export default function CartDrawer() {
 
   return (
     <div
-      className={`fixed inset-0 z-[70] transition-opacity ${drawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      className={`fixed inset-0 z-[70] transition-[opacity,visibility] duration-300 ${drawerOpen ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'}`}
       aria-hidden={!drawerOpen}
     >
       <div className="absolute inset-0 bg-brand-forest/50" onClick={() => setDrawerOpen(false)} />

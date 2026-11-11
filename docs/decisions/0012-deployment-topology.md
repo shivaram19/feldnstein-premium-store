@@ -38,3 +38,13 @@ Easier: one push deploys everything; frontend/backend never drift. Harder: two e
 dashboards (Pages settings, Render) need one-time manual setup; demo credentials and CORS
 origins are committed config — must be revisited before any real launch. Deferred: custom
 domain, TLS pinning, image vulnerability scanning, blue/green.
+
+## Amendments
+
+- 2026-11-11: Storefront bugfix — runtime JSX asset paths (`/assets/...`) bypass Vite's base
+  rewriting and 404ed on the Pages subpath; fixed by prefixing them with `import.meta.env.BASE_URL`
+  via an `assetUrl()` helper in `feldnstein-react/src/api/shopApi.ts`, and backend media refs
+  (absolute URL / path / bare asset key) are resolved against `VITE_SITE_API` in
+  `feldnstein-react/src/context/ContentContext.jsx`. Same change set fixed Tailwind's content globs
+  to include `*.tsx` (they only covered js/jsx, so CartDrawer/AddToCart/CheckoutView/TrackOrder
+  classes never generated and the closed cart drawer stayed visible and click-intercepting).
