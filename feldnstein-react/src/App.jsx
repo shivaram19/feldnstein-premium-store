@@ -11,6 +11,7 @@ import Footer from './components/Footer'
 import Toast from './components/Toast'
 import CartDrawer from './components/CartDrawer'
 import CheckoutView from './components/CheckoutView'
+import CartView from './components/CartView'
 import TrackOrder from './components/TrackOrder'
 import { useCart } from './context/CartContext'
 
@@ -29,6 +30,10 @@ export default function App() {
           <CollectionSection />
           <SubscriptionSection />
           <TestimonialsSection />
+        </main>
+      ) : view === 'cart' ? (
+        <main>
+          <CartView />
         </main>
       ) : view === 'checkout' ? (
         <main>

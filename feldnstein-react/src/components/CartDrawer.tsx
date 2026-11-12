@@ -14,7 +14,7 @@ interface SiteProduct {
 
 /** Slide-over cart: line items with thumbnails, quantity steppers, GST math, checkout CTA. */
 export default function CartDrawer() {
-  const { cart, loading, drawerOpen, setDrawerOpen, setQty, removeItem, setView } = useCart()
+  const { cart, loading, drawerOpen, setDrawerOpen, setQty, removeItem, setView, view } = useCart()
   const [images, setImages] = useState<Record<number, string>>({})
 
   useEffect(() => {
@@ -42,7 +42,18 @@ export default function CartDrawer() {
 
   const browseCollection = () => {
     setDrawerOpen(false)
-    document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })
+    const scroll = () => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })
+    if (view !== 'home') {
+      setView('home')
+      requestAnimationFrame(() => requestAnimationFrame(scroll))
+    } else {
+      scroll()
+    }
+  }
+
+  const viewFullCart = () => {
+    setDrawerOpen(false)
+    setView('cart')
   }
 
   return (
@@ -143,7 +154,10 @@ export default function CartDrawer() {
             <button className="btn btn-primary w-full mt-2" data-testid="cart-checkout-btn" onClick={startCheckout}>
               Checkout · {inr(cart.grandTotal)}
             </button>
-            <button className="text-xs text-brand-charcoal/50 hover:text-brand-forest text-center mt-1" onClick={browseCollection}>
+            <button className="text-xs font-semibold text-brand-forest hover:text-brand-ochreDeep text-center mt-1" onClick={viewFullCart}>
+              View full cart
+            </button>
+            <button className="text-xs text-brand-charcoal/50 hover:text-brand-forest text-center" onClick={browseCollection}>
               or continue browsing
             </button>
           </footer>

@@ -22,6 +22,19 @@
 .btn-ghost { background: transparent; color: var(--forest); border: 1.5px solid var(--forest); }
 .btn-ghost:hover { background: var(--forest); color: #fff; }
 
+/* ===== Canonical form controls (ADR-0022) ===== */
+.input { display: block; width: 100%; border: 1px solid var(--hairline); border-radius: 0.75rem;
+  background: #fff; color: var(--charcoal); font-size: 0.9375rem; line-height: 1.4;
+  padding: 0.75rem 1rem; transition: border-color .2s ease, box-shadow .2s ease; }
+.input::placeholder { color: var(--charcoal); opacity: .45; }
+.input:hover { border-color: #d8d2c0; }
+.input:focus { outline: none; border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(197,155,39,.35); }
+.input:disabled { background: var(--warm-card); opacity: .6; cursor: not-allowed; }
+select.input { appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23414942' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
+
 /* ===== Section header (numbered, editorial) ===== */
 .section-head { max-width: 42rem; margin: 0 auto 3rem; text-align: center; }
 .section-label { display: inline-flex; align-items: center; gap: .5rem; font-size: .6875rem;

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { shopApi, type Cart, type Order, type CheckoutDetails } from '../api/shopApi'
 
-export type ShopView = 'home' | 'checkout' | 'track'
+export type ShopView = 'home' | 'cart' | 'checkout' | 'track'
 
 interface CartContextValue {
   toast: { message: string; visible: boolean }

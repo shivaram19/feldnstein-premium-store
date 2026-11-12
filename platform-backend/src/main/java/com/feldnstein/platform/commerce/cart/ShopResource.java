@@ -64,7 +64,11 @@ public class ShopResource {
         if (body.qty() <= 0) return bad("qty must be positive");
         Cart cart = carts.resolve(token);
         if (cart == null) cart = carts.create();
-        String rejected = carts.setItem(cart, body.variantId(), body.qty());
+        // E-commerce convention (ADR-0022): add increments the existing line; absolute set lives on PUT.
+        int current = cart.lines().stream()
+                .filter(i -> i.variant().id.equals(body.variantId()))
+                .mapToInt(i -> i.qty()).sum();
+        String rejected = carts.setItem(cart, body.variantId(), current + body.qty());
         if (rejected != null) return Response.status(400).entity(Map.of("error", rejected)).build();
         Map<String, Object> view = carts.view(cart);
         return Response.status(token == null ? 201 : 200).entity(view).build();

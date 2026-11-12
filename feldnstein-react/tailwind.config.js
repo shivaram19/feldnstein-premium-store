@@ -6,7 +6,7 @@ export default {
       colors: {
         brand: {
           forest: '#184e32', forestDark: '#0d3822', ochre: '#c59b27', ochreDeep: '#b8860b',
-          ivory: '#fcfbf7', warmCard: '#f7f5ee', border: '#e9e5d9',
+          ivory: '#fcfbf7', warmCard: '#f7f5ee', border: '#e9e5d9', cream: '#f7f2e3',
           herb: '#246942', rust: '#bc4747', charcoal: '#222522', subtle: '#414942'
         }
       },

@@ -13,13 +13,28 @@ const NAV_LINKS = [
 const SECTION_IDS = ['collection', 'matrix', 'process', 'subscription']
 
 export default function Header() {
-  const { cart, setDrawerOpen, setView } = useCart()
+  const { cart, setDrawerOpen, setView, view } = useCart()
   const cartItems = cart.itemCount
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuBtnRef = useRef(null)
   const mobileMenuRef = useRef(null)
   const activeId = useScrollSpy(SECTION_IDS)
+
+  // Hash links only exist in the home view's DOM; from track/checkout we switch back first.
+  const goTo = (e, href) => {
+    e.preventDefault()
+    const id = href.slice(1)
+    const scroll = () => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    if (view !== 'home') {
+      setView('home')
+      requestAnimationFrame(() => requestAnimationFrame(scroll))
+    } else {
+      scroll()
+    }
+    window.history.replaceState(null, '', href)
+    closeMenu()
+  }
 
   // Sticky header shrink
   useEffect(() => {
@@ -86,7 +101,7 @@ export default function Header() {
           }`}
           id="headerInner"
         >
-          <a href="#hero" className="flex items-center gap-2.5 group" aria-label="FELD·N·STEIN home">
+          <a href="#hero" className="flex items-center gap-2.5 group" aria-label="FELD·N·STEIN home" onClick={e => goTo(e, '#hero')}>
             <span className="w-9 h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden border border-brand-forest/15 shadow-sm flex-none transition-transform duration-300 group-hover:scale-105">
               <img src={assetUrl('/assets/img/logo-green.jpg')} alt="" width="40" height="40" className="w-full h-full object-cover" />
             </span>
@@ -94,7 +109,7 @@ export default function Header() {
           </a>
           <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold" aria-label="Primary">
             {NAV_LINKS.map(({ href, label }) => (
-              <a key={href} href={href} className={navClass(href)} {...navLinkProps(href)}>
+              <a key={href} href={href} className={navClass(href)} onClick={e => goTo(e, href)} {...navLinkProps(href)}>
                 {label}
               </a>
             ))}
@@ -148,7 +163,7 @@ export default function Header() {
           className={`lg:hidden ${menuOpen ? '' : 'hidden'} pb-4 flex flex-col gap-3 text-sm font-semibold`}
         >
           {NAV_LINKS.map(({ href, label }) => (
-            <a key={href} href={href} className={navClass(href)} onClick={closeMenu} {...navLinkProps(href)}>
+            <a key={href} href={href} className={navClass(href)} onClick={e => goTo(e, href)} {...navLinkProps(href)}>
               {label}
             </a>
           ))}

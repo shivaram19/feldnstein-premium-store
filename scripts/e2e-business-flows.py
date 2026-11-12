@@ -601,6 +601,11 @@ def flow9_media_content():
             if s not in (200, 201, 204):
                 failed.append("9.x cleanup: restore content block")
                 print(f"  FAIL  9.x cleanup: restore content block — PUT {s}")
+        else:  # block did not pre-exist: delete it so the storefront falls back to brand defaults
+            s, _ = call("DELETE", f"/g/site-content/{BLOCK_KEY}", "admin")
+            if s not in (200, 202, 204):
+                failed.append("9.x cleanup: delete content block")
+                print(f"  FAIL  9.x cleanup: delete content block — DELETE {s}")
         if asset_id is not None:  # no-op in the happy path (9.13 already deleted it)
             post("admin", f"/g/media/{asset_id}/unpublish")
             call("DELETE", f"/g/media/{asset_id}", "admin")

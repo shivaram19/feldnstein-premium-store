@@ -53,6 +53,16 @@ public class ContentResource {
         return Response.noContent().build();
     }
 
+    @DELETE @Path("/{key:.+}")
+    @Transactional
+    @com.feldnstein.platform.gaanugu.settings.Audited("CONTENT_UPDATE")
+    public Response deleteBlock(@PathParam("key") String key) {
+        ContentBlock block = blocks.find("blockKey", key).firstResult();
+        if (block == null) throw new NotFoundException("block not found: " + key);
+        block.delete();
+        return Response.noContent().build();
+    }
+
     @GET @Path("/{key:.+}")
     public Map<String, Object> getBlock(@PathParam("key") String key) {
         ContentBlock block = blocks.find("blockKey", key).firstResult();
