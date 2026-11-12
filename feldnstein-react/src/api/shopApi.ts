@@ -189,3 +189,71 @@ export const shopApi = {
       body: JSON.stringify({ email, ...(name ? { name } : {}) }),
     }),
 }
+
+/* ===== Customer identity (ADR-0023) — separate transport: these endpoints return
+   tokens that must never touch the cart-token cache. ===== */
+
+const CUSTOMER_TOKEN_KEY = 'feldnstein.customerToken'
+
+export function customerToken(): string | null {
+  return localStorage.getItem(CUSTOMER_TOKEN_KEY)
+}
+
+export function rememberCustomer(token: string | null): void {
+  if (token) localStorage.setItem(CUSTOMER_TOKEN_KEY, token)
+  else localStorage.removeItem(CUSTOMER_TOKEN_KEY)
+}
+
+export interface MeProfile {
+  email: string
+  name: string | null
+  memberSince: string | null
+  orderCount: number
+  totalSpent: number
+  loyalty: LoyaltyBalance & { lifetimeRedeemed?: number }
+  lastAddress?: {
+    customerName: string
+    phone: string
+    address: string
+    city: string
+    state: string
+    pincode: string
+  }
+}
+
+async function authReq<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  }
+  const token = customerToken()
+  if (token) headers['X-Customer-Token'] = token
+  const res = await fetch(API_BASE + path, { ...init, headers })
+  if (!res.ok) {
+    let message = `request failed (${res.status})`
+    try {
+      const body = await res.json()
+      if (typeof body?.error === 'string') message = body.error
+    } catch {
+      // non-JSON error body
+    }
+    throw new Error(message)
+  }
+  return (await res.json()) as T
+}
+
+export const authApi = {
+  requestMagicLink: (email: string) =>
+    authReq<{ sent: boolean }>('/shop/auth/magic-link', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  verify: (linkToken: string) =>
+    authReq<{ token: string; email: string }>('/shop/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token: linkToken }),
+    }),
+  logout: () => authReq<Record<string, never>>('/shop/auth/logout', { method: 'POST' }),
+  me: () => authReq<MeProfile>('/shop/me'),
+  orders: () => authReq<Order[]>('/shop/me/orders'),
+}

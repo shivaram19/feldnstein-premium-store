@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useCart } from '../context/CartContext'
+import { useCustomer } from '../context/CustomerContext'
 import { shopApi, type CheckoutDetails } from '../api/shopApi'
 
 declare global {
@@ -36,6 +37,7 @@ const FIELDS: { key: keyof CheckoutDetails; label: string; placeholder: string; 
 /** Checkout: address form → demo payment → confirmation with order code. */
 export default function CheckoutView() {
   const { cart, placeOrder, payOrder, lastOrder, setLastOrder, setView, showToast } = useCart()
+  const { customer, profile, requestLink } = useCustomer()
   const [step, setStep] = useState<Step>('details')
   const [form, setForm] = useState<CheckoutDetails>({
     customerName: '', email: '', phone: '', address: '', city: '', state: '', pincode: '',
@@ -44,6 +46,22 @@ export default function CheckoutView() {
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
   const [points, setPoints] = useState('')
+  const [claimSent, setClaimSent] = useState(false)
+
+  // Signed-in repeat buyer: prefill empty fields from the last delivery address
+  useEffect(() => {
+    const last = profile?.lastAddress
+    if (!last) return
+    setForm(prev => ({
+      customerName: prev.customerName || last.customerName,
+      email: prev.email || profile.email,
+      phone: prev.phone || last.phone,
+      address: prev.address || last.address,
+      city: prev.city || last.city,
+      state: prev.state || last.state,
+      pincode: prev.pincode || last.pincode,
+    }))
+  }, [profile])
 
   const phoneDigits = form.phone.replace(/\D/g, '')
   const phoneValid = /^[6-9]\d{9}$/.test(phoneDigits)
@@ -172,6 +190,34 @@ export default function CheckoutView() {
               <p className="text-xs text-brand-charcoal/70" data-testid="loyalty-redeemed">Redeemed {lastOrder.loyalty.redeemed} points</p>
             )}
           </div>
+          {!customer && (
+            <div className="mt-4 bg-brand-cream rounded-xl p-4 text-left" data-testid="claim-card">
+              {!claimSent ? (
+                <>
+                  <p className="text-sm font-bold text-brand-forest">Get a sign-in link for instant tracking & reorder</p>
+                  <p className="text-xs text-brand-charcoal/60 mt-1">
+                    One email — no password. Your order history and loyalty points attach automatically.
+                  </p>
+                  <button
+                    className="btn btn-gold w-full mt-3"
+                    data-testid="claim-send"
+                    onClick={() => {
+                      requestLink(lastOrder.email)
+                        .then(() => setClaimSent(true))
+                        .catch((err: unknown) => showToast(err instanceof Error ? err.message : 'Could not send the link'))
+                    }}
+                  >
+                    Email me a sign-in link
+                  </button>
+                </>
+              ) : (
+                <p className="text-sm text-brand-forest" data-testid="claim-sent">
+                  <span className="material-symbols-outlined text-base align-middle mr-1">mark_email_read</span>
+                  Link sent to <strong>{lastOrder.email}</strong> — open it on this device to sign in.
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex gap-3 mt-6">
             <button className="btn btn-ghost flex-1" onClick={() => setView('track')}>Track order</button>
             <button className="btn btn-primary flex-1" onClick={() => setView('home')}>Continue shopping</button>

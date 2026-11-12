@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { shopApi, type Cart, type Order, type CheckoutDetails } from '../api/shopApi'
 
-export type ShopView = 'home' | 'cart' | 'checkout' | 'track'
+export type ShopView = 'home' | 'cart' | 'checkout' | 'track' | 'account'
 
 interface CartContextValue {
   toast: { message: string; visible: boolean }
@@ -27,8 +27,8 @@ const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, i
 // View ↔ URL hash mapping so cart/checkout/track are real, linkable destinations
 // with working back-button behavior (e-commerce norm). Section anchors (#collection
 // etc.) are left to the home view and never treated as views.
-const HASH_TO_VIEW: Record<string, ShopView> = { cart: 'cart', checkout: 'checkout', track: 'track' }
-const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track' }
+const HASH_TO_VIEW: Record<string, ShopView> = { cart: 'cart', checkout: 'checkout', track: 'track', account: 'account' }
+const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track', account: '#account' }
 
 const viewFromHash = (): ShopView => HASH_TO_VIEW[window.location.hash.slice(1)] ?? 'home'
 

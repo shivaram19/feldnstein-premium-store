@@ -17,4 +17,13 @@ public interface NewsletterGateway {
     default void sendCampaign(String name, String subject, String body, int recipientCount) {
         throw new DomainException("this newsletter provider does not support campaigns");
     }
+
+    /**
+     * Send a single transactional email (magic links, receipts). Providers
+     * without transactional capability may throw; the demo gateway captures
+     * sends so dev/e2e flows can pick the link back up (ADR-0023).
+     */
+    default void sendTransactional(String to, String subject, String body) {
+        throw new DomainException("this newsletter provider does not support transactional mail");
+    }
 }

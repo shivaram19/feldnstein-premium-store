@@ -18,6 +18,8 @@ Drives the running dev server over HTTP through the complete business loops:
   Flow 15 economics (ADR-0020): absorption pricing with variable material cost —
           workbook parameters, procurement feed, price rules, cake credit,
           below-floor variants, sensitivity, RBAC
+  Flow 16 customer auth (ADR-0023): passwordless magic link → session →
+          /shop/me aggregation → single-use enforcement → logout
 
 Usage:  python3 scripts/e2e-business-flows.py [base_url]
         default base_url http://localhost:8080  (pass http://localhost:5173 to test the Vite proxy)
@@ -1172,6 +1174,89 @@ def flow15_economics():
     check("15.7b ops allowed → 200", s == 200, str(s))
 
 
+# --------------------------------------------------------------- Flow 16
+def flow16_customer_auth():
+    """Passwordless customer identity (ADR-0023): magic link → session → /shop/me → logout."""
+    print("\n=== Flow 16: customer auth — magic link, session, me, single-use, logout ===")
+
+    def shop(method, path, body=None, cart_token=None, customer_token=None):
+        url = BASE + path
+        data = json.dumps(body).encode() if body is not None else None
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Content-Type", "application/json")
+        if cart_token:
+            req.add_header("X-Cart-Token", cart_token)
+        if customer_token:
+            req.add_header("X-Customer-Token", customer_token)
+        try:
+            with urllib.request.urlopen(req) as res:
+                raw = res.read().decode()
+                return res.status, (json.loads(raw) if raw else None)
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode()
+            try:
+                return e.code, json.loads(raw)
+            except json.JSONDecodeError:
+                return e.code, {"raw": raw[:200]}
+
+    email = f"e2e-auth-{TAG.lower()}@example.com".lower()
+
+    # place a real order so /shop/me has something to aggregate
+    s, site = shop("GET", "/site/products")
+    vid = site[0]["variants"][0]["id"]
+    s, cart = shop("POST", "/shop/cart/add", {"variantId": vid, "qty": 1})
+    cart_token = cart.get("token")
+    s, order = shop("POST", "/shop/checkout", {
+        "customerName": "E2E Auth Buyer", "email": email, "phone": "9876543210",
+        "address": "12 Press Lane", "city": "Guntur", "state": "Andhra Pradesh", "pincode": "522001",
+    }, cart_token=cart_token)
+    check("16.0 order placed for auth flow", s == 201 and order.get("orderCode"), str(s))
+    s, paid = shop("POST", f"/shop/payments/{order['orderCode']}/demo-pay")
+    check("16.0b order paid", s == 200 and paid.get("status") == "PAID", str(s))
+
+    # me/orders require a session
+    s, _ = shop("GET", "/shop/me")
+    check("16.1 /shop/me without session → 401", s == 401, str(s))
+    s, _ = shop("GET", "/shop/me/orders")
+    check("16.1b /shop/me/orders without session → 401", s == 401, str(s))
+
+    # request a link → dev pickup → verify
+    s, _ = shop("POST", "/shop/auth/magic-link", {"email": email})
+    check("16.2 magic-link accepted → 202", s == 202, str(s))
+    s, bad = shop("POST", "/shop/auth/magic-link", {"email": "not-an-email"})
+    check("16.2b malformed email rejected → 400", s == 400, str(s))
+    s, dev = shop("GET", f"/shop/auth/dev-link?email={urllib.parse.quote(email)}")
+    link_token = dev.get("token") if s == 200 else None
+    check("16.3 dev-link returns pending token", s == 200 and bool(link_token), str(s))
+    s, dev_missing = shop("GET", "/shop/auth/dev-link?email=nobody-%s@example.com" % TAG.lower())
+    check("16.3b dev-link 404 for unknown email", s == 404, str(s))
+
+    s, session = shop("POST", "/shop/auth/verify", {"token": link_token})
+    customer_token = session.get("token") if s == 200 else None
+    check("16.4 verify returns session", s == 200 and bool(customer_token)
+          and session.get("email") == email, str(s))
+
+    # session reads
+    s, me = shop("GET", "/shop/me", customer_token=customer_token)
+    check("16.5 /shop/me aggregates by email", s == 200 and me.get("email") == email
+          and me.get("orderCount", 0) >= 1 and "loyalty" in me
+          and me.get("lastAddress", {}).get("city") == "Guntur", json.dumps(me)[:160])
+    s, orders = shop("GET", "/shop/me/orders", customer_token=customer_token)
+    mine = [o for o in (orders or []) if o.get("orderCode") == order["orderCode"]]
+    check("16.6 /shop/me/orders includes placed order with lines",
+          s == 200 and len(mine) == 1 and len(mine[0].get("lines", [])) == 1, str(s))
+
+    # single use + tamper + logout
+    s, _ = shop("POST", "/shop/auth/verify", {"token": link_token})
+    check("16.7 magic link is single-use → 400", s == 400, str(s))
+    s, _ = shop("POST", "/shop/auth/verify", {"token": link_token + "tamper"})
+    check("16.8 tampered token rejected → 400", s == 400, str(s))
+    s, _ = shop("POST", "/shop/auth/logout", customer_token=customer_token)
+    check("16.9 logout → 204", s == 204, str(s))
+    s, _ = shop("GET", "/shop/me", customer_token=customer_token)
+    check("16.10 session dead after logout → 401", s == 401, str(s))
+
+
 def main():
     print(f"E2E business flows against {BASE}  (tag {TAG})")
     try:
@@ -1190,6 +1275,7 @@ def main():
         flow13_b2b()
         flow14_crm_social()
         flow15_economics()
+        flow16_customer_auth()
     except Exception as e:  # noqa: BLE001 — report and fail the run
         failed.append(f"unhandled: {e}")
         print(f"\n  FAIL  unhandled exception: {e!r}")

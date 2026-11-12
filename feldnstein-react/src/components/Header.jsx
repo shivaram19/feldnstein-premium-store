@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
+import { useCustomer } from '../context/CustomerContext'
 import { assetUrl } from '../api/shopApi'
 import { useScrollSpy } from '../hooks/useScrollSpy'
+import SignInModal from './SignInModal'
 
 const NAV_LINKS = [
   { href: '#collection', label: 'Shop' },
@@ -14,11 +16,15 @@ const SECTION_IDS = ['collection', 'matrix', 'process', 'subscription']
 
 export default function Header() {
   const { cart, setDrawerOpen, setView, view } = useCart()
+  const { customer, signOut } = useCustomer()
   const cartItems = cart.itemCount
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [signInOpen, setSignInOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const menuBtnRef = useRef(null)
   const mobileMenuRef = useRef(null)
+  const accountRef = useRef(null)
   const activeId = useScrollSpy(SECTION_IDS)
 
   // Hash links only exist in the home view's DOM; from track/checkout we switch back first.
@@ -77,6 +83,15 @@ export default function Header() {
     return () => document.removeEventListener('click', onClick)
   }, [menuOpen])
 
+  // Outside click closes the account menu
+  useEffect(() => {
+    const onClick = e => {
+      if (accountOpen && !accountRef.current?.contains(e.target)) setAccountOpen(false)
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [accountOpen])
+
   const navClass = href => {
     const active = `#${activeId}` === href
     return `nav-link transition-colors ${
@@ -115,6 +130,46 @@ export default function Header() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            {customer ? (
+              <div className="relative" ref={accountRef}>
+                <button
+                  className="w-10 h-10 rounded-full bg-brand-forest text-white text-xs font-bold flex items-center justify-center hover:bg-brand-forestDark transition-colors"
+                  aria-label="Account menu"
+                  aria-expanded={accountOpen}
+                  onClick={() => setAccountOpen(open => !open)}
+                >
+                  {(customer.name || customer.email).slice(0, 1).toUpperCase()}
+                </button>
+                {accountOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-brand-border rounded-xl shadow-2xl p-1.5 z-50" role="menu">
+                    <p className="px-3 py-2 text-[11px] text-brand-charcoal/50 truncate border-b border-brand-border mb-1">{customer.email}</p>
+                    <button
+                      className="w-full text-left px-3 py-2 text-sm font-semibold text-brand-forest rounded-lg hover:bg-brand-warmCard"
+                      role="menuitem"
+                      onClick={() => { setAccountOpen(false); setView('account') }}
+                    >
+                      My orders
+                    </button>
+                    <button
+                      className="w-full text-left px-3 py-2 text-sm text-brand-charcoal/70 rounded-lg hover:bg-brand-warmCard"
+                      role="menuitem"
+                      onClick={async () => { setAccountOpen(false); await signOut(); setView('home') }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors"
+                aria-label="Sign in"
+                title="Sign in"
+                onClick={() => setSignInOpen(true)}
+              >
+                <span className="material-symbols-outlined">person</span>
+              </button>
+            )}
             <button
               className="relative w-10 h-10 rounded-full flex items-center justify-center text-brand-forest hover:bg-brand-warmCard transition-colors"
               aria-label="Cart"
@@ -169,6 +224,7 @@ export default function Header() {
           ))}
         </div>
       </div>
+      <SignInModal open={signInOpen} onClose={() => setSignInOpen(false)} />
     </header>
   )
 }

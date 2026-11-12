@@ -22,26 +22,48 @@ export default function AmbientVideo({
       v.pause()
       return
     }
+    // Playback upgrades on first real user interaction (tap/click/key), never at
+    // load or scroll: autoplaying ambient video decodes on the main thread and can
+    // freeze low-memory devices (and India's typical 2–4GB Android). Lazy videos
+    // only fetch their source once both conditions hold — near the viewport AND
+    // after interaction; the poster is the designed visual until then.
+    let interacted = false
+    const start = () => {
+      if (lazy) {
+        const srcEl = v.querySelector('source[data-src]')
+        if (srcEl && !srcEl.src) {
+          srcEl.src = srcEl.dataset.src
+          v.load()
+        }
+      }
+      v.play().catch(() => {})
+    }
+    const onInteract = () => {
+      interacted = true
+      if (!lazy || v.dataset.near === '1') start()
+    }
+    window.addEventListener('pointerdown', onInteract, { capture: true })
+    window.addEventListener('keydown', onInteract, { capture: true })
+    let observer
     if (lazy) {
-      const loader = new IntersectionObserver(
+      observer = new IntersectionObserver(
         entries => {
           entries.forEach(e => {
             if (!e.isIntersecting) return
-            const srcEl = v.querySelector('source[data-src]')
-            if (srcEl) {
-              srcEl.src = srcEl.dataset.src
-              v.load()
-              v.play().catch(() => {})
-            }
-            loader.unobserve(v)
+            v.dataset.near = '1'
+            if (interacted) start()
+            observer.unobserve(v)
           })
         },
         { rootMargin: '300px' }
       )
-      loader.observe(v)
-      return () => loader.disconnect()
+      observer.observe(v)
     }
-    v.play().catch(() => {})
+    return () => {
+      window.removeEventListener('pointerdown', onInteract, true)
+      window.removeEventListener('keydown', onInteract, true)
+      observer?.disconnect()
+    }
   }, [reduced, lazy])
 
   return (
@@ -54,7 +76,7 @@ export default function AmbientVideo({
       playsInline
       preload={lazy ? 'none' : 'metadata'}
       poster={poster}
-      autoPlay={!reduced && !lazy}
+      autoPlay={false}
       aria-label={ariaLabel}
       {...rest}
     >
