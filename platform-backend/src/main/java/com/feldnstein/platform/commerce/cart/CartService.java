@@ -85,6 +85,7 @@ public class CartService {
         l.put("variantId", i.variant().id);
         l.put("sku", i.variant().sku);
         l.put("product", i.variant().product != null ? i.variant().product.name : "");
+        l.put("productId", i.variant().product != null ? i.variant().product.id : null);
         l.put("sizeMl", i.variant().sizeMl);
         l.put("qty", i.qty());
         l.put("unitPrice", i.unitPrice().amount());

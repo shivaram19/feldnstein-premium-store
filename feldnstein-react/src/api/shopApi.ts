@@ -16,6 +16,7 @@ export interface CartLine {
   variantId: number
   sku: string
   product: string
+  productId?: number | null
   sizeMl: number
   qty: number
   unitPrice: number

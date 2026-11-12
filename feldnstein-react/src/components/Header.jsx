@@ -6,8 +6,8 @@ import { useScrollSpy } from '../hooks/useScrollSpy'
 const NAV_LINKS = [
   { href: '#collection', label: 'Shop' },
   { href: '#matrix', label: 'Our Standard' },
-  { href: '#process', label: 'Journal' },
-  { href: '#subscription', label: 'Club' },
+  { href: '#process', label: 'Process' },
+  { href: '#subscription', label: 'Subscribe' },
 ]
 
 const SECTION_IDS = ['collection', 'matrix', 'process', 'subscription']

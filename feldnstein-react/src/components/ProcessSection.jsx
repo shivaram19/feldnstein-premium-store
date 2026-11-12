@@ -1,77 +1,12 @@
-import { useEffect, useRef } from 'react'
 import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { assetUrl } from '../api/shopApi'
 
 // Steps 01 + 02 both land on the first card (sourcing covers seed prep);
 // 03 -> second, 04 -> third, 05 -> fourth.
 const STEP_TARGETS = { 1: 1, 2: 1, 3: 2, 4: 3, 5: 4 }
 
-const LEGS = [
-  { id: 'leg-front-far', x: 15, y: 13, phase: 0 },
-  { id: 'leg-hind-near', x: 55, y: 15, phase: 0 },
-  { id: 'leg-front-near', x: 21, y: 13, phase: Math.PI },
-  { id: 'leg-hind-far', x: 48, y: 15, phase: Math.PI },
-]
-
 function ProcessDiagram() {
-  const orbitRef = useRef(null)
-  const legRefs = useRef({})
-  const reduced = usePrefersReducedMotion()
-
-  const setLegRef = id => el => {
-    legRefs.current[id] = el
-  }
-
-  // Bull-driven ghani: orbit + walking legs (requestAnimationFrame)
-  useEffect(() => {
-    const orbit = orbitRef.current
-    if (!orbit) return
-    const animatedLegs = LEGS.map(leg => ({ ...leg, element: legRefs.current[leg.id] }))
-    if (animatedLegs.some(leg => !leg.element)) return
-
-    const orbitDuration = 20000 // one lap = 3 RPM
-    const walkDuration = 1100 // trot cycle
-    const swingAngle = 22 // forward/backward leg swing
-    const liftHeight = 3.5 // subtle hoof lift in SVG units
-
-    if (reduced) {
-      orbit.setAttribute('transform', 'rotate(0 400 380)')
-      animatedLegs.forEach(leg => leg.element.removeAttribute('transform'))
-      return undefined
-    }
-
-    let startTime = null
-    let frameId = null
-
-    const animate = timestamp => {
-      if (startTime === null) startTime = timestamp
-      const elapsed = timestamp - startTime
-
-      // Bull and wooden beam orbit the press together (counter-clockwise).
-      const angle = (elapsed % orbitDuration) / orbitDuration * 360
-      orbit.setAttribute('transform', `rotate(${-angle} 400 380)`)
-
-      // Animate alternating diagonal pairs so the bull appears to trot.
-      const cycle = elapsed / walkDuration * Math.PI * 2
-      animatedLegs.forEach(leg => {
-        const stride = cycle + leg.phase
-        const swing = Math.sin(stride) * swingAngle
-        const lift = Math.max(0, Math.sin(stride)) * liftHeight
-        leg.element.setAttribute(
-          'transform',
-          `translate(0 ${-lift}) rotate(${swing} ${leg.x} ${leg.y})`
-        )
-      })
-
-      frameId = requestAnimationFrame(animate)
-    }
-
-    frameId = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frameId)
-  }, [reduced])
-
   const goToProcessStep = step => {
     const card = document.getElementById(`process-step-${STEP_TARGETS[step]}`)
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -112,63 +47,6 @@ function ProcessDiagram() {
         <path d="M336 396 A64 46 0 0 0 464 396" fill="#184e32" fillOpacity=".10" stroke="#184e32" strokeWidth="7" strokeLinecap="round" />
         <circle cx="400" cy="380" r="10" fill="#C59B27" stroke="#184e32" strokeWidth="3" />
         <path d="M400 380 L400 324" stroke="#184e32" strokeWidth="12" strokeLinecap="round" />
-      </g>
-      {/* Entire bull + beam orbit around the press, counter-clockwise */}
-      <g id="bull-orbit" ref={orbitRef}>
-        <g transform="translate(400 380) scale(0.85) translate(-400 -380)">
-          {/* Wooden beam: shaft to bull harness */}
-          <path d="M400 380 L400 235" stroke="#6D4527" strokeWidth="14" strokeLinecap="round" fill="none" />
-          <path d="M400 380 L400 235" stroke="#B7834D" strokeWidth="5" strokeLinecap="round" fill="none" />
-          {/* Bull faces along the circular walking direction */}
-          <g id="bull" transform="translate(400 235)">
-            {/* Far hind leg */}
-            <g id="leg-hind-far" ref={setLegRef('leg-hind-far')}>
-              <path d="M43 15 L47 35 L42 53 L49 56 L57 53 L56 34 L53 13 Z" fill="#A87946" stroke="#694222" strokeWidth="2" />
-              <path d="M42 52 L51 52 L54 59 L41 59 Z" fill="#49372A" />
-            </g>
-            {/* Near hind leg */}
-            <g id="leg-hind-near" ref={setLegRef('leg-hind-near')}>
-              <path d="M58 17 L60 37 L66 53 L60 57 L53 52 L51 35 L49 15 Z" fill="#D8BD91" stroke="#694222" strokeWidth="2" />
-              <path d="M54 52 L63 52 L66 59 L54 59 Z" fill="#49372A" />
-            </g>
-            {/* Far front leg */}
-            <g id="leg-front-far" ref={setLegRef('leg-front-far')}>
-              <path d="M10 13 L13 34 L8 52 L15 56 L22 52 L22 33 L20 11 Z" fill="#A87946" stroke="#694222" strokeWidth="2" />
-              <path d="M8 51 L17 51 L20 58 L7 58 Z" fill="#49372A" />
-            </g>
-            {/* Near front leg */}
-            <g id="leg-front-near" ref={setLegRef('leg-front-near')}>
-              <path d="M25 14 L28 34 L31 52 L24 56 L17 52 L17 34 L15 12 Z" fill="#E0C79D" stroke="#694222" strokeWidth="2" />
-              <path d="M19 51 L28 51 L31 58 L18 58 Z" fill="#49372A" />
-            </g>
-            {/* Unified body silhouette */}
-            <path d="M-3 1 C1 -13 15 -20 30 -18 C42 -17 52 -11 64 -8 C78 -4 88 7 86 20 C83 34 70 40 53 37 L18 33 C5 30 -3 17 -3 1 Z" fill="#C9A779" stroke="#694222" strokeWidth="2" />
-            {/* Zebu shoulder hump */}
-            <path d="M-2 9 C-13 -3 -7 -23 7 -28 C20 -32 30 -19 29 -6 L19 17 Z" fill="#A87946" stroke="#694222" strokeWidth="2" />
-            {/* Neck */}
-            <path d="M-4 -9 C-14 -18 -13 -34 -3 -42 C8 -49 22 -39 24 -27 L17 -6 L8 7 Z" fill="#D8BD91" stroke="#694222" strokeWidth="2" />
-            {/* Head */}
-            <path d="M-6 -36 C-19 -40 -24 -51 -16 -59 L-1 -63 L13 -55 L15 -43 L6 -33 Z" fill="#D8BD91" stroke="#694222" strokeWidth="2" />
-            {/* Muzzle */}
-            <path d="M-19 -51 Q-30 -54 -29 -44 Q-26 -34 -13 -37 L-5 -43 L-8 -51 Z" fill="#8B5A2B" stroke="#694222" strokeWidth="1.5" />
-            {/* Horns */}
-            <path d="M-14 -57 Q-29 -69 -23 -76 Q-12 -69 -7 -57 Z" fill="#F5EBDC" stroke="#694222" strokeWidth="1.5" />
-            <path d="M4 -59 Q18 -73 14 -78 Q3 -70 -2 -59 Z" fill="#F5EBDC" stroke="#694222" strokeWidth="1.5" />
-            {/* Ear and eye */}
-            <path d="M-9 -44 Q-27 -49 -24 -39 L-10 -34 Z" fill="#A87946" stroke="#694222" strokeWidth="1.5" />
-            <circle cx="-13" cy="-48" r="2.2" fill="#184E32" />
-            <circle cx="-13" cy="-48" r=".8" fill="#FFFFFF" />
-            {/* Tail */}
-            <path d="M78 7 Q99 13 91 30" fill="none" stroke="#694222" strokeWidth="3" strokeLinecap="round" />
-            <path d="M91 29 Q84 36 92 40 Q99 34 91 29 Z" fill="#49372A" />
-            {/* Harness around shoulder, attached at the beam origin */}
-            <path d="M-1 -5 Q-3 8 5 19" fill="none" stroke="#694222" strokeWidth="7" strokeLinecap="round" />
-            <path d="M-3 0 L5 3" fill="none" stroke="#E0BD83" strokeWidth="2" />
-            {/* Harness attachment */}
-            <circle cx="0" cy="0" r="8" fill="#8B5A2B" stroke="#694222" strokeWidth="2" />
-            <circle cx="0" cy="0" r="3" fill="#E5C58C" />
-          </g>
-        </g>
       </g>
       <text x="400" y="462" textAnchor="middle" fontFamily="Newsreader, Georgia, serif" fontSize="18" fontWeight="600" fill="#184e32" stroke="#ffffff" strokeWidth="6" paintOrder="stroke">Bull Pressed</text>
       <text x="400" y="482" textAnchor="middle" fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="10" letterSpacing="2.5" fill="#717972" stroke="#ffffff" strokeWidth="5" paintOrder="stroke">3 RPM · STONE CHURN</text>
