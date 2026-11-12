@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { inr } from '../api/shopApi'
 import AddToCart from './AddToCart'
 
@@ -6,6 +6,16 @@ export default function QuickViewModal({ product, onClose }) {
   const closeBtnRef = useRef(null)
   const triggerRef = useRef(null)
   const open = product !== null
+  const [chosenVariant, setChosenVariant] = useState(null)
+
+  // Reset the size selection whenever a different product opens
+  useEffect(() => setChosenVariant(null), [product])
+
+  // Big price tracks the selected size (falls back to the first priced variant,
+  // the same default AddToCart uses)
+  const priced = (product?.sizes ?? []).filter(s => s.priceInclGst != null || s.price != null)
+  const shown = priced.find(s => s.variantId === chosenVariant) ?? priced[0]
+  const shownPrice = shown ? (shown.priceInclGst ?? shown.price) : product?.price
 
   // Lock body scroll, focus the close button, handle Escape
   useEffect(() => {
@@ -58,14 +68,17 @@ export default function QuickViewModal({ product, onClose }) {
             <h3 id="modalTitle" className="font-serif text-2xl font-bold text-brand-forest">{product?.name || 'Product Name'}</h3>
             <p id="modalDesc" className="text-xs text-brand-subtle mt-2 leading-relaxed">{product?.desc || 'Artisanal single-origin stone churned oil.'}</p>
             <div className="mt-4 flex items-baseline gap-2">
-              <span id="modalPrice" className="font-serif text-3xl font-bold text-brand-forest">{product?.price != null ? inr(product.price) : '₹625'}</span>
+              <span id="modalPrice" className="font-serif text-3xl font-bold text-brand-forest">{shownPrice != null ? inr(shownPrice) : '—'}</span>
               {product?.mrp && <span id="modalMrp" className="text-xs text-brand-subtle line-through">₹{product.mrp}</span>}
             </div>
             <div className="mt-6 flex flex-col gap-3">
               {product && (
-                <div onClick={close}>
-                  <AddToCart product={product} />
-                </div>
+                <AddToCart
+                  product={product}
+                  chosen={chosenVariant ?? undefined}
+                  onChosenChange={setChosenVariant}
+                  onAdded={close}
+                />
               )}
             </div>
           </div>
