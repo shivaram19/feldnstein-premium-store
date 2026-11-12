@@ -5,13 +5,15 @@ import AddToCart from './AddToCart'
 import { useContent } from '../context/ContentContext'
 import { inr } from '../api/shopApi'
 
-const DOT_COUNT = 4
 const CARD_WIDTH = 360
 
 export default function CollectionSection() {
   const { products, categories } = useContent()
   const [filter, setFilter] = useState('all')
   const [currentDot, setCurrentDot] = useState(0)
+  const [pages, setPages] = useState(1)
+  const [atStart, setAtStart] = useState(true)
+  const [atEnd, setAtEnd] = useState(true)
   const [fadeL, setFadeL] = useState(false)
   const [fadeR, setFadeR] = useState(true)
   const [modalProduct, setModalProduct] = useState(null)
@@ -21,26 +23,38 @@ export default function CollectionSection() {
     p => filter === 'all' || p.category.includes(filter)
   ).length
 
-  const syncDots = useCallback(idx => {
-    setCurrentDot(prev => (prev === idx ? prev : idx))
-  }, [])
-
   const onTrackScroll = useCallback(() => {
     const track = trackRef.current
     if (!track) return
     const max = track.scrollWidth - track.clientWidth
-    if (max <= 0) return
-    const idx = Math.min(
-      DOT_COUNT - 1,
-      Math.floor((track.scrollLeft / max) * DOT_COUNT)
-    )
-    syncDots(idx)
+    // Honest carousel state (ADR-0022 follow-on): when everything fits, there is
+    // one page and both arrows are disabled instead of silently doing nothing.
+    if (max <= 0) {
+      setPages(1)
+      setCurrentDot(0)
+      setAtStart(true)
+      setAtEnd(true)
+      setFadeL(false)
+      setFadeR(false)
+      return
+    }
+    const count = Math.ceil(track.scrollWidth / track.clientWidth)
+    const idx = Math.min(count - 1, Math.round((track.scrollLeft / max) * (count - 1)))
+    setPages(count)
+    setCurrentDot(idx)
+    setAtStart(track.scrollLeft <= 8)
+    setAtEnd(track.scrollLeft >= max - 8)
     setFadeL(track.scrollLeft > 8)
     setFadeR(track.scrollLeft < max - 8)
-  }, [syncDots])
+  }, [])
 
   useEffect(() => {
     onTrackScroll()
+  }, [onTrackScroll, filter, products])
+
+  useEffect(() => {
+    window.addEventListener('resize', onTrackScroll)
+    return () => window.removeEventListener('resize', onTrackScroll)
   }, [onTrackScroll])
 
   const scrollCarousel = dir => {
@@ -54,7 +68,6 @@ export default function CollectionSection() {
       track.scrollTo({ left: 0 })
       onTrackScroll()
     }
-    syncDots(0)
   }
 
   const openQuickView = (product, trigger) => {
@@ -139,11 +152,16 @@ export default function CollectionSection() {
           No products in this category yet.
         </p>
         <div className="mt-6 flex items-center justify-center gap-4">
-          <button onClick={() => scrollCarousel(-1)} aria-label="Previous products" className="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors">
+          <button
+            onClick={() => scrollCarousel(-1)}
+            aria-label="Previous products"
+            disabled={atStart}
+            className="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <div id="carouselDots" className="flex items-center gap-1.5" aria-hidden="true">
-            {Array.from({ length: DOT_COUNT }).map((_, i) => (
+            {Array.from({ length: pages }).map((_, i) => (
               <span
                 key={i}
                 className={`rounded-full transition-all ${
@@ -152,7 +170,12 @@ export default function CollectionSection() {
               ></span>
             ))}
           </div>
-          <button onClick={() => scrollCarousel(1)} aria-label="Next products" className="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors">
+          <button
+            onClick={() => scrollCarousel(1)}
+            aria-label="Next products"
+            disabled={atEnd}
+            className="w-10 h-10 rounded-full border border-brand-border text-brand-forest flex items-center justify-center hover:bg-brand-warmCard transition-colors disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
             <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
