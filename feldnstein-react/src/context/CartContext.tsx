@@ -24,16 +24,43 @@ interface CartContextValue {
 
 const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, itemCount: 0 }
 
+// View ↔ URL hash mapping so cart/checkout/track are real, linkable destinations
+// with working back-button behavior (e-commerce norm). Section anchors (#collection
+// etc.) are left to the home view and never treated as views.
+const HASH_TO_VIEW: Record<string, ShopView> = { cart: 'cart', checkout: 'checkout', track: 'track' }
+const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track' }
+
+const viewFromHash = (): ShopView => HASH_TO_VIEW[window.location.hash.slice(1)] ?? 'home'
+
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart>(EMPTY_CART)
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [view, setView] = useState<ShopView>('home')
+  const [view, setViewState] = useState<ShopView>(viewFromHash)
   const [lastOrder, setLastOrder] = useState<Order | null>(null)
   const [toast, setToast] = useState({ message: '', visible: false })
   const toastTimer = useRef<number | undefined>(undefined)
+
+  const setView = useCallback((next: ShopView) => {
+    setViewState(next)
+    const hash = VIEW_TO_HASH[next]
+    if (hash !== window.location.hash) {
+      window.history.pushState(null, '', hash || window.location.pathname)
+    }
+  }, [])
+
+  // Back/forward and manual hash edits restore the matching view
+  useEffect(() => {
+    const sync = () => setViewState(viewFromHash())
+    window.addEventListener('popstate', sync)
+    window.addEventListener('hashchange', sync)
+    return () => {
+      window.removeEventListener('popstate', sync)
+      window.removeEventListener('hashchange', sync)
+    }
+  }, [])
 
   const showToast = useCallback((message: string) => {
     setToast({ message, visible: true })

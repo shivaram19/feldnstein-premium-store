@@ -35,3 +35,4 @@ Backend: `POST /shop/cart/add` increments the existing line quantity (still stoc
 - Drawer and checkout panels get their intended cream background; inputs become consistent site-wide.
 - Re-running the e2e suite against `/cart/add` expectations: the suite asserts cart contents after adds — increment semantics keep total quantities the same only when each add targets a fresh line; the flow scripts add each product once per cart, so totals are unchanged, but this must be re-verified.
 - Out of scope: product detail page, shop page (still offered as follow-up).
+- Follow-on: shop views are mirrored in the URL hash (`#cart`, `#checkout`, `#track`) so cart/checkout/track are deep-linkable with working back-button; section anchors remain home-view-only. Also fixed: `GET /shop/cart` was missing `@Transactional`, 500ing for any returning visitor with a non-empty cart token (lazy `ProductVariant.sku` access outside the session).

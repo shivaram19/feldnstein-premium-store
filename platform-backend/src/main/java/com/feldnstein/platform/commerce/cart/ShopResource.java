@@ -48,6 +48,7 @@ public class ShopResource {
 
     @GET
     @Path("/cart")
+    @Transactional  // session must stay open while the view walks lazy variant/product associations
     public Response cart(@HeaderParam(CartService.TOKEN_HEADER) String token) {
         Cart cart = carts.resolve(token);
         if (cart == null) return Response.ok(Map.of("lines", java.util.List.of(), "itemCount", 0,
