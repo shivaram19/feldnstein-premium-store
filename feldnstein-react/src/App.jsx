@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import Ticker from './components/Ticker'
@@ -17,6 +18,11 @@ import { useCart } from './context/CartContext'
 
 export default function App() {
   const { view } = useCart()
+  // View switches must start at the top of the new view — the browser otherwise
+  // keeps the previous view's scroll offset (cart/checkout/track all expect top).
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [view])
   return (
     <>
       <Header />
