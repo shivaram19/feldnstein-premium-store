@@ -27,6 +27,20 @@ const abs = (u) => {
   return `${API_BASE}/site/media/file/${u}`
 }
 
+// Rich PDP content (description, variant labels/MRPs, nutrition, gallery) is static
+// canonical content (ADR-0024); live API variants merge onto it by sizeMl so prices
+// stay server-authoritative while the page stays rich when the API is unreachable.
+const RICH_FIELDS = ['tagline', 'rating', 'reviewCount', 'story', 'highlights', 'perfectFor', 'ingredients', 'storage', 'shelfLife', 'nutrition', 'gallery']
+
+function pickRich(fallback) {
+  const rich = {}
+  if (!fallback) return rich
+  for (const key of RICH_FIELDS) {
+    if (fallback[key] !== undefined && fallback[key] !== null) rich[key] = fallback[key]
+  }
+  return rich
+}
+
 function normalizeProducts(rows) {
   if (!Array.isArray(rows) || rows.length === 0) return defaultProducts
   return rows.map((p) => {
@@ -35,26 +49,39 @@ function normalizeProducts(rows) {
         || (p.name && d.name.toLowerCase().includes(String(p.name).toLowerCase().split(' ').slice(-2).join(' ')))
         || (p.name && String(p.name).toLowerCase().includes(d.id)),
     )
-    const sizes = (p.variants ?? []).map((v) => ({
-      variantId: v.id,
-      sku: v.sku,
-      sizeMl: v.sizeMl,
-      price: v.price != null ? Number(v.price) : undefined,
-      priceInclGst: v.priceInclGst != null ? Number(v.priceInclGst) : undefined,
-    }))
+    const staticVariants = fallback?.variants ?? []
+    const apiVariants = Array.isArray(p.variants) ? p.variants : []
+    const src = apiVariants.length ? apiVariants : staticVariants
+    const sizes = src.map((v) => {
+      const match = staticVariants.find((sv) => sv.sizeMl === v.sizeMl)
+      const litres = v.sizeMl / 1000
+      return {
+        variantId: v.id ?? v.variantId,
+        sku: v.sku ?? '',
+        sizeMl: v.sizeMl,
+        price: v.price != null ? Number(v.price) : undefined,
+        priceInclGst: v.priceInclGst != null ? Number(v.priceInclGst) : undefined,
+        label: v.label ?? match?.label ?? (Number.isInteger(litres) ? `${litres}L can` : `${v.sizeMl} ml bottle`),
+        mrp: v.mrp ?? match?.mrp ?? null,
+      }
+    })
     const priced = sizes.filter((s) => s.priceInclGst != null || s.price != null)
     const minPrice = priced.length ? Math.min(...priced.map((s) => s.priceInclGst ?? s.price)) : (fallback?.price ?? 0)
     const maxPrice = priced.length ? Math.max(...priced.map((s) => s.priceInclGst ?? s.price)) : minPrice
+    const mainImg = abs(p.imageUrl) ?? fallback?.img ?? assetUrl('/assets/img/img-02.jpg')
     return {
       id: fallback?.id ?? String(p.code ?? p.id).toLowerCase(),
       name: p.name ?? fallback?.name ?? 'Oil',
       price: minPrice,
       priceRange: priced.length > 1 ? `${inr(minPrice)} – ${inr(maxPrice)}` : null,
       category: fallback?.category ?? 'staples',
-      img: abs(p.imageUrl) ?? fallback?.img ?? assetUrl('/assets/img/img-02.jpg'),
+      img: mainImg,
       badge: p.badge ?? fallback?.badge ?? '',
       desc: p.shortDesc ?? fallback?.desc ?? '',
       longDesc: p.longDesc ?? fallback?.longDesc ?? undefined,
+      variants: staticVariants,
+      ...pickRich(fallback),
+      gallery: [mainImg, ...(fallback?.gallery ?? []).slice(1)],
       sizes,
     }
   })

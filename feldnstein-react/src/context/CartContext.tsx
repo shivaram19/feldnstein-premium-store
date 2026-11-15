@@ -1,21 +1,28 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { shopApi, type Cart, type Order, type CheckoutDetails } from '../api/shopApi'
 
-export type ShopView = 'home' | 'cart' | 'checkout' | 'track' | 'account'
+export type ShopView = 'home' | 'cart' | 'checkout' | 'track' | 'account' | 'product'
+
+interface NavState {
+  view: ShopView
+  productId: string | null
+}
 
 interface CartContextValue {
   toast: { message: string; visible: boolean }
   showToast: (message: string) => void
   cart: Cart
   loading: boolean
-  addToCart: (variantId: number, name: string, price: number, sizeMl?: number) => void
+  addToCart: (variantId: number, name: string, price: number, sizeMl?: number, qty?: number) => Promise<void>
   setQty: (variantId: number, qty: number) => void
   removeItem: (variantId: number) => void
   refresh: () => void
   drawerOpen: boolean
   setDrawerOpen: (open: boolean) => void
   view: ShopView
+  productId: string | null
   setView: (view: ShopView) => void
+  openProduct: (id: string) => void
   lastOrder: Order | null
   setLastOrder: (order: Order | null) => void
   placeOrder: (details: CheckoutDetails) => Promise<Order>
@@ -26,11 +33,16 @@ const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, i
 
 // View ↔ URL hash mapping so cart/checkout/track are real, linkable destinations
 // with working back-button behavior (e-commerce norm). Section anchors (#collection
-// etc.) are left to the home view and never treated as views.
+// etc.) are left to the home view and never treated as views. Product pages use
+// '#product/<id>' (ADR-0024) so each oil is a linkable destination too.
 const HASH_TO_VIEW: Record<string, ShopView> = { cart: 'cart', checkout: 'checkout', track: 'track', account: 'account' }
-const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track', account: '#account' }
+const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track', account: '#account', product: '' }
 
-const viewFromHash = (): ShopView => HASH_TO_VIEW[window.location.hash.slice(1)] ?? 'home'
+const navFromHash = (): NavState => {
+  const hash = window.location.hash.slice(1)
+  if (hash.startsWith('product/')) return { view: 'product', productId: hash.slice('product/'.length) }
+  return { view: HASH_TO_VIEW[hash] ?? 'home', productId: null }
+}
 
 const CartContext = createContext<CartContextValue | null>(null)
 
@@ -38,22 +50,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart>(EMPTY_CART)
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [view, setViewState] = useState<ShopView>(viewFromHash)
+  const [view, setViewState] = useState<ShopView>(() => navFromHash().view)
+  const [productId, setProductId] = useState<string | null>(() => navFromHash().productId)
   const [lastOrder, setLastOrder] = useState<Order | null>(null)
   const [toast, setToast] = useState({ message: '', visible: false })
   const toastTimer = useRef<number | undefined>(undefined)
 
-  const setView = useCallback((next: ShopView) => {
-    setViewState(next)
-    const hash = VIEW_TO_HASH[next]
+  const applyNav = useCallback((next: NavState) => {
+    setViewState(next.view)
+    setProductId(next.productId)
+    const hash = next.view === 'product' ? `#product/${next.productId}` : VIEW_TO_HASH[next.view]
     if (hash !== window.location.hash) {
       window.history.pushState(null, '', hash || window.location.pathname)
     }
   }, [])
 
+  const setView = useCallback((next: ShopView) => applyNav({ view: next, productId: null }), [applyNav])
+
+  const openProduct = useCallback((id: string) => applyNav({ view: 'product', productId: id }), [applyNav])
+
   // Back/forward and manual hash edits restore the matching view
   useEffect(() => {
-    const sync = () => setViewState(viewFromHash())
+    const sync = () => {
+      const nav = navFromHash()
+      setViewState(nav.view)
+      setProductId(nav.productId)
+    }
     window.addEventListener('popstate', sync)
     window.addEventListener('hashchange', sync)
     return () => {
@@ -82,16 +104,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(refresh, [refresh])
 
   const addToCart = useCallback(
-    (variantId: number, name: string, price: number, sizeMl?: number) => {
+    (variantId: number, name: string, price: number, sizeMl?: number, qty = 1) =>
       shopApi
-        .addItem(variantId, 1)
+        .addItem(variantId, qty)
         .then(next => {
           setCart(next)
           const label = sizeMl ? `${name} · ${sizeMl} ml` : name
           showToast(`Added to cart — ${label} · ₹${Number(price).toLocaleString('en-IN')}`)
         })
-        .catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not add to cart'))
-    },
+        .catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not add to cart')),
     [showToast],
   )
 
@@ -124,7 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     toast, showToast, cart, loading,
     addToCart, setQty, removeItem, refresh,
     drawerOpen, setDrawerOpen,
-    view, setView,
+    view, productId, setView, openProduct,
     lastOrder, setLastOrder,
     placeOrder, payOrder,
   }
