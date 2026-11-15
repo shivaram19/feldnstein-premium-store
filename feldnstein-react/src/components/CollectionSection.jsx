@@ -3,12 +3,14 @@ import Reveal from './Reveal'
 import QuickViewModal from './QuickViewModal'
 import AddToCart from './AddToCart'
 import { useContent } from '../context/ContentContext'
+import { useCart } from '../context/CartContext'
 import { inr } from '../api/shopApi'
 
 const CARD_WIDTH = 360
 
 export default function CollectionSection() {
   const { products, categories } = useContent()
+  const { openProduct } = useCart()
   const [filter, setFilter] = useState('all')
   const [currentDot, setCurrentDot] = useState(0)
   const [pages, setPages] = useState(1)
@@ -123,11 +125,22 @@ export default function CollectionSection() {
                   data-category={product.category}
                 >
                   <div className="relative">
-                    <img loading="lazy" src={product.img} alt={product.name} className="w-full h-64 object-cover" />
+                    <button
+                      className="product-card-link block w-full"
+                      onClick={() => openProduct(product.id)}
+                      aria-label={`View ${product.name}`}
+                    >
+                      <img loading="lazy" src={product.img} alt={product.name} className="w-full h-64 object-cover" />
+                    </button>
                     <span className="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-white/90 text-brand-forest rounded-full px-3 py-1">{product.badge}</span>
                   </div>
                   <div className="p-6 flex flex-col flex-1 text-center">
-                    <h3 className="font-serif text-lg font-semibold text-brand-forest">{product.name}</h3>
+                    <button
+                      className="product-card-link font-serif text-lg font-semibold text-brand-forest hover:text-brand-ochreDeep transition-colors"
+                      onClick={() => openProduct(product.id)}
+                    >
+                      {product.name}
+                    </button>
                     <p className="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">{product.desc}</p>
                     <div className="mt-4 flex items-baseline justify-center gap-2">
                       <span className="font-serif text-xl font-bold text-brand-forest">{inr(product.price)}</span>
