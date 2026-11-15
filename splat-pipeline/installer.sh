@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
-# ONE-SHOT installer for the MC instance: run via `ssh host 'bash -s' < installer.sh`.
-# Writes both pipeline scripts on the remote side and launches the pipeline under
-# nohup, so a single short SSH window is enough.
+# ONE-SHOT installer for the MC instance: run via `ssh host 'bash -s' < installer.sh`,
+# or as the instance launch `command`. Reports milestones to $STATUS_URL
+# (the platform's public subscribe endpoint) so progress is observable without
+# SSH — set STATUS_URL to the platform base, e.g. https://…onrender.com.
 set -euo pipefail
 mkdir -p ~/videos ~/work ~/exports ~/tars
+
+report() {
+  [ -n "${STATUS_URL:-}" ] || return 0
+  curl -fsS -m 15 -X POST "$STATUS_URL/shop/subscribe" \
+    -H 'Content-Type: application/json' \
+    -d "{\"email\":\"pipe-$(date -u +%H%M%S)@status.pipeline\",\"name\":\"$1\"}" >/dev/null 2>&1 || true
+}
+trap 'report "FAILED at line $LINENO"' ERR
+report "boot $(hostname) user=$(whoami)"
 
 cat > ~/orchestrate.sh <<'ORCHESTRATE_EOF'
 #!/usr/bin/env bash
