@@ -15,10 +15,11 @@ import CheckoutView from './components/CheckoutView'
 import CartView from './components/CartView'
 import AccountView from './components/AccountView'
 import TrackOrder from './components/TrackOrder'
+import ProductDetailView from './components/ProductDetailView'
 import { useCart } from './context/CartContext'
 
 export default function App() {
-  const { view } = useCart()
+  const { view, productId } = useCart()
   // View switches must start at the top of the new view — the browser otherwise
   // keeps the previous view's scroll offset (cart/checkout/track all expect top).
   useEffect(() => {
@@ -37,6 +38,10 @@ export default function App() {
           <MatrixSection />
           <SubscriptionSection />
           <TestimonialsSection />
+        </main>
+      ) : view === 'product' ? (
+        <main>
+          <ProductDetailView key={productId} productId={productId} />
         </main>
       ) : view === 'cart' ? (
         <main>
