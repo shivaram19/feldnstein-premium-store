@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { products as defaultProducts, categories as defaultCategories } from '../data/products'
+import { testimonials as defaultTestimonials } from '../data/testimonials'
 import { inr, assetUrl } from '../api/shopApi'
 
 const API_BASE = import.meta.env.VITE_SITE_API ?? ''
@@ -59,13 +60,24 @@ function normalizeProducts(rows) {
   })
 }
 
+function normalizeTestimonials(items) {
+  return items.map((t, i) => ({
+    id: t.id ?? i + 1,
+    rating: typeof t.rating === 'number' ? t.rating : null,
+    review: t.review ?? t.quote ?? null,
+    customerName: t.customerName ?? t.author ?? null,
+    orderCount: typeof t.orderCount === 'number' ? t.orderCount : null,
+    avatar: abs(t.avatar) ?? null,
+  }))
+}
+
 export function ContentProvider({ children }) {
   const [state, setState] = useState({
     products: defaultProducts,
     categories: defaultCategories,
     hero: null,
     banner: null,
-    testimonials: null,
+    testimonials: defaultTestimonials,
     ticker: null,
     live: false,
   })
@@ -86,7 +98,7 @@ export function ContentProvider({ children }) {
           categories: defaultCategories,
           hero,
           banner,
-          testimonials: content['testimonials']?.items?.length ? content.testimonials.items : null,
+          testimonials: content['testimonials']?.items?.length ? normalizeTestimonials(content.testimonials.items) : defaultTestimonials,
           ticker: content['ticker:items']?.items?.length ? content['ticker:items'].items : null,
           live: true,
         })

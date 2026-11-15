@@ -73,33 +73,21 @@ await new Promise(r => setTimeout(r, 1200))
 const revealed = await page.$$eval('[data-reveal].is-revealed', els => els.length)
 check('scroll reveal reveals elements', revealed > 3)
 
-// 3. Product carousel + filter
+// 3. Product carousel + category pill (only "All Oils" remains, centered)
 const productCount = await page.$$eval('#productCarousel .product-item', els => els.length)
 check('4 products rendered', productCount === 4)
-await page.evaluate(() => {
-  const pills = [...document.querySelectorAll('.category-pill')]
-  pills.find(p => p.textContent.includes('Therapeutic')).click()
-})
-await new Promise(r => setTimeout(r, 300))
-const visibleAfterFilter = await page.$$eval(
-  '#productCarousel .product-item',
-  els => els.filter(e => e.style.display !== 'none').length
+const pillInfo = await page.$$eval('.category-pill', pills =>
+  pills.map(p => ({ label: p.textContent.trim(), pressed: p.getAttribute('aria-pressed') }))
 )
-check('therapeutic filter shows 2 products', visibleAfterFilter === 2)
-await page.evaluate(() => {
-  const pills = [...document.querySelectorAll('.category-pill')]
-  pills.find(p => p.textContent.includes('Kitchen Value')).click()
+check('only the All Oils pill renders, active', pillInfo.length === 1 && pillInfo[0].label.includes('All Oils') && pillInfo[0].pressed === 'true')
+const centered = await page.$eval('.category-pill', pill => {
+  const row = pill.parentElement.getBoundingClientRect()
+  const r = pill.getBoundingClientRect()
+  return Math.abs((r.left + r.width / 2) - (row.left + row.width / 2)) < 2
 })
-await new Promise(r => setTimeout(r, 300))
-const emptyShown = await page.$eval('#filterEmpty', el => !el.classList.contains('hidden'))
-check('empty state shows for value filter', emptyShown)
+check('All Oils pill is centered', centered)
 
 // 4. Quick add updates cart badge + toast
-await page.evaluate(() => {
-  const pills = [...document.querySelectorAll('.category-pill')]
-  pills.find(p => p.textContent.includes('All Oils')).click()
-})
-await new Promise(r => setTimeout(r, 200))
 await page.evaluate(() => document.querySelector('.quick-add').click())
 await new Promise(r => setTimeout(r, 300))
 const cartBadge = await page.$eval('#cartCount', el => ({ text: el.textContent, hidden: el.classList.contains('hidden') }))

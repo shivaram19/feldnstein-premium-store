@@ -128,7 +128,7 @@ const STEP_CARDS = [
     icon: 'hourglass_empty',
     tag: '48-Hr Settling',
     tagHighlight: false,
-    title: 'Gravity Sedimentation',
+    title: 'Natural Settling',
     body: 'Fresh raw oil rests in food-grade steel vats. Natural gravity clarifies without micro-filters, deodorizers, or bleaching clays.',
     footerIcon: 'filter_vintage',
     footer: 'Zero Micro-Filters',
@@ -214,7 +214,7 @@ export default function ProcessSection() {
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
           <div className="section-label"><span className="material-symbols-outlined text-sm">history_edu</span> 01 — From Native Seeds to Culinary Gold</div>
-          <h2 className="section-title">From Native Seed to <em>Apothecary Bottle</em></h2>
+          <h2 className="section-title">From Native Seed to <em>Bottle</em></h2>
           <p className="section-sub">An ancient Gaanuga sequence that refuses modern shortcuts. Here is exactly how your oil is born.</p>
         </Reveal>
         <Reveal className="max-w-2xl mx-auto mb-16">

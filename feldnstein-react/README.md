@@ -35,7 +35,7 @@ Then open **http://localhost:5173** in your browser. The page reloads automatica
 
 - Scroll — the header shrinks and nav links highlight per section (scrollspy)
 - **Process** section — the bull walks circles around the press; click steps 01–05
-- **Collection** section — filter pills, carousel arrows/dots, **Quick View** modal, **Add to Reserve Cart** (watch the cart badge and toast)
+- **Collection** section — carousel arrows/dots, **Quick View** modal, **Add to Reserve Cart** (watch the cart badge and toast)
 - Narrow the browser window to see the mobile hamburger menu
 
 ## Project structure

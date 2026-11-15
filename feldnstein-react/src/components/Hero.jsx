@@ -111,16 +111,6 @@ export default function Hero() {
             <a href="#collection" className="btn btn-gold">Shop the Reserve <span className="material-symbols-outlined text-base">arrow_forward</span></a>
             <a href="#matrix" className="btn btn-ghost-light">Our Standard</a>
           </Reveal>
-          <Reveal className="mt-12 flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
-              <span className="material-symbols-outlined text-brand-ochre text-xl">verified</span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white">Lab Verified · Batch 042</span>
-            </span>
-            <span className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 border border-white/15">
-              <span className="material-symbols-outlined text-brand-ochre text-xl">shield</span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white">FSSAI Certified Mill</span>
-            </span>
-          </Reveal>
         </div>
       </div>
     </section>

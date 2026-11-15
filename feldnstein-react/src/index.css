@@ -91,6 +91,9 @@ select.input { appearance: none; -webkit-appearance: none;
 .carousel-fade-r { right: 0; background: linear-gradient(to left, #fff, transparent); }
 .carousel-fade.show { opacity: 1; }
 
+/* ===== Ticker marquee (seamless loop — track is two identical halves) ===== */
+@keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
 /* Process diagram: interactive SVG steps (click + keyboard) */
 .process-step { cursor: pointer; }
 .process-step:focus { outline: none; }

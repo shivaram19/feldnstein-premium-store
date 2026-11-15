@@ -32,9 +32,9 @@ export default function App() {
           <Hero />
           <Ticker />
           <ProcessSection />
+          <CollectionSection />
           <CreedSection />
           <MatrixSection />
-          <CollectionSection />
           <SubscriptionSection />
           <TestimonialsSection />
         </main>

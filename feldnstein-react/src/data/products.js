@@ -45,7 +45,4 @@ export const products = [
 
 export const categories = [
   { key: 'all', label: 'All Oils' },
-  { key: 'staples', label: 'Cooking Staples' },
-  { key: 'therapeutic', label: 'Therapeutic & Hair' },
-  { key: 'value', label: 'Kitchen Value 5L' },
 ]
