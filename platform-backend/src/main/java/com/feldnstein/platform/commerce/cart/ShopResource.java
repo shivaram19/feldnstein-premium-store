@@ -99,6 +99,20 @@ public class ShopResource {
         return Response.ok(carts.view(cart)).build();
     }
 
+    public record SubscriptionRequest(Boolean subscribe) {}
+
+    /** Attach/detach the Kitchen Reserve subscription on this cart. */
+    @PUT
+    @Path("/cart/subscription")
+    @Transactional
+    public Response subscription(@HeaderParam(CartService.TOKEN_HEADER) String token, SubscriptionRequest body) {
+        Cart cart = carts.resolve(token);
+        if (cart == null) return bad("cart not found");
+        if (body == null || body.subscribe() == null) return bad("subscribe is required");
+        carts.setSubscription(cart, body.subscribe());
+        return Response.ok(carts.view(cart)).build();
+    }
+
     public record CheckoutRequest(String customerName, String email, String phone,
                                   String address, String city, String state, String pincode,
                                   Integer pointsToRedeem) {}

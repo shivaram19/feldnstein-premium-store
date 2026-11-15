@@ -175,7 +175,7 @@ class LoyaltyServiceTest {
             CustomerOrder order = CustomerOrder.place(OrderNo.fresh(), "Loyalty Buyer",
                     new EmailAddress(email), "9999999999",
                     new DeliveryAddress("12 MG Road", "Bengaluru", "Karnataka", "560001"),
-                    List.of(new CustomerOrder.LineDraft(variant, Quantity.of(qty), unit, GstRate.of(BigDecimal.ZERO))));
+                    List.of(new CustomerOrder.LineDraft(variant, Quantity.of(qty), unit, GstRate.of(BigDecimal.ZERO))), false);
             order.persistAndFlush();
             return order;
         });

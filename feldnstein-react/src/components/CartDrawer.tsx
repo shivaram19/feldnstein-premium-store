@@ -148,6 +148,11 @@ export default function CartDrawer() {
             <div className="flex justify-between text-sm text-brand-charcoal/70">
               <span>GST ({cart.lines[0] ? cart.lines[0].gstPct : 5}%)</span><span>{inr(cart.gstTotal)}</span>
             </div>
+            {cart.subscribe && (
+              <div className="flex justify-between text-sm font-semibold text-brand-herb" data-testid="cart-subscription-note">
+                <span>Kitchen Reserve −10%</span><span>at checkout</span>
+              </div>
+            )}
             <div className="flex justify-between font-serif text-lg font-bold text-brand-forest">
               <span>Total</span><span>{inr(cart.grandTotal)}</span>
             </div>

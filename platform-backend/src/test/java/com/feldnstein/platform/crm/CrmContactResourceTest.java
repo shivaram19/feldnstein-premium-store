@@ -314,7 +314,7 @@ class CrmContactResourceTest {
                     new EmailAddress(email), "9999999999",
                     new DeliveryAddress("12 MG Road", "Bengaluru", "Karnataka", "560001"),
                     List.of(new CustomerOrder.LineDraft(variant, Quantity.of(1), Money.of(100),
-                            GstRate.of(new BigDecimal("20")))));
+                            GstRate.of(new BigDecimal("20")))), false);
             order.persist();
 
             Subscriber.record(email, null).persist();

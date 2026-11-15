@@ -77,7 +77,14 @@ public class CartService {
         m.put("gstTotal", t.gstTotal().amount());
         m.put("grandTotal", t.grandTotal().amount());
         m.put("itemCount", t.itemCount());
+        m.put("subscribe", cart.subscribe());
         return m;
+    }
+
+    /** Attach or detach the Kitchen Reserve subscription flag (10% off at checkout). */
+    @Transactional
+    public void setSubscription(Cart cart, boolean subscribe) {
+        cart.setSubscribe(subscribe);
     }
 
     private Map<String, Object> lineView(CartItem i) {

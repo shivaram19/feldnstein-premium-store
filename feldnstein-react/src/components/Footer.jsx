@@ -14,16 +14,6 @@ const LINK_GROUPS = [
     ],
   },
   {
-    title: 'Company',
-    links: [
-      { label: 'The 3 RPM Gaanuga Method', href: '#process' },
-      { label: 'Quality & Purity Standards', href: '#matrix' },
-      { label: 'First Press Access', href: '#subscription' },
-      { label: 'Mothadaka Farm Tours', href: 'https://wa.me/919160098989', external: true },
-      { label: 'Physician Affiliation Club', href: '#' },
-    ],
-  },
-  {
     title: 'Legal',
     links: [
       { label: 'Purity Guarantee', href: '#' },
@@ -85,16 +75,6 @@ export default function Footer() {
               <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">mail</span><a className="hover:text-brand-ochre transition-colors" href="mailto:contact@feldnstein.com">contact@feldnstein.com</a></li>
               <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">chat</span><span>WhatsApp: +91 91600 98989</span></li>
               <li className="flex items-center gap-2"><span className="material-symbols-outlined text-sm text-brand-ochre">local_shipping</span><button className="hover:text-brand-ochre transition-colors" onClick={() => setView('track')}>Track your order</button></li>
-            </ul>
-          </div>
-          <div className="flex flex-col gap-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-brand-ochre">Legal</h3>
-            <ul className="flex flex-col gap-2.5 text-xs text-white/70">
-              {LINK_GROUPS[2].links.map(link => (
-                <li key={link.label}>
-                  <a className="hover:text-brand-ochre transition-colors" href={link.href}>{link.label}</a>
-                </li>
-              ))}
             </ul>
           </div>
         </Reveal>

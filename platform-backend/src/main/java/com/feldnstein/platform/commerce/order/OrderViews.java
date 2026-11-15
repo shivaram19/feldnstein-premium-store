@@ -30,6 +30,8 @@ public class OrderViews {
         m.put("subTotal", o.subTotal().amount());
         m.put("gstTotal", o.gstTotal().amount());
         m.put("grandTotal", o.grandTotal().amount());
+        m.put("subscription", o.subscription());
+        if (o.subscription()) m.put("discountTotal", o.discountTotal().amount());
         m.put("createdAt", o.createdAt().toString());
         m.put("lines", o.lines().stream().map(l -> {
             Map<String, Object> line = new LinkedHashMap<String, Object>();

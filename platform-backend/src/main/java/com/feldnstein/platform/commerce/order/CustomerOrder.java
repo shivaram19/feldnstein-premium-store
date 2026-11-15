@@ -72,6 +72,13 @@ public class CustomerOrder extends PanacheEntity {
     @Column(nullable = false, length = 16)
     private Status status = Status.PENDING;
 
+    /** Kitchen Reserve subscription purchase — 10% off subtotal, GST scaled to the discounted base. */
+    @Column(nullable = false)
+    private boolean subscription = false;
+
+    @Column(name = "discount_total", nullable = false, precision = 12, scale = 2)
+    private BigDecimal discountTotal = BigDecimal.ZERO;
+
     @Column(name = "sub_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal subTotal = BigDecimal.ZERO;
 
@@ -108,7 +115,7 @@ public class CustomerOrder extends PanacheEntity {
 
     /** Factory: places a new PENDING order from priced lines, computing totals from the lines. */
     public static CustomerOrder place(OrderNo no, String customerName, EmailAddress email, String phone,
-                                      DeliveryAddress delivery, List<LineDraft> drafts) {
+                                      DeliveryAddress delivery, List<LineDraft> drafts, boolean subscription) {
         if (customerName == null || customerName.trim().length() < 2)
             throw new DomainException("name is required");
         if (drafts == null || drafts.isEmpty()) throw new DomainException("order has no lines");
@@ -121,6 +128,7 @@ public class CustomerOrder extends PanacheEntity {
         order.city = delivery.city();
         order.state = delivery.state();
         order.pincode = delivery.pincode();
+        order.subscription = subscription;
         Money sub = Money.ZERO;
         Money gst = Money.ZERO;
         for (LineDraft draft : drafts) {
@@ -129,9 +137,24 @@ public class CustomerOrder extends PanacheEntity {
             sub = sub.plus(line.lineTotal());
             gst = gst.plus(line.gstAmount());
         }
-        order.subTotal = sub.amount();
-        order.gstTotal = gst.amount();
-        order.grandTotal = sub.plus(gst).amount();
+        if (subscription && sub.amount().signum() > 0) {
+            // Standing Kitchen Reserve benefit: 10% off the pre-tax base, GST scaled
+            // proportionally so tax is computed on the price actually charged.
+            BigDecimal discount = sub.amount()
+                    .multiply(new BigDecimal("0.10"))
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal discountedSub = sub.amount().subtract(discount);
+            BigDecimal scaledGst = gst.amount().multiply(discountedSub)
+                    .divide(sub.amount(), 2, java.math.RoundingMode.HALF_UP);
+            order.discountTotal = discount;
+            order.subTotal = discountedSub;
+            order.gstTotal = scaledGst;
+            order.grandTotal = discountedSub.add(scaledGst);
+        } else {
+            order.subTotal = sub.amount();
+            order.gstTotal = gst.amount();
+            order.grandTotal = sub.plus(gst).amount();
+        }
         return order;
     }
 
@@ -206,6 +229,8 @@ public class CustomerOrder extends PanacheEntity {
     public Money subTotal() { return Money.of(subTotal); }
     public Money gstTotal() { return Money.of(gstTotal); }
     public Money grandTotal() { return Money.of(grandTotal); }
+    public boolean subscription() { return subscription; }
+    public Money discountTotal() { return Money.of(discountTotal); }
     public int pointsRedeemed() { return pointsRedeemed == null ? 0 : pointsRedeemed; }
     public CartTotals totals() {
         return new CartTotals(subTotal(), gstTotal(), grandTotal(), lines.stream().mapToInt(OrderLine::qty).sum());

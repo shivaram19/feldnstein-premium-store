@@ -114,7 +114,7 @@ class LoyaltyResourceTest {
                     new EmailAddress(email), "9999999999",
                     new DeliveryAddress("12 MG Road", "Bengaluru", "Karnataka", "560001"),
                     List.of(new CustomerOrder.LineDraft(variant, Quantity.of(1), Money.of(100),
-                            GstRate.of(BigDecimal.ZERO))));
+                            GstRate.of(BigDecimal.ZERO))), false);
             o.persistAndFlush();
             return o;
         });

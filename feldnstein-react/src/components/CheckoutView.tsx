@@ -183,6 +183,11 @@ export default function CheckoutView() {
               <span>Paid ({lastOrder.payment?.provider ?? 'demo'})</span>
               <span>{inr(lastOrder.grandTotal)}</span>
             </div>
+            {(lastOrder as { subscription?: boolean; discountTotal?: number }).subscription && (
+              <p className="text-xs text-brand-herb mt-2" data-testid="subscription-discount">
+                Kitchen Reserve subscription applied — you saved {inr((lastOrder as { discountTotal?: number }).discountTotal ?? 0)} (10% off).
+              </p>
+            )}
             {lastOrder.loyalty && lastOrder.loyalty.earned > 0 && (
               <p className="text-xs text-brand-charcoal/70 mt-2" data-testid="loyalty-earned">You earned {lastOrder.loyalty.earned} points</p>
             )}
@@ -314,6 +319,11 @@ export default function CheckoutView() {
           <div className="border-t border-brand-border mt-4 pt-3 flex flex-col gap-1 text-sm text-brand-charcoal/70">
             <div className="flex justify-between"><span>Subtotal</span><span>{inr(cart.subTotal)}</span></div>
             <div className="flex justify-between"><span>GST</span><span>{inr(cart.gstTotal)}</span></div>
+            {cart.subscribe && (
+              <div className="flex justify-between text-brand-herb font-semibold" data-testid="checkout-subscription-note">
+                <span>Kitchen Reserve subscription −10%</span><span>applied on placing</span>
+              </div>
+            )}
             <div className="flex justify-between font-serif text-base font-bold text-brand-forest">
               <span>Total</span><span>{inr(cart.grandTotal)}</span>
             </div>

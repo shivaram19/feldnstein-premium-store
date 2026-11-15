@@ -38,6 +38,10 @@ public class Cart extends PanacheEntity {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    /** Kitchen Reserve subscription: when true, checkout applies the standing 10% discount. */
+    @Column(nullable = false)
+    private boolean subscribe = false;
+
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<CartItem> items = new ArrayList<>();
 
@@ -65,6 +69,14 @@ public class Cart extends PanacheEntity {
 
     public boolean expired(Instant now) {
         return expiresAt.isBefore(now);
+    }
+
+    public boolean subscribe() {
+        return subscribe;
+    }
+
+    public void setSubscribe(boolean subscribe) {
+        this.subscribe = subscribe;
     }
 
     /** Adds or replaces the line for a variant. Merging equal variants is the invariant here. */

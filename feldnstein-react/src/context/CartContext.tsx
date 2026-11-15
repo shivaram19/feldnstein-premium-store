@@ -16,6 +16,9 @@ interface CartContextValue {
   addToCart: (variantId: number, name: string, price: number, sizeMl?: number, qty?: number) => Promise<void>
   setQty: (variantId: number, qty: number) => void
   removeItem: (variantId: number) => void
+  /** Kitchen Reserve subscription flag — 10% off at checkout when true. */
+  subscribe: boolean
+  setSubscribe: (subscribe: boolean) => void
   refresh: () => void
   drawerOpen: boolean
   setDrawerOpen: (open: boolean) => void
@@ -29,7 +32,7 @@ interface CartContextValue {
   payOrder: (orderCode: string) => Promise<Order>
 }
 
-const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, itemCount: 0 }
+const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, itemCount: 0, subscribe: false }
 
 // View ↔ URL hash mapping so cart/checkout/track are real, linkable destinations
 // with working back-button behavior (e-commerce norm). Section anchors (#collection
@@ -127,6 +130,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     shopApi.removeItem(variantId).then(setCart).catch(() => undefined)
   }, [])
 
+  const subscribe = cart.subscribe ?? false
+  const setSubscribe = useCallback((next: boolean) => {
+    shopApi.setSubscription(next).then(setCart).catch(() => undefined)
+  }, [])
+
   const placeOrder = useCallback(async (details: CheckoutDetails) => {
     const order = await shopApi.checkout(details)
     setLastOrder(order)
@@ -143,7 +151,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value: CartContextValue = {
     toast, showToast, cart, loading,
-    addToCart, setQty, removeItem, refresh,
+    addToCart, setQty, removeItem, subscribe, setSubscribe, refresh,
     drawerOpen, setDrawerOpen,
     view, productId, setView, openProduct,
     lastOrder, setLastOrder,

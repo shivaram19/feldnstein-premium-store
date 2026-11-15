@@ -66,7 +66,7 @@ class PaymentServiceTest {
         CustomerOrder order = CustomerOrder.place(OrderNo.fresh(), "Pay Buyer", new EmailAddress("pay@example.com"),
                 "9999999999", new DeliveryAddress("22 FC Road", "Pune", "Maharashtra", "411005"),
                 List.of(new CustomerOrder.LineDraft(variant, Quantity.of(1), Money.of(200),
-                        GstRate.of(BigDecimal.ZERO))));
+                        GstRate.of(BigDecimal.ZERO))), false);
         order.persist();
         return order;
     }

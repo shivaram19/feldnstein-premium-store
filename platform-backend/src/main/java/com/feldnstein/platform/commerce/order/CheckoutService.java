@@ -54,7 +54,7 @@ public class CheckoutService {
                 .toList();
 
         CustomerOrder order = CustomerOrder.place(OrderNo.fresh(), form.customerName(),
-                email, form.phone(), delivery, drafts);
+                email, form.phone(), delivery, drafts, cart.subscribe());
         order.persist();
 
         if (form.pointsToRedeem() != null) {

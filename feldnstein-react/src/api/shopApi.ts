@@ -32,6 +32,7 @@ export interface Cart {
   gstTotal: number
   grandTotal: number
   itemCount: number
+  subscribe?: boolean
 }
 
 export interface OrderLine {
@@ -162,6 +163,8 @@ export const shopApi = {
     req<Cart>(`/shop/cart/items/${variantId}`, { method: 'PUT', body: JSON.stringify({ qty }) }),
   removeItem: (variantId: number) =>
     req<Cart>(`/shop/cart/items/${variantId}`, { method: 'DELETE' }),
+  setSubscription: (subscribe: boolean) =>
+    req<Cart>('/shop/cart/subscription', { method: 'PUT', body: JSON.stringify({ subscribe }) }),
   checkout: (details: CheckoutDetails) =>
     req<Order>('/shop/checkout', {
       method: 'POST',

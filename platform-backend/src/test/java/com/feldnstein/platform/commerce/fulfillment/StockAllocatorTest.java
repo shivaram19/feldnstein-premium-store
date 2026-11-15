@@ -66,7 +66,7 @@ class StockAllocatorTest {
         return CustomerOrder.place(OrderNo.fresh(), "Test Buyer", new EmailAddress("buyer@example.com"),
                 "9999999999", new DeliveryAddress("12 MG Road", "Bengaluru", "Karnataka", "560001"),
                 List.of(new CustomerOrder.LineDraft(variant, Quantity.of(qty), Money.of(100),
-                        GstRate.of(BigDecimal.ZERO))));
+                        GstRate.of(BigDecimal.ZERO))), false);
     }
 
     private static ProductVariant persistVariant(long stamp) {

@@ -9,6 +9,7 @@ import VariantSelector from './pdp/VariantSelector'
 import QuantityStepper, { StickyATCBar, useOnScreen } from './pdp/QuantityStepper'
 import FaqSection from './pdp/FaqSection'
 import ComparisonTable from './pdp/ComparisonTable'
+import SubscribeSaveRow from './pdp/SubscribeSaveRow'
 import { productContent, oilComparison } from '../data/productContent'
 
 const FREE_SHIPPING_THRESHOLD = 499
@@ -43,7 +44,7 @@ function FactRow({ icon, label, value }) {
  */
 export default function ProductDetailView({ productId }) {
   const { products } = useContent()
-  const { addToCart, setView, showToast } = useCart()
+  const { addToCart, setView, showToast, subscribe, setSubscribe } = useCart()
   const product = products.find(p => p.id === productId)
   const content = productContent[productId]
 
@@ -145,6 +146,8 @@ export default function ProductDetailView({ productId }) {
             {/* Price block — three honest tiers: MRP → our price → offer (when configured) */}
             <PriceBlock price={price} mrp={mrp} offer={product.offer ?? null} qty={qty} />
 
+            <SubscribeSaveRow checked={subscribe} onChange={setSubscribe} price={price} />
+
             <VariantSelector
               options={sizes.map(s => ({ variantId: s.variantId, label: s.label, sizeMl: s.sizeMl, price: priceOf(s), mrp: s.mrp ?? null }))}
               value={current?.variantId}
@@ -190,15 +193,20 @@ export default function ProductDetailView({ productId }) {
                       </div>
                     ))}
                   </div>
+                  <p className="mt-4 border-t border-brand-border pt-3 text-[11px] leading-relaxed text-brand-charcoal/60">
+                    From the bottle label — the same facts you hold in your hand, nothing more.
+                  </p>
                 </div>
               )}
-              {(product.ingredients || product.storage || product.shelfLife) && (
-                <div className="rounded-2xl border border-brand-border bg-white p-5 space-y-3">
-                  {product.ingredients && <FactRow icon="inventory_2" label="Ingredients" value={product.ingredients} />}
-                  {product.storage && <FactRow icon="warehouse" label="Storage" value={product.storage} />}
-                  {product.shelfLife && <FactRow icon="event_available" label="Shelf Life" value={product.shelfLife} />}
+              <div className="rounded-2xl border border-brand-border bg-white p-5 space-y-3">
+                <span className="block text-xs font-bold uppercase tracking-wider text-brand-charcoal/60">Good to Know</span>
+                {product.ingredients && <FactRow icon="inventory_2" label="Ingredients" value={product.ingredients} />}
+                {product.storage && <FactRow icon="warehouse" label="Storage" value={product.storage} />}
+                {product.shelfLife && <FactRow icon="event_available" label="Best Before" value={product.shelfLife} />}
+                <div className="border-t border-brand-border pt-3">
+                  <FactRow icon="factory" label="Packed & Marketed By" value="FELD N STEIN, Mothadaka, Guntur District, Andhra Pradesh · Customer care +91 91600 98989" />
                 </div>
-              )}
+              </div>
             </div>
 
             {product.nutrition && (
