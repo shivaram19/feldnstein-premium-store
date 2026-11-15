@@ -35,6 +35,18 @@ select.input { appearance: none; -webkit-appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23414942' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
 
+/* ===== Radix-driven animations (ADR-0025) ===== */
+@keyframes accordionDown { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
+@keyframes accordionUp { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialogIn { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes offerShine { 0% { transform: translateX(-120%); } 55% { transform: translateX(320%); } 100% { transform: translateX(320%); } }
+.offer-shine { background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); animation: offerShine 2.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .offer-shine { animation: none; }
+  [class*="animate-"] { animation-duration: .01ms !important; }
+}
+
 /* ===== Section header (numbered, editorial) ===== */
 .section-head { max-width: 42rem; margin: 0 auto 3rem; text-align: center; }
 .section-label { display: inline-flex; align-items: center; gap: .5rem; font-size: .6875rem;

@@ -42,7 +42,23 @@ function pickRich(fallback) {
 }
 
 function normalizeProducts(rows) {
-  if (!Array.isArray(rows) || rows.length === 0) return defaultProducts
+  // Static fallback must expose the same `sizes` shape the API path builds —
+  // otherwise an API outage (or a non-CORS origin like the smoke-test server)
+  // silently removes every Add-to-Cart button from the store.
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return defaultProducts.map(d => ({
+      ...d,
+      sizes: (d.variants ?? []).map(v => ({
+        variantId: v.variantId,
+        sku: v.sku ?? '',
+        sizeMl: v.sizeMl,
+        label: v.label,
+        price: v.price,
+        priceInclGst: v.priceInclGst ?? v.price,
+        mrp: v.mrp ?? null,
+      })),
+    }))
+  }
   return rows.map((p) => {
     const fallback = defaultProducts.find(
       (d) => d.id === String(p.code ?? '').toLowerCase()
@@ -100,7 +116,7 @@ function normalizeTestimonials(items) {
 
 export function ContentProvider({ children }) {
   const [state, setState] = useState({
-    products: defaultProducts,
+    products: normalizeProducts([]),
     categories: defaultCategories,
     hero: null,
     banner: null,

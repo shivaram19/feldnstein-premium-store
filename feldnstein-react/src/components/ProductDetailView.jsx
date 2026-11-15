@@ -1,12 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { useContent } from '../context/ContentContext'
-import { inr } from '../api/shopApi'
 import StarRating from './StarRating'
+import Gallery from './pdp/Gallery'
+import UspChips from './pdp/UspChips'
+import PriceBlock from './pdp/PriceBlock'
+import VariantSelector from './pdp/VariantSelector'
+import QuantityStepper, { StickyATCBar, useOnScreen } from './pdp/QuantityStepper'
+import FaqSection from './pdp/FaqSection'
+import ComparisonTable from './pdp/ComparisonTable'
+import { productContent, oilComparison } from '../data/productContent'
 
-// Matches the backend loyalty default (loyalty.earn-percent=5, ADR-0018):
-// points shown are 5% of the amount spent.
-const LOYALTY_EARN_PERCENT = 5
 const FREE_SHIPPING_THRESHOLD = 499
 
 const TRUST_BADGES = [
@@ -28,10 +32,20 @@ function FactRow({ icon, label, value }) {
   )
 }
 
+/**
+ * ProductDetailView — assembled from minute-segment components (ADR-0025),
+ * each a conscious business decision documented in its own file: Gallery
+ * (touch-the-bottle), UspChips (3-second trust), PriceBlock (offer clarity),
+ * VariantSelector (Radix radio semantics), QuantityStepper + StickyATCBar
+ * (mobile conversion), FaqSection (objection handling + SEO),
+ * ComparisonTable (whole-catalog cross-sell). Radix primitives carry
+ * behavior; everything else is hand-built with the same rigor.
+ */
 export default function ProductDetailView({ productId }) {
   const { products } = useContent()
   const { addToCart, setView, showToast } = useCart()
   const product = products.find(p => p.id === productId)
+  const content = productContent[productId]
 
   const sizes = useMemo(
     () => (product?.sizes ?? []).filter(s => s.priceInclGst != null || s.price != null),
@@ -39,13 +53,13 @@ export default function ProductDetailView({ productId }) {
   )
   const [chosen, setChosen] = useState(null)
   const [qty, setQty] = useState(1)
-  const [imgIdx, setImgIdx] = useState(0)
+  const ctaRowRef = useRef(null)
+  const ctaOnScreen = useOnScreen(ctaRowRef)
 
   const priceOf = s => s.priceInclGst ?? s.price ?? 0
   const current = sizes.find(s => s.variantId === chosen) ?? sizes[0]
   const price = current ? priceOf(current) : product?.price ?? 0
   const mrp = current?.mrp ?? null
-  const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : null
   const gallery = product?.gallery ?? [product?.img].filter(Boolean)
 
   const goToCollection = () => {
@@ -77,8 +91,6 @@ export default function ProductDetailView({ productId }) {
     )
   }
 
-  const points = Math.floor(((price * qty) / 100) * LOYALTY_EARN_PERCENT)
-
   const handleAddToCart = () => {
     if (!current) return
     addToCart(current.variantId, product.name, price, current.sizeMl, qty)
@@ -102,29 +114,8 @@ export default function ProductDetailView({ productId }) {
         </button>
 
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-start">
-          {/* Image gallery */}
-          <div className="lg:sticky lg:top-24">
-            <div className="rounded-3xl border border-brand-border bg-white overflow-hidden">
-              <img id="detailMainImg" src={gallery[imgIdx]} alt={product.name} className="w-full aspect-square object-cover" />
-            </div>
-            {gallery.length > 1 && (
-              <div className="mt-4 flex gap-3 flex-wrap">
-                {gallery.map((g, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setImgIdx(i)}
-                    aria-label={`View image ${i + 1}`}
-                    aria-pressed={i === imgIdx}
-                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition ${i === imgIdx ? 'border-brand-forest' : 'border-brand-border opacity-70 hover:opacity-100'}`}
-                  >
-                    <img src={g} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <Gallery images={gallery} alt={product.name} />
 
-          {/* Info column */}
           <div>
             {product.tagline && (
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-subtle/80">{product.tagline}</p>
@@ -149,72 +140,19 @@ export default function ProductDetailView({ productId }) {
               </div>
             )}
 
-            {/* Price block */}
-            <div className="mt-5 rounded-2xl border border-brand-border bg-brand-warmCard p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-charcoal/60">Your Price</span>
-                  <div className="mt-0.5 flex items-baseline gap-2.5">
-                    <span id="detailPrice" className="font-serif text-3xl font-bold text-brand-forest">{inr(price)}</span>
-                    {mrp && mrp > price && <span className="text-sm text-brand-charcoal/50 line-through">{inr(mrp)}</span>}
-                  </div>
-                </div>
-                {discount && (
-                  <span className="rounded-lg bg-brand-ochre/15 text-brand-ochreDeep px-3 py-1.5 text-xs font-bold whitespace-nowrap">
-                    {discount}% OFF
-                  </span>
-                )}
-              </div>
-              <p className="mt-1.5 text-xs text-brand-charcoal/55">
-                incl. of all taxes
-                {mrp && mrp > price && <> · You save {inr(mrp - price)}</>}
-              </p>
-              <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-herb">
-                <span className="material-symbols-outlined text-base">eco</span>
-                Buy now & earn {points} loyalty points instantly
-              </p>
-            </div>
+            <UspChips items={content?.usps} />
 
-            {/* Variant selector */}
-            {sizes.length > 0 && (
-              <div className="mt-6">
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal/70">Select Variant</span>
-                <div id="variantGrid" role="listbox" aria-label="Select variant" className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {sizes.map(s => {
-                    const active = current?.variantId === s.variantId
-                    const p = priceOf(s)
-                    return (
-                      <button
-                        key={s.variantId}
-                        role="option"
-                        aria-selected={active}
-                        onClick={() => setChosen(s.variantId)}
-                        className={`text-left rounded-xl border-2 p-3 transition ${active ? 'border-brand-forest bg-brand-forest/5' : 'border-brand-border bg-white hover:border-brand-forest/40'}`}
-                      >
-                        <span className="block text-xs font-semibold text-brand-charcoal">{s.label ?? `${s.sizeMl} ml`}</span>
-                        <span className="mt-1 flex items-baseline gap-1.5 flex-wrap">
-                          <span className="font-serif text-lg font-bold text-brand-forest">{inr(p)}</span>
-                          <span className="text-[10px] text-brand-charcoal/55">₹{Math.round(p / (s.sizeMl / 1000))}/L</span>
-                        </span>
-                        {s.mrp && s.mrp > p && <span className="block text-[11px] text-brand-charcoal/50 line-through">MRP {inr(s.mrp)}</span>}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            {/* Price block — three honest tiers: MRP → our price → offer (when configured) */}
+            <PriceBlock price={price} mrp={mrp} offer={product.offer ?? null} qty={qty} />
 
-            {/* Quantity + CTAs */}
-            <div className="mt-6 flex flex-wrap items-stretch gap-3">
-              <div className="flex items-center rounded-full border border-brand-border bg-white">
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} aria-label="Decrease quantity" className="w-10 h-11 flex items-center justify-center text-brand-forest hover:text-brand-ochreDeep">
-                  <span className="material-symbols-outlined text-lg">remove</span>
-                </button>
-                <span id="detailQty" className="w-8 text-center font-semibold text-brand-forest">{qty}</span>
-                <button onClick={() => setQty(q => Math.min(10, q + 1))} aria-label="Increase quantity" className="w-10 h-11 flex items-center justify-center text-brand-forest hover:text-brand-ochreDeep">
-                  <span className="material-symbols-outlined text-lg">add</span>
-                </button>
-              </div>
+            <VariantSelector
+              options={sizes.map(s => ({ variantId: s.variantId, label: s.label, sizeMl: s.sizeMl, price: priceOf(s), mrp: s.mrp ?? null }))}
+              value={current?.variantId}
+              onChange={setChosen}
+            />
+
+            <div ref={ctaRowRef} className="mt-6 flex flex-wrap items-stretch gap-3">
+              <QuantityStepper qty={qty} onChange={setQty} />
               <button id="detailAddBtn" className="btn btn-primary flex-1 min-w-[10rem] justify-center" disabled={!current} onClick={handleAddToCart}>
                 Add to Cart
               </button>
@@ -229,7 +167,6 @@ export default function ProductDetailView({ productId }) {
               {product.story?.length ? product.story.map((para, i) => <p key={i}>{para}</p>) : <p>{product.desc}</p>}
             </div>
 
-            {/* Highlights */}
             {product.highlights?.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
                 {product.highlights.map(h => (
@@ -241,7 +178,6 @@ export default function ProductDetailView({ productId }) {
               </div>
             )}
 
-            {/* Perfect for + facts */}
             <div className="mt-8 grid sm:grid-cols-2 gap-4">
               {product.perfectFor?.length > 0 && (
                 <div className="rounded-2xl border border-brand-border bg-white p-5">
@@ -265,7 +201,6 @@ export default function ProductDetailView({ productId }) {
               )}
             </div>
 
-            {/* Nutrition facts */}
             {product.nutrition && (
               <div className="mt-6 rounded-2xl border-2 border-brand-charcoal bg-white p-5 max-w-md">
                 <h3 className="font-serif text-lg font-bold text-brand-forest">
@@ -297,9 +232,15 @@ export default function ProductDetailView({ productId }) {
                 </div>
               ))}
             </div>
+
+            <FaqSection faqs={content?.faqs} />
           </div>
         </div>
+
+        <ComparisonTable currentId={productId} oils={oilComparison} />
       </div>
+
+      <StickyATCBar visible={!ctaOnScreen} img={gallery[0]} name={product.name} price={price} onAdd={handleAddToCart} />
     </div>
   )
 }

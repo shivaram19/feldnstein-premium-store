@@ -143,17 +143,17 @@ await new Promise(r => setTimeout(r, 500))
 check('product detail renders', await page.$('#productDetail') !== null)
 check('product hash is linkable', await page.evaluate(() => window.location.hash.startsWith('#product/')))
 check('detail shows product name', (await page.$eval('#productDetail h1', el => el.textContent.trim())).length > 3)
-const variantCount = (await page.$$('#variantGrid [role="option"]')).length
+const variantCount = (await page.$$('#variantGrid [role="radio"]')).length
 check('variant grid shows sizes', variantCount >= 3)
 check('description paragraph renders', (await page.$eval('#productStory', el => el.textContent.trim())).length > 200)
 check('nutrition table renders', (await page.$$('#nutritionTable tbody tr')).length >= 5)
 check('trust badges render', (await page.$$('.trust-badge')).length === 4)
 
 // Selecting a variant updates the headline price
-const firstVariantPrice = await page.$eval('#variantGrid [role="option"] .font-serif', el => el.textContent.trim())
+const firstVariantPrice = await page.$eval('#variantGrid [role="radio"] .font-serif', el => el.textContent.trim())
 const headlinePrice = await page.$eval('#detailPrice', el => el.textContent.trim())
 check('headline price matches first variant', headlinePrice === firstVariantPrice)
-await page.evaluate(() => document.querySelectorAll('#variantGrid [role="option"]')[2].click())
+await page.evaluate(() => document.querySelectorAll('#variantGrid [role="radio"]')[2].click())
 await new Promise(r => setTimeout(r, 200))
 const headlineAfterVariant = await page.$eval('#detailPrice', el => el.textContent.trim())
 check('variant click updates headline price', headlineAfterVariant !== headlinePrice)
