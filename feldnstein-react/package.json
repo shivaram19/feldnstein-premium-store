@@ -17,7 +17,8 @@
     "@radix-ui/react-switch": "^1.4.1",
     "@radix-ui/react-visually-hidden": "^1.2.13",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

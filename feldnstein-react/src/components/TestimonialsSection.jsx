@@ -2,8 +2,10 @@ import Reveal from './Reveal'
 import TestimonialCard from './TestimonialCard'
 import { useContent } from '../context/ContentContext'
 import { testimonialSubtitle } from '../data/testimonials'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function TestimonialsSection() {
+  const { t } = useLanguage()
   const { testimonials } = useContent()
   const items = Array.isArray(testimonials) ? testimonials : []
 
@@ -12,7 +14,7 @@ export default function TestimonialsSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
-          <div className="section-label"><span className="material-symbols-outlined text-sm">reviews</span> 05 — What Makes People Come Back</div>
+          <div className="section-label"><span className="material-symbols-outlined text-sm">reviews</span> {t('section.testimonials')}</div>
           <h2 className="section-title">What Makes People Come Back <em>at FELD·N·STEIN</em></h2>
           {testimonialSubtitle && <p className="section-sub">{testimonialSubtitle}</p>}
         </Reveal>

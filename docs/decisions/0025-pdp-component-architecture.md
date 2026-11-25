@@ -55,3 +55,12 @@ tooling; named human owner accountable (§6).
 - Two-way door: Radix usage can expand to the rest of the storefront
   (Select.tsx from ADR-0022 could migrate onto RadioGroup/Select primitives)
   or be removed per-component without data-model changes.
+
+## Amendments
+
+- 2026-11-15: Footer decomposed into `src/components/footer/` segments
+  (Brand / LinkGroup / Support / Bottom, Radix `Separator` for the divider)
+  and footer "Policy & Info" links became real `#policy/<key>` destinations
+  (PolicyView, FAQ on the Radix Accordion wrapper) — same Radix-primitives +
+  brand-styling pattern applied beyond the PDP; one-way door avoided, no new
+  dependencies.

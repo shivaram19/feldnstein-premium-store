@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { useContent } from '../context/ContentContext'
 import StarRating from './StarRating'
@@ -8,11 +8,18 @@ import PriceBlock from './pdp/PriceBlock'
 import VariantSelector from './pdp/VariantSelector'
 import QuantityStepper, { StickyATCBar, useOnScreen } from './pdp/QuantityStepper'
 import FaqSection from './pdp/FaqSection'
+import ReviewsSection from './pdp/ReviewsSection'
 import ComparisonTable from './pdp/ComparisonTable'
 import SubscribeSaveRow from './pdp/SubscribeSaveRow'
 import { productContent, oilComparison } from '../data/productContent'
+import { shopApi } from '../api/shopApi'
+import { useLanguage } from '../context/LanguageContext'
 
 const FREE_SHIPPING_THRESHOLD = 499
+
+// Storefront product id → backend oil_product id (ADR-0028). Sunflower has
+// no backend catalog entry yet, so it renders no reviews — by design.
+const OIL_ID = { groundnut: 1, sesame: 2, coconut: 3 }
 
 const TRUST_BADGES = [
   { icon: 'local_shipping', title: 'Free Shipping', sub: `On orders above ₹${FREE_SHIPPING_THRESHOLD}` },
@@ -45,6 +52,7 @@ function FactRow({ icon, label, value }) {
 export default function ProductDetailView({ productId }) {
   const { products } = useContent()
   const { addToCart, setView, showToast, subscribe, setSubscribe } = useCart()
+  const { t } = useLanguage()
   const product = products.find(p => p.id === productId)
   const content = productContent[productId]
 
@@ -55,6 +63,16 @@ export default function ProductDetailView({ productId }) {
   const [chosen, setChosen] = useState(null)
   const [qty, setQty] = useState(1)
   const ctaRowRef = useRef(null)
+  const [batch, setBatch] = useState(null)
+  useEffect(() => {
+    const oilId = OIL_ID[productId]
+    if (!oilId) return
+    let cancelled = false
+    shopApi.currentBatch(oilId)
+      .then(b => { if (!cancelled) setBatch(b) })
+      .catch(() => { /* no released batch → the row simply stays hidden */ })
+    return () => { cancelled = true }
+  }, [productId])
   const ctaOnScreen = useOnScreen(ctaRowRef)
 
   const priceOf = s => s.priceInclGst ?? s.price ?? 0
@@ -157,10 +175,10 @@ export default function ProductDetailView({ productId }) {
             <div ref={ctaRowRef} className="mt-6 flex flex-wrap items-stretch gap-3">
               <QuantityStepper qty={qty} onChange={setQty} />
               <button id="detailAddBtn" className="btn btn-primary flex-1 min-w-[10rem] justify-center" disabled={!current} onClick={handleAddToCart}>
-                Add to Cart
+                {t('pdp.addToCart')}
               </button>
               <button id="detailBuyNowBtn" className="btn btn-gold flex-1 min-w-[10rem] justify-center" disabled={!current} onClick={handleBuyNow}>
-                Buy Now
+                {t('pdp.buyNow')}
               </button>
             </div>
 
@@ -185,11 +203,11 @@ export default function ProductDetailView({ productId }) {
               {product.perfectFor?.length > 0 && (
                 <div className="rounded-2xl border border-brand-border bg-white p-5">
                   <span className="text-xs font-bold uppercase tracking-wider text-brand-charcoal/60">Perfect For</span>
-                  <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                  <div className="mt-3 flex flex-col gap-2.5">
                     {product.perfectFor.map(f => (
-                      <div key={f.label} className="flex flex-col items-center gap-1.5">
-                        <span className="material-symbols-outlined text-brand-forest">{f.icon}</span>
-                        <span className="text-[10px] font-semibold text-brand-charcoal/75 leading-tight">{f.label}</span>
+                      <div key={f.label} className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-brand-forest text-xl w-6 flex justify-center shrink-0">{f.icon}</span>
+                        <span className="text-[13px] font-semibold text-brand-charcoal/85">{f.label}</span>
                       </div>
                     ))}
                   </div>
@@ -203,6 +221,15 @@ export default function ProductDetailView({ productId }) {
                 {product.ingredients && <FactRow icon="inventory_2" label="Ingredients" value={product.ingredients} />}
                 {product.storage && <FactRow icon="warehouse" label="Storage" value={product.storage} />}
                 {product.shelfLife && <FactRow icon="event_available" label="Best Before" value={product.shelfLife} />}
+                {batch && (
+                  <div className="border-t border-brand-border pt-3">
+                    <FactRow
+                      icon="history"
+                      label="Current Batch"
+                      value={`${batch.batchCode} · pressed ${new Date(batch.pressDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · ${batch.yieldLitres} L pressed`}
+                    />
+                  </div>
+                )}
                 <div className="border-t border-brand-border pt-3">
                   <FactRow icon="factory" label="Packed & Marketed By" value="FELD N STEIN, Mothadaka, Guntur District, Andhra Pradesh · Customer care +91 91600 98989" />
                 </div>
@@ -240,6 +267,8 @@ export default function ProductDetailView({ productId }) {
                 </div>
               ))}
             </div>
+
+            <ReviewsSection oilProductId={OIL_ID[productId] ?? null} />
 
             <FaqSection faqs={content?.faqs} />
           </div>

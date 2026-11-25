@@ -3,6 +3,7 @@ import Reveal from './Reveal'
 import AmbientVideo from './AmbientVideo'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { useContent } from '../context/ContentContext'
+import { useLanguage } from '../context/LanguageContext'
 import { assetUrl } from '../api/shopApi'
 
 // Kinetic typography: split the hero headline into staggered words.
@@ -79,6 +80,7 @@ function KineticHeadline({ liveHeadline }) {
 }
 
 export default function Hero() {
+  const { lang, t } = useLanguage()
   const { hero } = useContent()
   return (
     <section id="hero" className="relative w-full min-h-[100svh] flex items-center overflow-hidden bg-brand-forestDark">
@@ -101,18 +103,42 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-28 lg:py-36 w-full">
         <div className="max-w-3xl">
           <Reveal className="section-label">
-            <span className="material-symbols-outlined text-sm">eco</span> Farm-Direct · Lab-Tested · Small Batch
+            <span className="material-symbols-outlined text-sm">eco</span> {t('hero.label')}
           </Reveal>
-          <KineticHeadline liveHeadline={hero?.headline || null} />
+          {/* Telugu mode uses the translated static headline — the content
+              API has no Telugu yet (ADR-0029 honest slice). */}
+          <KineticHeadline liveHeadline={lang === 'te' ? t('hero.headline') : (hero?.headline || null)} />
           <Reveal className="mt-8 text-base sm:text-lg text-white/80 leading-relaxed max-w-md">
-            {hero?.subcopy || 'Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.'}
+            {lang === 'te' ? t('hero.subcopy') : (hero?.subcopy || 'Bull-pressed oils, crafted slowly from the finest seeds. No heat. No chemicals. Just pure oil your family can trust.')}
           </Reveal>
           <Reveal className="mt-10 flex flex-wrap items-center gap-4">
-            <a href="#collection" className="btn btn-gold">Shop the Reserve <span className="material-symbols-outlined text-base">arrow_forward</span></a>
-            <a href="#matrix" className="btn btn-ghost-light">Our Standard</a>
+            <a href="#collection" className="btn btn-gold btn-shine">{t('hero.shopCta')} <span className="material-symbols-outlined text-base">arrow_forward</span></a>
+            <a href="#matrix" className="btn btn-ghost-light">{t('hero.standardCta')}</a>
+          </Reveal>
+          {/* Glance chips (tension 1): three facts readable in the first
+              second, before any paragraph is read. */}
+          <Reveal className="mt-6 flex flex-wrap gap-2">
+            {[t('hero.chip1'), t('hero.chip2'), t('hero.chip3')].map(chip => (
+              <span key={chip} className="px-3 py-1.5 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm text-white/90 text-[11px] font-bold uppercase tracking-wider">
+                {chip}
+              </span>
+            ))}
           </Reveal>
         </div>
       </div>
+      {/* Scroll cue (ADR-0027): Nielsen — users scroll when the above-fold
+          content signals there is more; the cue makes the promise explicit. */}
+      <p className="absolute bottom-5 right-5 z-10 hidden sm:block text-[10px] uppercase tracking-[0.15em] text-white/50">
+        {t('hero.caption')}
+      </p>
+      <a
+        href="#collection"
+        aria-label="Scroll to the collection"
+        className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-white/70 hover:text-brand-ochre transition-colors"
+      >
+        <span className="text-[10px] font-bold uppercase tracking-[0.25em]">{t('hero.scrollCue')}</span>
+        <span className="material-symbols-outlined text-xl animate-bounce" aria-hidden="true">keyboard_arrow_down</span>
+      </a>
     </section>
   )
 }

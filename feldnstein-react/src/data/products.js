@@ -136,8 +136,8 @@ export const products = [
     highlights: HIGHLIGHTS,
     perfectFor: [
       { icon: 'skillet', label: 'Sautéing' },
-      { icon: 'blender', label: 'Dressings' },
-      { icon: 'mixture', label: 'Marinades' },
+      { icon: 'soup_kitchen', label: 'Dressings' },
+      { icon: 'blender', label: 'Marinades' },
       { icon: 'dinner_dining', label: 'Traditional Cooking' },
     ],
     ingredients: '100% Black Sesame Seeds',

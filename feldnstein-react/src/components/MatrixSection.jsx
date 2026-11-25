@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Reveal from './Reveal'
 import MobileComparisonCarousel from './MobileComparisonCarousel'
+import { useLanguage } from '../context/LanguageContext'
 
 const ROWS = [
   {
@@ -44,6 +45,7 @@ const ROWS = [
 const MOBILE_QUERY = '(max-width: 767px)'
 
 export default function MatrixSection() {
+  const { t } = useLanguage()
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function MatrixSection() {
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 mb-14">
             <div className="max-w-xl text-left">
               <div className="hairline-rule" style={{ marginLeft: 0, marginRight: 0 }}></div>
-              <div className="section-label"><span className="material-symbols-outlined text-sm">balance</span> 02 — Strict Transparency</div>
+              <div className="section-label"><span className="material-symbols-outlined text-sm">balance</span> {t('section.standard')}</div>
               <h2 className="section-title !text-left">What Goes Into Your Cooking <em>Matters</em></h2>
               <p className="section-sub !mt-3">Industrial commercial oils prioritize infinite shelf-life over bioavailability. Compare the essential truth side-by-side.</p>
             </div>

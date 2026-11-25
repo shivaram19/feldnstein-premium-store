@@ -106,7 +106,38 @@ select.input { appearance: none; -webkit-appearance: none;
 /* ===== Ticker marquee (seamless loop — track is two identical halves) ===== */
 @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* Process diagram: interactive SVG steps (click + keyboard) */
-.process-step { cursor: pointer; }
-.process-step:focus { outline: none; }
-.process-step:focus-visible { outline: 2px solid #c59b27; outline-offset: 8px; }
+/* ===== Sensory attention layer (ADR-0027): light ===== */
+/* Golden sheen sweep across the hero CTA — light as the brand's voice
+   (oil is rendered sunlight). */
+@keyframes light-sweep {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  55%, 100% { transform: translateX(240%) skewX(-18deg); }
+}
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 248, 220, 0.55), transparent);
+  animation: light-sweep 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Slow warm glow on the gold italic accents of section titles. */
+@keyframes em-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(197, 155, 39, 0); }
+  50% { text-shadow: 0 0 22px rgba(197, 155, 39, 0.45); }
+}
+.section-title em { animation: em-glow 5.5s ease-in-out infinite; }
+
+/* Accessibility: motion yields to the user's system preference. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-shine::after,
+  .section-title em,
+  .animate-spin,
+  [class*='animate-'] {
+    animation: none !important;
+  }
+  html { scroll-behavior: auto; }
+}

@@ -2,8 +2,10 @@ import { useState } from 'react'
 import Reveal from './Reveal'
 import { useCart } from '../context/CartContext'
 import { shopApi } from '../api/shopApi'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function SubscriptionSection() {
+  const { t } = useLanguage()
   const { showToast } = useCart()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -38,7 +40,7 @@ export default function SubscriptionSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
-          <div className="section-label"><span className="material-symbols-outlined text-sm">sync</span> 04 — Seamless Agrarian Supply</div>
+          <div className="section-label"><span className="material-symbols-outlined text-sm">sync</span> {t('section.subscribe')}</div>
           <h2 className="section-title">How FELD·N·STEIN <em>Fits in Your Day</em></h2>
         </Reveal>
         <Reveal as="div" className="max-w-5xl mx-auto mt-8">

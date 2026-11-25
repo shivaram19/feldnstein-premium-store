@@ -3,13 +3,14 @@ import { useCart } from '../context/CartContext'
 import { useCustomer } from '../context/CustomerContext'
 import { assetUrl } from '../api/shopApi'
 import { useScrollSpy } from '../hooks/useScrollSpy'
+import { useLanguage } from '../context/LanguageContext'
 import SignInModal from './SignInModal'
 
 const NAV_LINKS = [
-  { href: '#collection', label: 'Shop' },
-  { href: '#matrix', label: 'Our Standard' },
-  { href: '#process', label: 'Process' },
-  { href: '#subscription', label: 'Subscribe' },
+  { href: '#collection', labelKey: 'nav.shop' },
+  { href: '#matrix', labelKey: 'nav.standard' },
+  { href: '#process', labelKey: 'nav.process' },
+  { href: '#subscription', labelKey: 'nav.subscribe' },
 ]
 
 const SECTION_IDS = ['collection', 'matrix', 'process', 'subscription']
@@ -26,6 +27,7 @@ export default function Header() {
   const mobileMenuRef = useRef(null)
   const accountRef = useRef(null)
   const activeId = useScrollSpy(SECTION_IDS)
+  const { lang, setLang, t } = useLanguage()
 
   // Hash links only exist in the home view's DOM; from track/checkout we switch back first.
   const goTo = (e, href) => {
@@ -123,13 +125,22 @@ export default function Header() {
             <span className="font-serif text-xl lg:text-2xl font-medium text-brand-forest tracking-[0.12em]">FELD·N·STEIN</span>
           </a>
           <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold" aria-label="Primary">
-            {NAV_LINKS.map(({ href, label }) => (
+            {NAV_LINKS.map(({ href, labelKey }) => (
               <a key={href} href={href} className={navClass(href)} onClick={e => goTo(e, href)} {...navLinkProps(href)}>
-                {label}
+                {t(labelKey)}
               </a>
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <button
+              data-testid="lang-toggle"
+              onClick={() => setLang(lang === 'en' ? 'te' : 'en')}
+              title={t('lang.note')}
+              aria-label={lang === 'en' ? 'Switch to Telugu' : 'Switch to English'}
+              className="h-9 px-2.5 rounded-full border border-brand-border text-[11px] font-bold tracking-wide text-brand-forest hover:bg-brand-warmCard transition-colors"
+            >
+              {t('lang.toggle')}
+            </button>
             {customer ? (
               <div className="relative" ref={accountRef}>
                 <button
@@ -217,9 +228,9 @@ export default function Header() {
           id="mobileMenu"
           className={`lg:hidden ${menuOpen ? '' : 'hidden'} pb-4 flex flex-col gap-3 text-sm font-semibold`}
         >
-          {NAV_LINKS.map(({ href, label }) => (
+          {NAV_LINKS.map(({ href, labelKey }) => (
             <a key={href} href={href} className={navClass(href)} onClick={e => goTo(e, href)} {...navLinkProps(href)}>
-              {label}
+              {t(labelKey)}
             </a>
           ))}
         </div>

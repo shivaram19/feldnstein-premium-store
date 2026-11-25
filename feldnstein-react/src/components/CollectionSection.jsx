@@ -4,11 +4,13 @@ import QuickViewModal from './QuickViewModal'
 import AddToCart from './AddToCart'
 import { useContent } from '../context/ContentContext'
 import { useCart } from '../context/CartContext'
+import { useLanguage } from '../context/LanguageContext'
 import { inr } from '../api/shopApi'
 
 const CARD_WIDTH = 360
 
 export default function CollectionSection() {
+  const { t } = useLanguage()
   const { products, categories } = useContent()
   const { openProduct } = useCart()
   const [filter, setFilter] = useState('all')
@@ -81,7 +83,7 @@ export default function CollectionSection() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
-          <div className="section-label">03 — The Absolute Reserve</div>
+          <div className="section-label">{t('section.reserve')}</div>
           <h2 className="section-title">The <em>absolute</em> reserve collection</h2>
           <p className="section-sub">Five pure cold-pressed oils, hand-harvested and stone-milled within 24 hours of extraction.</p>
         </Reveal>

@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { shopApi, type Cart, type Order, type CheckoutDetails } from '../api/shopApi'
+import { playDrop, playSuccess } from '../hooks/useSoundFeedback'
 
-export type ShopView = 'home' | 'cart' | 'checkout' | 'track' | 'account' | 'product'
+export type ShopView = 'home' | 'cart' | 'checkout' | 'track' | 'account' | 'product' | 'policy'
 
 interface NavState {
   view: ShopView
   productId: string | null
+  policyKey: string | null
 }
 
 interface CartContextValue {
@@ -24,8 +26,10 @@ interface CartContextValue {
   setDrawerOpen: (open: boolean) => void
   view: ShopView
   productId: string | null
+  policyKey: string | null
   setView: (view: ShopView) => void
   openProduct: (id: string) => void
+  openPolicy: (key: string) => void
   lastOrder: Order | null
   setLastOrder: (order: Order | null) => void
   placeOrder: (details: CheckoutDetails) => Promise<Order>
@@ -39,12 +43,13 @@ const EMPTY_CART: Cart = { lines: [], subTotal: 0, gstTotal: 0, grandTotal: 0, i
 // etc.) are left to the home view and never treated as views. Product pages use
 // '#product/<id>' (ADR-0024) so each oil is a linkable destination too.
 const HASH_TO_VIEW: Record<string, ShopView> = { cart: 'cart', checkout: 'checkout', track: 'track', account: 'account' }
-const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track', account: '#account', product: '' }
+const VIEW_TO_HASH: Record<ShopView, string> = { home: '', cart: '#cart', checkout: '#checkout', track: '#track', account: '#account', product: '', policy: '' }
 
 const navFromHash = (): NavState => {
   const hash = window.location.hash.slice(1)
-  if (hash.startsWith('product/')) return { view: 'product', productId: hash.slice('product/'.length) }
-  return { view: HASH_TO_VIEW[hash] ?? 'home', productId: null }
+  if (hash.startsWith('product/')) return { view: 'product', productId: hash.slice('product/'.length), policyKey: null }
+  if (hash.startsWith('policy/')) return { view: 'policy', productId: null, policyKey: hash.slice('policy/'.length) }
+  return { view: HASH_TO_VIEW[hash] ?? 'home', productId: null, policyKey: null }
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -55,6 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [view, setViewState] = useState<ShopView>(() => navFromHash().view)
   const [productId, setProductId] = useState<string | null>(() => navFromHash().productId)
+  const [policyKey, setPolicyKey] = useState<string | null>(() => navFromHash().policyKey)
   const [lastOrder, setLastOrder] = useState<Order | null>(null)
   const [toast, setToast] = useState({ message: '', visible: false })
   const toastTimer = useRef<number | undefined>(undefined)
@@ -62,15 +68,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const applyNav = useCallback((next: NavState) => {
     setViewState(next.view)
     setProductId(next.productId)
-    const hash = next.view === 'product' ? `#product/${next.productId}` : VIEW_TO_HASH[next.view]
+    setPolicyKey(next.policyKey)
+    const hash =
+      next.view === 'product' ? `#product/${next.productId}`
+      : next.view === 'policy' ? `#policy/${next.policyKey}`
+      : VIEW_TO_HASH[next.view]
     if (hash !== window.location.hash) {
       window.history.pushState(null, '', hash || window.location.pathname)
     }
   }, [])
 
-  const setView = useCallback((next: ShopView) => applyNav({ view: next, productId: null }), [applyNav])
+  const setView = useCallback((next: ShopView) => applyNav({ view: next, productId: null, policyKey: null }), [applyNav])
 
-  const openProduct = useCallback((id: string) => applyNav({ view: 'product', productId: id }), [applyNav])
+  const openProduct = useCallback((id: string) => applyNav({ view: 'product', productId: id, policyKey: null }), [applyNav])
+
+  const openPolicy = useCallback((key: string) => applyNav({ view: 'policy', productId: null, policyKey: key }), [applyNav])
 
   // Back/forward and manual hash edits restore the matching view
   useEffect(() => {
@@ -78,6 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const nav = navFromHash()
       setViewState(nav.view)
       setProductId(nav.productId)
+      setPolicyKey(nav.policyKey)
     }
     window.addEventListener('popstate', sync)
     window.addEventListener('hashchange', sync)
@@ -114,6 +127,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setCart(next)
           const label = sizeMl ? `${name} · ${sizeMl} ml` : name
           showToast(`Added to cart — ${label} · ₹${Number(price).toLocaleString('en-IN')}`)
+          playDrop() // auditory confirmation — the drop the eye can't see
         })
         .catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not add to cart')),
     [showToast],
@@ -140,6 +154,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLastOrder(order)
     setCart(EMPTY_CART)
     localStorage.removeItem('feldnstein.cartToken')
+    playSuccess() // the order's auditory peak — remembered with the purchase
     return order
   }, [])
 
@@ -153,7 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     toast, showToast, cart, loading,
     addToCart, setQty, removeItem, subscribe, setSubscribe, refresh,
     drawerOpen, setDrawerOpen,
-    view, productId, setView, openProduct,
+    view, productId, policyKey, setView, openProduct, openPolicy,
     lastOrder, setLastOrder,
     placeOrder, payOrder,
   }

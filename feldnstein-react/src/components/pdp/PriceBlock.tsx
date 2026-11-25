@@ -45,6 +45,11 @@ export default function PriceBlock({ price, mrp, offer, qty, loyaltyPercent = 5 
         MRP incl. of all taxes
         {hasMrp && <> · You save {inr(mrp - price)}</>}
       </p>
+      {/* Per-day cost (tension 2): the earned-premium defense — certainty
+          priced in care vocabulary, never in discounts. */}
+      <p className="mt-1 text-[11px] text-brand-charcoal/50">
+        ≈ {inr(Math.max(1, Math.round(price / 42)))} a day at typical family use
+      </p>
 
       {offer && (
         <div className="pdp-offer-row mt-3 flex items-center gap-2 rounded-xl bg-brand-forest px-3.5 py-2.5 text-white overflow-hidden relative" data-testid="offer-badge">

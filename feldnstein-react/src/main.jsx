@@ -5,15 +5,18 @@ import App from './App.jsx'
 import { CartProvider } from './context/CartContext.tsx'
 import { CustomerProvider } from './context/CustomerContext.tsx'
 import { ContentProvider } from './context/ContentContext.jsx'
+import { LanguageProvider } from './context/LanguageContext.tsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ContentProvider>
-      <CartProvider>
-        <CustomerProvider>
-          <App />
-        </CustomerProvider>
-      </CartProvider>
-    </ContentProvider>
+    <LanguageProvider>
+      <ContentProvider>
+        <CartProvider>
+          <CustomerProvider>
+            <App />
+          </CustomerProvider>
+        </CartProvider>
+      </ContentProvider>
+    </LanguageProvider>
   </StrictMode>,
 )

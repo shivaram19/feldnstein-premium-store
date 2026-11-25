@@ -191,6 +191,36 @@ export const shopApi = {
       method: 'POST',
       body: JSON.stringify({ email, ...(name ? { name } : {}) }),
     }),
+  /** Moderated reviews (ADR-0028). Rendered only when rows exist — the
+      PDP's null-by-design ratings contract is unchanged. */
+  reviews: (productId: number) =>
+    req<ReviewSummary>(`/shop/products/${productId}/reviews`),
+  /** Current RELEASED batch (batch genealogy — citations-verified §D
+      tension 2). 404 → the PDP hides the row. */
+  currentBatch: (productId: number) =>
+    req<BatchInfo>(`/shop/products/${productId}/batch`),
+}
+
+export interface BatchInfo {
+  batchCode: string
+  pressDate: string
+  bestBefore: string
+  yieldLitres: number
+}
+
+export interface Review {
+  id: number
+  author: string
+  rating: number
+  title: string
+  body: string
+  date: string
+}
+
+export interface ReviewSummary {
+  average: number
+  count: number
+  reviews: Review[]
 }
 
 /* ===== Customer identity (ADR-0023) — separate transport: these endpoints return
