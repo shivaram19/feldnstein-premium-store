@@ -37,6 +37,15 @@ public class ProductReview extends PanacheEntity {
     @Column(nullable = false)
     public boolean approved;
 
+    /** Self-declared order code (ADR-0030). Proves an order existed for the
+        product — not that the submitter owns it; see ADR-0030 consequences. */
+    @Column(name = "order_code", length = 24)
+    public String orderCode;
+
+    /** True when order_code matched a real order line for this product. */
+    @Column(name = "verified_buyer", nullable = false)
+    public boolean verifiedBuyer;
+
     @Column(name = "created_at", nullable = false)
     public Instant createdAt = Instant.now();
 }

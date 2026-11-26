@@ -128,6 +128,12 @@ export function inr(value: number): string {
   return `₹${rounded.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+/** Stated free-shipping promise (PDP badge + cart bar share one truth). */
+export const FREE_SHIPPING_THRESHOLD = 499
+
+/** Merchant VPA for the UPI-intent path (ADR-0030 move 3). Overridable per deploy. */
+export const UPI_VPA = ((import.meta.env.VITE_UPI_VPA as string | undefined) ?? 'feldnstein@upi')
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -195,6 +201,10 @@ export const shopApi = {
       PDP's null-by-design ratings contract is unchanged. */
   reviews: (productId: number) =>
     req<ReviewSummary>(`/shop/products/${productId}/reviews`),
+  /** Submit a review for moderation (ADR-0028). orderCode (optional, V24)
+      marks a verified buyer when it matches a real order line. */
+  submitReview: (draft: { productId: number; authorName: string; rating: number; title: string; body: string; orderCode?: string }) =>
+    req<{ status: string }>('/shop/reviews', { method: 'POST', body: JSON.stringify(draft) }),
   /** Current RELEASED batch (batch genealogy — citations-verified §D
       tension 2). 404 → the PDP hides the row. */
   currentBatch: (productId: number) =>
@@ -206,6 +216,9 @@ export interface BatchInfo {
   pressDate: string
   bestBefore: string
   yieldLitres: number
+  /** ADR-0030 move 7 — present when the batch recorded its seed farmer. */
+  farmerName?: string
+  farmerPlace?: string
 }
 
 export interface Review {
@@ -215,6 +228,8 @@ export interface Review {
   title: string
   body: string
   date: string
+  /** True when the reviewer quoted a matching order code (V24). */
+  verified?: boolean
 }
 
 export interface ReviewSummary {

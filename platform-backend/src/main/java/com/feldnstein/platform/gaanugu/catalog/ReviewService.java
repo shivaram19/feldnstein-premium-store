@@ -1,5 +1,6 @@
 package com.feldnstein.platform.gaanugu.catalog;
 
+import com.feldnstein.platform.commerce.order.OrderLine;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
@@ -13,7 +14,13 @@ import java.util.Optional;
 @ApplicationScoped
 public class ReviewService {
 
-    public record ReviewDraft(Long productId, String authorName, Integer rating, String title, String body) {}
+    public record ReviewDraft(Long productId, String authorName, Integer rating, String title, String body,
+                              String orderCode) {
+        /** Anonymous review without an order reference (ADR-0028 contract). */
+        public ReviewDraft(Long productId, String authorName, Integer rating, String title, String body) {
+            this(productId, authorName, rating, title, body, null);
+        }
+    }
 
     public List<ProductReview> approvedFor(Long productId) {
         return ProductReview
@@ -42,12 +49,23 @@ public class ReviewService {
         if (isBlank(draft.title()) || draft.title().length() > 160) return "title is required (max 160)";
         if (isBlank(draft.body()) || draft.body().length() > 2000) return "body is required (max 2000)";
 
+        boolean verified = false;
+        if (!isBlank(draft.orderCode())) {
+            String code = draft.orderCode().trim();
+            Long matches = OrderLine.count(
+                    "order.orderCode = ?1 and variant.product.id = ?2", code, draft.productId());
+            if (matches == 0) return "order code doesn't match this product";
+            verified = true;
+        }
+
         ProductReview review = new ProductReview();
         review.productId = draft.productId();
         review.authorName = draft.authorName().trim();
         review.rating = draft.rating();
         review.title = draft.title().trim();
         review.body = draft.body().trim();
+        review.orderCode = isBlank(draft.orderCode()) ? null : draft.orderCode().trim();
+        review.verifiedBuyer = verified;
         review.approved = false;
         review.persist();
         return null;
@@ -71,6 +89,7 @@ public class ReviewService {
                 "rating", r.rating,
                 "title", r.title,
                 "body", r.body,
+                "verified", r.verifiedBuyer,
                 "date", r.createdAt.toString());
     }
 

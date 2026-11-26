@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { useCustomer } from '../context/CustomerContext'
 import { authApi, inr, type Order } from '../api/shopApi'
+import ReviewComposer from './ReviewComposer'
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Received', PAID: 'Paid', CONFIRMED: 'Packed', SHIPPED: 'On the way',
   DELIVERED: 'Delivered', CANCELLED: 'Cancelled',
 }
+
+/** Orders that have moved past payment can receive a review. */
+const REVIEWABLE = new Set(['PAID', 'CONFIRMED', 'SHIPPED', 'DELIVERED'])
 
 /** Signed-in order history with one-tap reorder (ADR-0023). */
 export default function AccountView() {
@@ -14,6 +18,9 @@ export default function AccountView() {
   const { setView, addToCart, setDrawerOpen, showToast } = useCart()
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
+  // ADR-0030 move 6: per-line review entry — the review-request flow without
+  // an email/SMS pipeline. The order code earns the verified-buyer flag.
+  const [composer, setComposer] = useState<{ productName: string; orderCode: string } | null>(null)
 
   useEffect(() => {
     if (!customer) return
@@ -81,8 +88,17 @@ export default function AccountView() {
               </p>
               <ul className="mt-3 flex flex-col gap-1">
                 {order.lines.map(line => (
-                  <li key={line.variantId} className="text-sm text-brand-charcoal/80">
-                    {line.qty} × {line.product} ({line.sizeMl} ml)
+                  <li key={line.variantId} className="text-sm text-brand-charcoal/80 flex items-center justify-between gap-3">
+                    <span>{line.qty} × {line.product} ({line.sizeMl} ml)</span>
+                    {REVIEWABLE.has(order.status) && (
+                      <button
+                        className="text-[11px] font-bold uppercase tracking-wide text-brand-ochreDeep hover:text-brand-forest inline-flex items-center gap-0.5 shrink-0"
+                        data-testid="write-review-btn"
+                        onClick={() => setComposer({ productName: line.product, orderCode: order.orderCode })}
+                      >
+                        <span className="material-symbols-outlined text-sm">rate_review</span> Review
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -96,6 +112,12 @@ export default function AccountView() {
           ))}
         </div>
       </div>
+      <ReviewComposer
+        open={composer != null}
+        onClose={() => setComposer(null)}
+        productName={composer?.productName ?? ''}
+        orderCode={composer?.orderCode ?? ''}
+      />
     </section>
   )
 }

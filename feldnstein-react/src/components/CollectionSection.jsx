@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Reveal from './Reveal'
 import QuickViewModal from './QuickViewModal'
 import AddToCart from './AddToCart'
+import StarRating from './StarRating'
 import { useContent } from '../context/ContentContext'
 import { useCart } from '../context/CartContext'
 import { useLanguage } from '../context/LanguageContext'
-import { inr } from '../api/shopApi'
+import { inr, shopApi } from '../api/shopApi'
+import { OIL_ID } from '../data/oilIds'
 
 const CARD_WIDTH = 360
 
@@ -22,6 +24,23 @@ export default function CollectionSection() {
   const [fadeR, setFadeR] = useState(true)
   const [modalProduct, setModalProduct] = useState(null)
   const trackRef = useRef(null)
+
+  // ADR-0030 move 1: live rating counts on the cards (Spiegel #7 — reviews at
+  // the comparison surface). Cards render the row only when approved reviews
+  // exist; a product with none shows nothing, never manufactured stars.
+  const [ratings, setRatings] = useState({})
+  useEffect(() => {
+    let cancelled = false
+    products.forEach(p => {
+      const oilId = OIL_ID[p.id]
+      if (!oilId) return
+      shopApi
+        .reviews(oilId)
+        .then(s => { if (!cancelled && s.count > 0) setRatings(prev => ({ ...prev, [p.id]: s })) })
+        .catch(() => { /* reviews are an enhancement — cards never fail on them */ })
+    })
+    return () => { cancelled = true }
+  }, [products])
 
   const visibleCount = products.filter(
     p => filter === 'all' || p.category.includes(filter)
@@ -85,7 +104,7 @@ export default function CollectionSection() {
           <div className="hairline-rule"></div>
           <div className="section-label">{t('section.reserve')}</div>
           <h2 className="section-title">The <em>absolute</em> reserve collection</h2>
-          <p className="section-sub">Five pure cold-pressed oils, hand-harvested and stone-milled within 24 hours of extraction.</p>
+          <p className="section-sub">{t('collection.sub')}</p>
         </Reveal>
         <div className="flex flex-wrap justify-center gap-3 mb-10">
           {categories.map(cat => {
@@ -144,6 +163,20 @@ export default function CollectionSection() {
                       {product.name}
                     </button>
                     <p className="mt-1 text-xs text-brand-charcoal/70 leading-relaxed flex-1">{product.desc}</p>
+                    {ratings[product.id] && (
+                      <a
+                        href={`#product-${product.id}`}
+                        onClick={e => { e.preventDefault(); openProduct(product.id) }}
+                        className="mt-2 inline-flex items-center gap-1.5 justify-center"
+                        data-testid="card-rating"
+                        aria-label={`${Number(ratings[product.id].average).toFixed(1)} stars, ${ratings[product.id].count} reviews — view ${product.name}`}
+                      >
+                        <StarRating rating={ratings[product.id].average} />
+                        <span className="text-xs font-semibold text-brand-charcoal/70">
+                          {Number(ratings[product.id].average).toFixed(1)} · {ratings[product.id].count} review{ratings[product.id].count === 1 ? '' : 's'}
+                        </span>
+                      </a>
+                    )}
                     <div className="mt-4 flex items-baseline justify-center gap-2">
                       <span className="font-serif text-xl font-bold text-brand-forest">{inr(product.price)}</span>
                       {product.priceRange && <span className="text-xs text-brand-charcoal/50">Range: {product.priceRange}</span>}

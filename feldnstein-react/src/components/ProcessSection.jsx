@@ -134,8 +134,8 @@ export default function ProcessSection() {
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
           <div className="section-label"><span className="material-symbols-outlined text-sm">history_edu</span> {t('section.process')}</div>
-          <h2 className="section-title">From Native Seed to <em>Bottle</em></h2>
-          <p className="section-sub">An ancient Gaanuga sequence that refuses modern shortcuts. Here is exactly how your oil is born.</p>
+          <h2 className="section-title">{t('process.title')}</h2>
+          <p className="section-sub">{t('process.sub')}</p>
         </Reveal>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {STEP_CARDS.map(card => (

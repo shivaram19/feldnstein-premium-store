@@ -15,7 +15,7 @@ export default function TestimonialsSection() {
         <Reveal className="section-head">
           <div className="hairline-rule"></div>
           <div className="section-label"><span className="material-symbols-outlined text-sm">reviews</span> {t('section.testimonials')}</div>
-          <h2 className="section-title">What Makes People Come Back <em>at FELD·N·STEIN</em></h2>
+          <h2 className="section-title">{t('testimonials.title')}</h2>
           {testimonialSubtitle && <p className="section-sub">{testimonialSubtitle}</p>}
         </Reveal>
         {items.length === 0 ? (

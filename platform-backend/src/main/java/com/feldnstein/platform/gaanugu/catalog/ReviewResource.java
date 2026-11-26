@@ -6,19 +6,17 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
 /**
- * Public review surface (ADR-0028). Read side is open and renders approved
- * rows only; submit stores pending; publication is admin-gated
- * (see ReviewAdminResource).
+ * Public review submission (ADR-0028). Stores pending; publication is
+ * admin-gated (see ReviewAdminResource). The read side lives on
+ * ShopCatalogResource — see its javadoc for why (two-deep sibling routing).
  */
 @Path("/shop")
 @ApplicationScoped
@@ -27,14 +25,6 @@ import java.util.Map;
 public class ReviewResource {
 
     @Inject ReviewService reviews;
-
-    @GET
-    @Path("/products/{productId}/reviews")
-    @PermitAll
-    @Transactional
-    public Response forProduct(@PathParam("productId") Long productId) {
-        return Response.ok(reviews.summaryFor(productId)).build();
-    }
 
     @POST
     @Path("/reviews")

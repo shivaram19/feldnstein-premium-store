@@ -12,14 +12,12 @@ import ReviewsSection from './pdp/ReviewsSection'
 import ComparisonTable from './pdp/ComparisonTable'
 import SubscribeSaveRow from './pdp/SubscribeSaveRow'
 import { productContent, oilComparison } from '../data/productContent'
-import { shopApi } from '../api/shopApi'
+import { shopApi, FREE_SHIPPING_THRESHOLD } from '../api/shopApi'
+import { OIL_ID } from '../data/oilIds'
 import { useLanguage } from '../context/LanguageContext'
 
-const FREE_SHIPPING_THRESHOLD = 499
-
-// Storefront product id → backend oil_product id (ADR-0028). Sunflower has
-// no backend catalog entry yet, so it renders no reviews — by design.
-const OIL_ID = { groundnut: 1, sesame: 2, coconut: 3 }
+// Storefront product id → backend oil_product id now lives in data/oilIds
+// (shared with the collection-grid ratings and the account review flow).
 
 const TRUST_BADGES = [
   { icon: 'local_shipping', title: 'Free Shipping', sub: `On orders above ₹${FREE_SHIPPING_THRESHOLD}` },
@@ -64,6 +62,9 @@ export default function ProductDetailView({ productId }) {
   const [qty, setQty] = useState(1)
   const ctaRowRef = useRef(null)
   const [batch, setBatch] = useState(null)
+  // ADR-0030 move 1: the header rating is the LIVE moderated average, not the
+  // static content value — social proof at the decision point (Spiegel #7).
+  const [liveRating, setLiveRating] = useState(null)
   useEffect(() => {
     const oilId = OIL_ID[productId]
     if (!oilId) return
@@ -71,6 +72,9 @@ export default function ProductDetailView({ productId }) {
     shopApi.currentBatch(oilId)
       .then(b => { if (!cancelled) setBatch(b) })
       .catch(() => { /* no released batch → the row simply stays hidden */ })
+    shopApi.reviews(oilId)
+      .then(s => { if (!cancelled && s.count > 0) setLiveRating({ average: s.average, count: s.count }) })
+      .catch(() => { /* no reviews → static content rating remains the fallback */ })
     return () => { cancelled = true }
   }, [productId])
   const ctaOnScreen = useOnScreen(ctaRowRef)
@@ -150,13 +154,21 @@ export default function ProductDetailView({ productId }) {
               </button>
             </div>
 
-            {product.rating != null && (
-              <div className="mt-2 flex items-center gap-2">
-                <StarRating rating={product.rating} />
-                <span className="text-sm text-brand-charcoal/70">
-                  {Number(product.rating).toFixed(1)} ({product.reviewCount ?? 0} reviews)
+            {(liveRating || product.rating != null) && (
+              <a
+                href="#pdp-reviews"
+                onClick={e => { e.preventDefault(); document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' }) }}
+                className="mt-2 inline-flex items-center gap-2"
+                data-testid="pdp-rating"
+              >
+                <StarRating rating={liveRating?.average ?? product.rating} />
+                <span className="text-sm text-brand-charcoal/70 underline-offset-2 hover:underline">
+                  {Number(liveRating?.average ?? product.rating).toFixed(1)}
+                  {liveRating
+                    ? ` · ${liveRating.count} review${liveRating.count === 1 ? '' : 's'}`
+                    : ` (${product.reviewCount ?? 0} reviews)`}
                 </span>
-              </div>
+              </a>
             )}
 
             <UspChips items={content?.usps} />
@@ -222,12 +234,21 @@ export default function ProductDetailView({ productId }) {
                 {product.storage && <FactRow icon="warehouse" label="Storage" value={product.storage} />}
                 {product.shelfLife && <FactRow icon="event_available" label="Best Before" value={product.shelfLife} />}
                 {batch && (
-                  <div className="border-t border-brand-border pt-3">
+                  <div className="border-t border-brand-border pt-3 space-y-3">
                     <FactRow
                       icon="history"
                       label="Current Batch"
                       value={`${batch.batchCode} · pressed ${new Date(batch.pressDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · ${batch.yieldLitres} L pressed`}
                     />
+                    {/* ADR-0030 move 7: the farmer is the emotional peak of the
+                        genealogy — indexical authenticity (Kolar & Žabkar #6). */}
+                    {batch.farmerName && (
+                      <FactRow
+                        icon="agriculture"
+                        label="Seeds From"
+                        value={`${batch.farmerName}${batch.farmerPlace ? `, ${batch.farmerPlace}` : ''} — this batch's seed source`}
+                      />
+                    )}
                   </div>
                 )}
                 <div className="border-t border-brand-border pt-3">

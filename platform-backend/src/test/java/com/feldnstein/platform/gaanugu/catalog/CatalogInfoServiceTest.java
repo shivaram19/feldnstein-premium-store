@@ -23,6 +23,9 @@ class CatalogInfoServiceTest {
             // V23 seed: B-2026-042 is the only RELEASED groundnut batch.
             assertEquals("B-2026-042", batch.get().get("batchCode"));
             assertEquals("2026-11-12", batch.get().get("pressDate"));
+            // V23 seed: farmer_id 1 → the F-001 seed farmer (V2).
+            assertEquals("Apparao Naidu", batch.get().get("farmerName"));
+            assertEquals("Cheepurupalli", batch.get().get("farmerPlace"));
         });
     }
 

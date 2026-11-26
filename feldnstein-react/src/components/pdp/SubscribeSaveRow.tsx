@@ -32,8 +32,10 @@ export default function SubscribeSaveRow({ checked, onChange, price }: {
         </p>
         <p className="mt-1 text-xs leading-relaxed text-brand-charcoal/70">
           {inr(discounted)} per recurring delivery instead of {inr(price)} · double loyalty points ·
-          monthly or bi-weekly refill · pause or change blends anytime on WhatsApp.
+          monthly or bi-weekly refill · pause, skip a delivery or change blends anytime on WhatsApp — no lock-in.
         </p>
+        {/* First-90-day churn is the documented subscription killer
+            (ADR-0030 move 2) — the no-lock-in line answers it at the toggle. */}
       </div>
     </div>
   )

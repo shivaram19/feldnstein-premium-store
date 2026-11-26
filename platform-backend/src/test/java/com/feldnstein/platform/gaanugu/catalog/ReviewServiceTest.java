@@ -66,4 +66,25 @@ class ReviewServiceTest {
             assertNotNull(reviews.submit(new ReviewDraft(1L, "A", 5, " ", "B")));
         });
     }
+
+    @Test
+    void bogusOrderCodeRejected_andAnonymousReviewsStayUnverified() {
+        QuarkusTransaction.requiringNew().run(() -> {
+            // No seeded orders (V19 purged them) — any code must be rejected.
+            assertNotNull(reviews.submit(new ReviewDraft(1L, "A", 5, "T", "B", "NOPE-000")));
+        });
+
+        Long[] id = new Long[1];
+        QuarkusTransaction.requiringNew().run(() -> {
+            assertNull(reviews.submit(new ReviewDraft(1L, "Anon Buyer", 4, "No code", "Anonymous review.")));
+            id[0] = reviews.pending().get(reviews.pending().size() - 1).id;
+        });
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            ProductReview row = ProductReview.findById(id[0]);
+            assertFalse(row.verifiedBuyer);
+            assertNull(row.orderCode);
+            ProductReview.deleteById(id[0]);
+        });
+    }
 }

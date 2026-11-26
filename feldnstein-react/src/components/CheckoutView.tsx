@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useCart } from '../context/CartContext'
 import { useCustomer } from '../context/CustomerContext'
-import { shopApi, type CheckoutDetails } from '../api/shopApi'
+import { shopApi, UPI_VPA, type CheckoutDetails } from '../api/shopApi'
 
 declare global {
   interface Window {
@@ -108,8 +108,20 @@ export default function CheckoutView() {
       .finally(() => setPaying(false))
   }
 
-  const payWithRazorpay = () => {
-    const checkout = lastOrder?.checkout
+  /** ADR-0030 move 3: UPI intent — the market's payment reflex (§C). Opens the
+      buyer's UPI app with amount + order code pre-filled; confirmation still
+      rides the existing (demo) payment flow. */
+  const payWithUpi = () => {
+    if (!lastOrder) return
+    const link = `upi://pay?pa=${encodeURIComponent(UPI_VPA)}` +
+      `&pn=${encodeURIComponent('Feld N Stein')}` +
+      `&am=${lastOrder.grandTotal}` +
+      `&cu=INR` +
+      `&tn=${encodeURIComponent(`Order ${lastOrder.orderCode}`)}`
+    window.location.href = link
+  }
+
+  const payWithRazorpay = () => {    const checkout = lastOrder?.checkout
     if (!checkout || !lastOrder) return
     setPaying(true)
     setError('')
@@ -223,6 +235,10 @@ export default function CheckoutView() {
               )}
             </div>
           )}
+          <p className="mt-4 text-xs text-brand-charcoal/60" data-testid="review-hint">
+            Once your oils arrive, sign in and open your order to leave a review — your order code earns a
+            verified-buyer badge on the product page.
+          </p>
           <div className="flex gap-3 mt-6">
             <button className="btn btn-ghost flex-1" onClick={() => setView('track')}>Track order</button>
             <button className="btn btn-primary flex-1" onClick={() => setView('home')}>Continue shopping</button>
@@ -294,6 +310,19 @@ export default function CheckoutView() {
                   : 'Demo gateway — no real money moves. Razorpay goes live with one config change.'}
               </div>
               {error && <p className="text-sm text-red-700 mt-3" role="alert">{error}</p>}
+              {lastOrder.checkout?.provider !== 'RAZORPAY' && (
+                <div className="mt-4 rounded-xl border border-brand-border p-4" data-testid="upi-intent">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-brand-charcoal/60">Pay by UPI</p>
+                  <p className="mt-1 text-xs text-brand-charcoal/60 leading-relaxed">
+                    Opens GPay, PhonePe or Paytm with the amount ({inr(lastOrder.grandTotal)}) and order code pre-filled.
+                    After paying, tap the button below to confirm — the demo gateway confirms instantly.
+                  </p>
+                  <button className="btn btn-ghost w-full mt-3" data-testid="upi-pay-btn" onClick={payWithUpi}>
+                    <span className="material-symbols-outlined text-base mr-1">smartphone</span>
+                    Pay {inr(lastOrder.grandTotal)} via UPI app
+                  </button>
+                </div>
+              )}
               <button className="btn btn-primary w-full mt-5" data-testid="pay-btn" disabled={paying} onClick={pay}>
                 {paying ? 'Processing…' : lastOrder.checkout?.provider === 'RAZORPAY'
                   ? `Pay ${inr(lastOrder.grandTotal)} securely`

@@ -27,7 +27,7 @@ export default function ReviewsSection({ oilProductId }) {
     new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
-    <section data-testid="pdp-reviews" className="mt-10 border-t border-brand-border pt-8">
+    <section id="pdp-reviews" data-testid="pdp-reviews" className="mt-10 border-t border-brand-border pt-8 scroll-mt-24">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="font-serif text-xl font-bold text-brand-forest">What buyers say</h2>
         <span className="flex items-center gap-1.5">
@@ -47,11 +47,22 @@ export default function ReviewsSection({ oilProductId }) {
                 {r.author} · {dateOf(r.date)}
               </figcaption>
             </div>
-            <h3 className="mt-2 text-sm font-bold text-brand-forest">{r.title}</h3>
+            <h3 className="mt-2 text-sm font-bold text-brand-forest flex items-center gap-2 flex-wrap">
+              {r.title}
+              {r.verified && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-brand-forest/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-forest" data-testid="verified-badge">
+                  <span className="material-symbols-outlined text-[11px]">verified</span> Verified buyer
+                </span>
+              )}
+            </h3>
             <blockquote className="mt-1.5 text-[13px] leading-relaxed text-brand-charcoal/80">{r.body}</blockquote>
           </figure>
         ))}
       </div>
+
+      <p className="mt-4 text-[11px] text-brand-charcoal/50">
+        Bought a bottle? Sign in and open your order to leave a review — it appears here after a quick check.
+      </p>
     </section>
   )
 }

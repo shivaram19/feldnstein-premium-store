@@ -11,9 +11,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Public batch-genealogy endpoint (citations-verified §D tension 2): the PDP
- * shows the current RELEASED batch — pressed when, what it yielded — as the
- * premium defense against discount culture. Provenance, not price cuts.
+ * Public catalog surface: released-batch genealogy and moderated review
+ * summaries for the PDP. Both live under the class-level /shop/products root
+ * — routing two-deep paths from a sibling @Path("/shop") class silently 404s
+ * when this class-level root exists (found 2026-11-25: ReviewResource's
+ * method-level /products/{id}/reviews was unreachable from the day this
+ * resource landed; the 404 was masked by the frontend's catch-and-hide).
  */
 @Path("/shop/products")
 @ApplicationScoped
@@ -21,6 +24,7 @@ import jakarta.ws.rs.core.Response;
 public class ShopCatalogResource {
 
     @Inject CatalogInfoService catalog;
+    @Inject ReviewService reviews;
 
     @GET
     @Path("/{productId}/batch")
@@ -29,5 +33,12 @@ public class ShopCatalogResource {
         return catalog.currentReleasedBatch(productId)
                 .map(batch -> Response.ok(batch).build())
                 .orElseGet(() -> Response.status(404).build());
+    }
+
+    @GET
+    @Path("/{productId}/reviews")
+    @PermitAll
+    public Response reviewsFor(@PathParam("productId") Long productId) {
+        return Response.ok(reviews.summaryFor(productId)).build();
     }
 }

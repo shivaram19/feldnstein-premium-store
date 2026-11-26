@@ -19,10 +19,19 @@ public class CatalogInfoService {
                 .<ProductionBatch>find("product.id = ?1 and status = ?2",
                         Sort.descending("pressDate"), productId, ProductionBatch.BatchStatus.RELEASED)
                 .firstResultOptional()
-                .map(b -> Map.of(
-                        "batchCode", b.batchCode,
-                        "pressDate", b.pressDate.toString(),
-                        "bestBefore", b.bestBeforeDate.toString(),
-                        "yieldLitres", b.oilYieldLitres));
+                .map(b -> {
+                    Map<String, Object> view = new java.util.HashMap<>(Map.of(
+                            "batchCode", b.batchCode,
+                            "pressDate", b.pressDate.toString(),
+                            "bestBefore", b.bestBeforeDate.toString(),
+                            "yieldLitres", b.oilYieldLitres));
+                    // ADR-0030 move 7: the farmer is the emotional peak of the
+                    // genealogy — name and place when the batch recorded one.
+                    if (b.farmer != null) {
+                        view.put("farmerName", b.farmer.name);
+                        if (b.farmer.address != null) view.put("farmerPlace", b.farmer.address);
+                    }
+                    return view;
+                });
     }
 }

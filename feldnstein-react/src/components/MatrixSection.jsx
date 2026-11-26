@@ -63,8 +63,8 @@ export default function MatrixSection() {
             <div className="max-w-xl text-left">
               <div className="hairline-rule" style={{ marginLeft: 0, marginRight: 0 }}></div>
               <div className="section-label"><span className="material-symbols-outlined text-sm">balance</span> {t('section.standard')}</div>
-              <h2 className="section-title !text-left">What Goes Into Your Cooking <em>Matters</em></h2>
-              <p className="section-sub !mt-3">Industrial commercial oils prioritize infinite shelf-life over bioavailability. Compare the essential truth side-by-side.</p>
+              <h2 className="section-title !text-left">{t('matrix.title')}</h2>
+              <p className="section-sub !mt-3">{t('matrix.sub')}</p>
             </div>
           </div>
           <div className="bg-white rounded-3xl border border-brand-border shadow-sm overflow-hidden">

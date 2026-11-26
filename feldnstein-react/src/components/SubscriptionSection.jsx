@@ -47,8 +47,8 @@ export default function SubscriptionSection() {
           <div className="rounded-3xl bg-white border border-brand-border p-6 lg:p-8">
             <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10">
               <div className="lg:max-w-sm">
-                <h3 className="font-serif text-2xl font-semibold text-brand-forest mb-2">Get First Press Access</h3>
-                <p className="text-sm text-brand-subtle leading-relaxed">Join the harvest list for fresh-batch drops, seasonal blends, and subscriber-only offers. No noise — one thoughtful email per press cycle.</p>
+                <h3 className="font-serif text-2xl font-semibold text-brand-forest mb-2">{t('subscribe.heading')}</h3>
+                <p className="text-sm text-brand-subtle leading-relaxed">{t('subscribe.sub')}</p>
               </div>
               <form onSubmit={handleSubscribe} className="flex-1 flex flex-col sm:flex-row gap-3.5" data-testid="subscribe-form">
                 <input
