@@ -13,7 +13,7 @@ const CARD_WIDTH = 360
 
 export default function CollectionSection() {
   const { t } = useLanguage()
-  const { products, categories } = useContent()
+  const { products } = useContent()
   const { openProduct } = useCart()
   const [filter, setFilter] = useState('all')
   const [currentDot, setCurrentDot] = useState(0)
@@ -43,7 +43,7 @@ export default function CollectionSection() {
   }, [products])
 
   const visibleCount = products.filter(
-    p => filter === 'all' || p.category.includes(filter)
+    p => filter === 'all' || p.id === filter
   ).length
 
   const onTrackScroll = useCallback(() => {
@@ -106,19 +106,45 @@ export default function CollectionSection() {
           <h2 className="section-title">The <em>absolute</em> reserve collection</h2>
           <p className="section-sub">{t('collection.sub')}</p>
         </Reveal>
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {categories.map(cat => {
-            const active = filter === cat.key
+        {/* Segregation rail (ADR-0031): product-photo anchors + label beneath +
+            active underline — recognition before reading (Treisman pre-attentive
+            shapes; Paivio dual coding). Replaces the single-pill non-choice. */}
+        <div
+          className="flex justify-start sm:justify-center gap-5 sm:gap-9 mb-10 overflow-x-auto pb-2 px-1"
+          data-testid="oil-rail"
+          role="tablist"
+          aria-label="Filter oils"
+        >
+          <button
+            role="tab"
+            aria-selected={filter === 'all'}
+            data-testid="rail-item-all"
+            className="rail-item flex flex-col items-center gap-2 shrink-0"
+            onClick={() => applyFilter('all')}
+          >
+            <span className={`rail-icon w-14 h-14 rounded-full border flex items-center justify-center transition-colors ${filter === 'all' ? 'border-brand-forest bg-brand-forest/5' : 'border-brand-border'}`}>
+              <span className="material-symbols-outlined text-brand-forest">apps</span>
+            </span>
+            <span className={`text-[11px] font-bold uppercase tracking-wide ${filter === 'all' ? 'text-brand-forest' : 'text-brand-subtle'}`}>All Oils</span>
+            <span className={`h-0.5 w-8 rounded-full ${filter === 'all' ? 'bg-brand-forest' : 'bg-transparent'}`}></span>
+          </button>
+          {products.map(p => {
+            const short = p.name.replace('Bull Pressed ', '').replace(' (Copra)', '').replace(' Oil', '')
+            const active = filter === p.id
             return (
               <button
-                key={cat.key}
-                className={`category-pill px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${
-                  active ? 'bg-brand-forest text-white' : 'text-brand-subtle'
-                }`}
-                onClick={() => applyFilter(cat.key)}
-                aria-pressed={active}
+                key={p.id}
+                role="tab"
+                aria-selected={active}
+                data-testid={`rail-item-${p.id}`}
+                className="rail-item flex flex-col items-center gap-2 shrink-0"
+                onClick={() => applyFilter(p.id)}
               >
-                {cat.label}
+                <span className={`rail-icon w-14 h-14 rounded-full border overflow-hidden transition-colors ${active ? 'border-brand-forest ring-2 ring-brand-forest/30' : 'border-brand-border'}`}>
+                  <img src={p.img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </span>
+                <span className={`text-[11px] font-bold uppercase tracking-wide ${active ? 'text-brand-forest' : 'text-brand-subtle'}`}>{short}</span>
+                <span className={`h-0.5 w-8 rounded-full ${active ? 'bg-brand-forest' : 'bg-transparent'}`}></span>
               </button>
             )
           })}
@@ -136,7 +162,7 @@ export default function CollectionSection() {
             aria-label="Products"
           >
             {products.map(product => {
-              const show = filter === 'all' || product.category.includes(filter)
+              const show = filter === 'all' || product.id === filter
               return (
                 <Reveal
                   as="article"

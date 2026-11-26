@@ -83,21 +83,29 @@ await new Promise(r => setTimeout(r, 1200))
 const revealed = await page.$$eval('[data-reveal].is-revealed', els => els.length)
 check('scroll reveal reveals elements', revealed > 3)
 
-// 3. Product carousel + category pill (only "All Oils" remains, centered).
+// 3. Product carousel + segregation rail (ADR-0031): All anchor + one photo
+// anchor per oil, All active by default.
 // The catalog comes from the API when reachable (3 seeded oils) and from static
 // fallback data otherwise (4 oils) — assert the carousel renders either way.
 const productCount = await page.$$eval('#productCarousel .product-item', els => els.length)
 check('products rendered (API or static catalog)', productCount >= 3)
-const pillInfo = await page.$$eval('.category-pill', pills =>
-  pills.map(p => ({ label: p.textContent.trim(), pressed: p.getAttribute('aria-pressed') }))
+const railInfo = await page.$$eval('[data-testid="oil-rail"] [role="tab"]', tabs =>
+  tabs.map(t => ({
+    testid: t.getAttribute('data-testid'),
+    selected: t.getAttribute('aria-selected'),
+    hasImage: t.querySelector('img') != null,
+  }))
 )
-check('only the All Oils pill renders, active', pillInfo.length === 1 && pillInfo[0].label.includes('All Oils') && pillInfo[0].pressed === 'true')
-const centered = await page.$eval('.category-pill', pill => {
-  const row = pill.parentElement.getBoundingClientRect()
-  const r = pill.getBoundingClientRect()
-  return Math.abs((r.left + r.width / 2) - (row.left + row.width / 2)) < 2
-})
-check('All Oils pill is centered', centered)
+check('oil rail renders All + one anchor per product', railInfo.length === productCount + 1 && railInfo[0].testid === 'rail-item-all')
+check('All Oils rail anchor is active by default', railInfo[0].selected === 'true')
+check('product rail anchors carry a photo', railInfo.slice(1).every(t => t.hasImage))
+await page.evaluate(() => document.querySelector('[data-testid="rail-item-groundnut"]')?.click())
+await new Promise(r => setTimeout(r, 600))
+const filteredCount = await page.$$eval('#productCarousel .product-item', els =>
+  els.filter(e => e.style.display !== 'none').length)
+check('rail anchor filters the carousel to one oil', filteredCount === 1)
+await page.evaluate(() => document.querySelector('[data-testid="rail-item-all"]')?.click())
+await new Promise(r => setTimeout(r, 600))
 
 // 4. Quick add updates cart badge + toast (amount comes from the live catalog
 // when the API is up, so assert the toast shape, not a hardcoded price)
